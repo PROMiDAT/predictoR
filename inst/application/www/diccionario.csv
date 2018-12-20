@@ -10,6 +10,9 @@ poderpred;Poder Predictivo;Predictive Power
 aprendizaje;Apendizaje Supervisado;Supervised Learning
 comparacion;Comparación de Modelos;Model Comparison
 predicnuevos;Predicción Individuos Nuevos;Predict New Data
+pred;Predicción;Prediction
+acerto;Acertó;Matched
+fallo;Falló;Failed
 knnl;K Vecinos Más Cercanos;k nearest neighbors
 dtl;Árboles De Decisión;Decision Trees
 rfl;Bosques Aleatorios;Random Forests
@@ -30,6 +33,9 @@ punto;Punto;Point
 eliminana;Eliminar NA;Remove NA
 si;SI;YES
 no;NO;NO
+prec;Precisión;Precision
+precG;Precisión Global;Global Precision
+errG;Error Global;Global Error
 cargarchivo;Cargar Archivo;Load Archive
 subir;Subir;Upload
 descarga;Descargar Datos;Download Data
@@ -39,6 +45,26 @@ numericas;Numéricas;Numericals
 categorico;Categórico;Categorical
 categoricas;Categóricas;Categoricals
 disyuntivo;Disyuntivo;Disjunctive
+distpred;Distribución de Variable a Predecir;Distribution of Variable to Predict
+distpredcat;Distribución de Variables Categóricas Según Variable a Predecir;Distribution of Categorical Variables According to the Variable to Predict
+pares;Gráfico de Pares;Pair Plot
+denspred;Densidad de Variables Numéricas Según Variable a Predecir;Density of Numerical Variables According to Variable to Predict
+distrelvar;Distribución relativa de la variable;Relative distribution of the variable
+denspodlab;Densidad de la variable ${X} según ${Y};Density of variable ${X} according to ${Y}
+distpodcat;Distribución relativa de la variable ${X} según ${Y};Relative distribution of the variable ${X} according to ${Y}
+generatem;Generación del Modelo;Generation of the Model
+predm;Predicción del Modelo;Prediction of the Model
+mc;Matriz de Confusión;Confusion Matrix
+indices;Índices Generales;General Indices
+gclasificacion;Gráfico Clasificación;Classification Plot
+evolerror;Evolución del Error;Error Evolution
+garbol;Gráfico Árbol;Tree Plot
+reglas;Reglas;Rules
+varImp;Importancia de Variables;Variable Importance
+kmax;K Máximo:;K Max:
+selkernel;Seleccionar un Kernel:;Select kernel:
+escal;Escalar Datos;Scale Data
+reald;Datos Reales;Real Data
 variables;Variables;Variables
 semilla;Semilla Aleatoria:;Random Seed:
 habilitada;Habilitada;Enabled
