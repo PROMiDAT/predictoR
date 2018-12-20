@@ -1,13 +1,14 @@
-Package: PredictoR
+Title: Predictive Data Analysis System
+Package: predictoR
 Type: Package
-Title: Predictivo Shiny
-Version: 1.0.8
-Author: Andres Navarro and Diego Jimenez
-Maintainer:  PROMiDAT <info@promidat.com>
-Description: Este paquete ayuda a realizar un análisis predictivo en datos mediante una interfaz gráfica.
+Version: 1.0.0
+Author: Oldemar Rodriguez R. with contributions from Diego Jimenez A. and Andres Navarro D.
+Maintainer:  Oldemar Rodriguez <oldemar.rodriguez@ucr.ac.cr>
+Depends: R (>= 3.4.3)
+Imports: shiny, shinyAce, rattle, shinydashboard, shinyWidgets, ROCR, rpart, zip, rgdal, raster, rpart.plot, nnet, xgboost, ada, colourpicker,flexdashboard, psych, shinyjs, knitr, forcats, dplyr, DT, randomForest, ggplot2, e1071, rstudioapi, xtable, corrplot, caret, dendextend, scatterplot3d, stringr, rmarkdown, kknn
+Description: Perform an predictive analysis on a database through a graphical interface.
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-Imports: shiny, shinyAce, rattle, shinydashboard, shinyWidgets, ROCR, rpart, zip, rgdal, raster, rpart.plot, nnet, xgboost, ada, modeest, colourpicker,flexdashboard, psych, shinyjs, knitr, forcats, dplyr, DT, randomForest, ggplot2, e1071, rstudioapi, xtable, corrplot, caret, dendextend, scatterplot3d, stringr, rmarkdown, kknn
 URL: http://www.promidat.com
 RoxygenNote: 6.1.0

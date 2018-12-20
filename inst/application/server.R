@@ -4,72 +4,46 @@ shinyServer(function(input, output, session) {
   # Funciones Utilitarias ---------------------------------------------------------------------------------------------------
 
   # Crea una tabla dependiendo de los datos ingresados
-  renderizar.tabla.datos <- function(data, editable = TRUE, extensions = c("Buttons"), dom = "Bfrtip", pageLength = 5, buttons = T, filename = NA, scrollY = "33vh") {
+  renderizar.tabla.datos <- function(data, editable = TRUE, dom = "frtip", pageLength = 10, scrollY = "27vh") {
+    if(input$idioma == "es"){
+      labelNum <- "Numérico"
+      labelCat <- "Categórico"
+    } else {
+      labelNum <- "Numerical"
+      labelCat <- "Categorical"
+    }
     size <- nrow(data)
     data <- head(data, n = 100)
-    if (buttons) {
-      buttons <- list(list(extend = "csv", filename = filename, text = "Descargar"))
-    } else {
-      buttons <- NULL
-    }
     nombre.columnas <- c("ID", colnames(data))
-    tipo.columnas <- c("", sapply(
-      colnames(data),
-      function(i) ifelse(class(data[, i]) %in% c("numeric", "integer"), "Numérico", "Categórico")
-    ))
+    tipo.columnas <- sapply(colnames(data), function(i) ifelse(class(data[,i]) %in% c("numeric", "integer"),
+                                                                paste0("<span data-id='numerico'>", labelNum, "</span>"),
+                                                                paste0("<span data-id='categorico'>", labelCat, "</span>")))
 
     sketch <- htmltools::withTags(table(
       tableHeader(nombre.columnas),
-      tableFooter(tipo.columnas)
-    ))
+      tags$tfoot(tags$tr(tags$th(), lapply(tipo.columnas, function(i) tags$th(HTML(i))))) ))
 
-    return(DT::datatable(data,
-                         selection = "none", editable = editable, container = sketch, extensions = extensions,
-                         options = list(dom = dom,
-                                        pageLength = pageLength,
-                                        buttons = buttons,
-                                        scrollY = scrollY,
-                                        language = list(
-                                          info = paste('_START_ to _END_ of _TOTAL_ entries (real size: ',size,')') ))
-    ))
+    return(DT::datatable(data, selection = 'none', editable = editable,  container = sketch,
+                  options = list(dom = dom, pageLength = pageLength, scrollY = scrollY)))
   }
 
   # Acualiza las distintas tablas
-  actualizar.tabla <- function(x = c("datos", "datos.aprendizaje", "datos.prueba")) {
-    if (any("datos" %in% x)) { # Cambia la tabla de datos
-      output$contents <- DT::renderDT(renderizar.tabla.datos(datos,
-                                                             editable = T,
-                                                             pageLength = 10,
-                                                             buttons = T,
-                                                             filename = "datos"),
-                                      server = F)
+  actualizar.tabla <- function(x = c("datos", "datos.aprendizaje", "datos.prueba")){
+    if(any("datos" %in% x)){ # Cambia la tabla de datos
+      output$contents <- DT::renderDT(renderizar.tabla.datos(datos,editable = T),server=F)
     }
-
-    if (any("datos.aprendizaje" %in% x)) { # Cambia la tabla de datos de aprendizaje
-      output$contentsAprend <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje,
-                                                                   editable = T,
-                                                                   pageLength = 5,
-                                                                   buttons = T,
-                                                                   filename = "datos.aprendizaje",
-                                                                   scrollY = "15vh"),
-                                            server = F)
+    if(any("datos.aprendizaje" %in% x)){ # Cambia la tabla de datos de aprendizaje
+      output$contentsAprend <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje,editable=T,scrollY="15vh"),server=F)
     }
-
-    if (any("datos.prueba" %in% x)) { # Cambia la tabla de datos de prueba
-      output$contentsPrueba <- DT::renderDT(renderizar.tabla.datos(datos.prueba,
-                                                                   editable = T,
-                                                                   pageLength = 5,
-                                                                   buttons = T,
-                                                                   filename = "datos.prueba",
-                                                                   scrollY = "15vh"),
-                                            server = F)
+    if(any("datos.prueba" %in% x)){ # Cambia la tabla de datos de prueba
+      output$contentsPrueba <- DT::renderDT(renderizar.tabla.datos(datos.prueba,editable = T,scrollY="15vh"),server=F)
     }
   }
 
   # Cierra un menu segun su tabName
   close.menu <- function(tabname = NA, valor = T) {
     select <- paste0("a[href^='#shiny-tab-", tabname, "']")
-    if (valor) {
+    if(valor){
       shinyjs::hide(selector = "ul.menu-open")
       shinyjs::disable(selector = select)
     } else {
@@ -96,14 +70,14 @@ shinyServer(function(input, output, session) {
   obj.predic <- function(predic.var = NULL) {
     real <- as.character(datos.prueba[, variable.predecir])
     predi <- as.character(predic.var)
+    acerto <- paste0("<span style='color:green'><b>",tr("acerto"),"</b></span>")
+    fallo  <- paste0("<span style='color:red'><b>",tr("fallo"),"</b></span>")
     df <- cbind(real, predi, ifelse(real == predi,
-                                    rep("<span style='color:green'><b>Acertó</b></span>", length(real)),
-                                    rep("<span style='color:red'><b>Falló</b></span>", length(real))
-    ))
-    colnames(df) <- c("Datos Reales", "Predicción", " ")
-    sketch <- htmltools::withTags(table(
-      tableHeader(c("Datos Reales", "Predicción", " "))
-    ))
+                                    rep(acerto, length(real)),
+                                    rep(fallo, length(real)) ))
+    colns <- c(tr("reald"), tr("pred"), " ")
+    colnames(df) <- colns
+    sketch <- htmltools::withTags(table(tableHeader(colns)))
     return(DT::datatable(df,
                          selection = "none",
                          editable = FALSE,
@@ -126,18 +100,19 @@ shinyServer(function(input, output, session) {
   }
 
   # Genera los gauges
-  fill.gauges <- function(ids, titulos, indices) {
+  fill.gauges <- function(ids, indices) {
+    titulos <- c(tr("precG"), tr("errG"))
     for (i in 1:length(ids)) {
       eval(parse(text = new.gauge(ids[i], indices[[i]], titulos[i])))
     }
   }
 
   # Grafica un error de datos faltantes
-  error.plot.tipos.variables <- function(num = T){
+  error.variables <- function(idioma = "es", num = T){
     if(num){
-      img <- raster::stack("www/errorNumericas.png")
+      img <- raster::stack(paste0("www/", idioma, "_errorNum.png"))
     }else{
-      img <- raster::stack("www/errorCategoricas.png")
+      img <- raster::stack(paste0("www/", idioma, "_errorCat.png"))
     }
     raster::plotRGB(img)
   }
@@ -150,20 +125,30 @@ shinyServer(function(input, output, session) {
   # Configuraciones iniciales -----------------------------------------------------------------------------------------------
 
   source("global.R", local = T)
-  options(shiny.maxRequestSize = 200 * 1024^2, DT.options = list(aLengthMenu = c(10, 30, 50), iDisplayLength = 10, scrollX = TRUE))
+  load("www/translation.bin")
+  options(shiny.maxRequestSize = 200 * 1024^2,
+          DT.options = list(aLengthMenu = c(10, 30, 50), iDisplayLength = 10,
+                            scrollX = TRUE, language = list(search = HTML('<i class="fa fa-search"></i>'),
+                                                            info = "", emptyTable = "", zeroRecords = "",
+                                                            paginate = list("previous" = HTML('<i class="fa fa-backward"></i>'),
+                                                                            "next" = HTML('<i class="fa fa-forward"></i>'),
+                                                                            "first" =HTML('<i class="fa fa-fast-backward"></i>'),
+                                                                            "last" = HTML('<i class="fa fa-fast-forward"></i>')) )))
+
   shinyjs::disable(selector = 'a[href^="#shiny-tab-parte1"]')
   shinyjs::disable(selector = 'a[href^="#shiny-tab-parte2"]')
   shinyjs::disable(selector = 'a[href^="#shiny-tab-comparar"]')
   shinyjs::disable(selector = 'a[href^="#shiny-tab-poderPred]')
   shinyjs::disable(selector = 'a[href^="#shiny-tab-parte1"]')
+
   actualizar.tabla()
-  isolate(eval(parse(text = default.func.num())))
-  isolate(eval(parse(text = default.func.cat())))
+
   updateAceEditor(session, "fieldCodeResum", value = cod.resum())
   updateAceEditor(session, "fieldModelCor", value = modelo.cor())
-  updateAceEditor(session, "fieldFuncNum", value = default.func.num())
-  updateAceEditor(session, "fieldFuncCat", value = def.code.cat())
-  close.menu("predNuevos",F)
+  updateAceEditor(session, "fieldFuncNum", extract.code("distribucion.numerico"))
+  updateAceEditor(session, "fieldFuncCat", extract.code("distribucion.categorico"))
+
+  #close.menu("predNuevos", F)
 
   # Valores Reactivos -------------------------------------------------------------------------------------------------------
 
@@ -358,15 +343,13 @@ shinyServer(function(input, output, session) {
   # Crea los select box del panel de trasnformar datos
   update.trans <- eventReactive(input$loadButton, {
     contador <<- contador + 1
-    if (!is.null(datos) && ncol(datos) > 0) {
+    if(!is.null(datos) && ncol(datos) > 0){
       res <- data.frame(Variables = colnames(datos), Tipo = c(1:ncol(datos)), Activa = c(1:ncol(datos)))
-      res$Tipo <- sapply(colnames(datos), function(i) paste0(
-        '<select id="sel', i, contador, '"> <option value="categorico">Categórico</option>
-        <option value="numerico" ', ifelse(class(datos[, i]) %in% c("numeric", "integer"),
-                                           ' selected="selected"', ""
-      ),
-      '>Numérico</option> <option value="disyuntivo">Disyuntivo</option> </select>'
-      ))
+      res$Tipo <- sapply(colnames(datos), function(i)
+        paste0('<select id="sel', i, contador, '"> <option value="categorico">',tr("categorico"),'</option>',
+               '<option value="numerico" ', ifelse(class(datos[, i]) %in% c("numeric", "integer"),
+                                                   ' selected="selected"', ""),'>', tr("numerico"),
+               '</option> <option value="disyuntivo">',tr("disyuntivo"),'</option> </select>'))
       res$Activa <- sapply(colnames(datos), function(i) paste0('<input type="checkbox" id="box', i, contador, '" checked/>'))
     } else {
       res <- as.data.frame(NULL)
@@ -376,8 +359,13 @@ shinyServer(function(input, output, session) {
   })
 
   # Cambia la tabla de con las opciones del panel de transformar
-  output$transData <- DT::renderDataTable(update.trans(),
-                                          escape = FALSE, selection = "none", server = FALSE,
+  output$transData <- DT::renderDT({
+                                    variables <- tr("variables")
+                                    tipo <- tr("tipo")
+                                    activa <- tr("activa")
+                                    sketch <- htmltools::withTags(table(tags$thead(tags$tr(tags$th(variables), tags$th(tipo), tags$th(activa)))))
+                                    DT::datatable(update.trans(),
+                                          escape = FALSE, selection = "none", container = sketch,
                                           options = list(dom = "t", paging = FALSE, ordering = FALSE, scrollY = "45vh"), rownames = F,
                                           callback = JS("table.rows().every(function(i, tab, row) {
                                                         var $this = $(this.node());
@@ -385,6 +373,7 @@ shinyServer(function(input, output, session) {
                                                         $this.addClass('shiny-input-checkbox');});
                                                         Shiny.unbindAll(table.table().node());
                                                         Shiny.bindAll(table.table().node());"))
+                                    }, server = FALSE)
 
   # Pagina de Segmentar Datos -----------------------------------------------------------------------------------------------
 
@@ -409,7 +398,7 @@ shinyServer(function(input, output, session) {
     updateSelectInput(session, "sel.distribucion.poder", choices = cat.sin.pred)
     updateSelectInput(session, "sel.density.poder", choices = nombres)
     updateAceEditor(session, "fieldCodePoderPred", value = plot.code.poder.pred(variable.predecir))
-    updatePlot$poder.pred <<- plot.code.poder.pred(variable.predecir)
+    updatePlot$poder.pred <<- plot.code.poder.pred(variable.predecir, label = tr("distrelvar"))
   }
 
   # Segmenta los datos en aprendizaje y prueba
@@ -487,9 +476,9 @@ shinyServer(function(input, output, session) {
   # Cambia los cuadros de summary por varibale
   output$resumen <- renderUI({
     if (input$sel.resumen %in% colnames(var.numericas(datos))) {
-      HTML(resumen.numerico(datos, input$sel.resumen))
+      resumen.numerico(datos, input$sel.resumen)
     } else {
-      HTML(resumen.categorico(datos, input$sel.resumen))
+      resumen.categorico(datos, input$sel.resumen)
     }
   })
 
@@ -497,18 +486,18 @@ shinyServer(function(input, output, session) {
 
   # Hace el grafico de la pagina de test de normalidad
   observeEvent(c(input$loadButton, input$transButton), {
-    output$plot.normal <- renderPlot({
+   output$plot.normal <- renderPlot({
       tryCatch({
         cod.normal <<- updatePlot$normal
         res <- isolate(eval(parse(text = cod.normal)))
         updateAceEditor(session, "fieldCodeNormal", value = cod.normal)
         insert.report(paste0("normalidad.", input$sel.normal),paste0("## Test de Normalidad \n```{r}\n", cod.normal, "\n```"))
         return(res)
-      }, error = function(e) {
-        if (ncol(var.numericas(datos)) == 0){
-          error.plot.tipos.variables(T)
-        }else{
-          showNotification(paste0("ERROR AL GENERAR TEST DE NORMALIDAD: ", e), duration = 10, type = "error")
+      }, error = function(e){
+        if(ncol(var.numericas(datos)) <= 0){
+          error.variables(isolate(input$idioma), T)
+        } else {
+          showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
         }
       })
@@ -522,19 +511,28 @@ shinyServer(function(input, output, session) {
 
   # Ejecuta el codigo cuando cambian los parametros
   observeEvent(c(input$sel.normal, input$col.normal), {
-    updatePlot$normal <- default.normal(data = "datos", vars = input$sel.normal, color = input$col.normal)
+    updatePlot$normal <- default.normal(data = "datos", vars = input$sel.normal, color = input$col.normal, tr("curvanormal"))
   })
 
   # Hace la tabla comparativa de la pagina de test de normalidad
   observeEvent(c(input$loadButton, input$transButton), {
-    output$calculo.normal <- DT::renderDataTable({
+    output$calculo.normal <- DT::renderDT({
       tryCatch({
+        #datos <- updateData$datos
         codigo <- updatePlot$calc.normal
         res <- isolate(eval(parse(text = codigo)))
         updateAceEditor(session, "fieldCalcNormal", value = codigo)
-        return(res)
+        fisher <- tr("fisher")
+        asimetria <- tr("asimetria")
+        sketch = htmltools::withTags(table(
+          tags$thead(tags$tr(tags$th(), tags$th(fisher), tags$th(asimetria)))
+        ))
+        DT::datatable(
+          res, selection = 'none', container = sketch,
+          options = list(dom = 'frtip', scrollY = "60vh")
+        )
       }, error = function(e) {
-        showNotification(paste0("ERROR AL CALCULAR TEST DE NORMALIDAD: ", e), duration = 10, type = "error")
+        showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
         return(NULL)
       })
     })
@@ -553,15 +551,18 @@ shinyServer(function(input, output, session) {
       tryCatch({
         cod.disp <<- updatePlot$disp
         updateAceEditor(session, "fieldCodeDisp", value = cod.disp)
-        res <- isolate(eval(parse(text = cod.disp)))
-        if (!is.null(cod.disp) && cod.disp != "") {
+        if(!is.null(cod.disp) && cod.disp != "") {
           insert.report(paste0("dispersion.", paste(input$select.var, collapse = ".")),
                         paste0("## Dispersión \n```{r}\n", cod.disp, "\n```"))
         }
-        return(res)
+        return(isolate(eval(parse(text = cod.disp))))
       }, error = function(e) {
-        showNotification(paste0("ERROR AL GENERAR DISPERSIÓN: ", e), duration = 10, type = "error")
-        return(NULL)
+        if(ncol(var.numericas(datos)) <= 1){
+          error.variables(isolate(input$idioma), T)
+        } else {
+          showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
+          return(NULL)
+        }
       })
     })
   })
@@ -628,7 +629,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.numericas(datos)) == 0){
-          error.plot.tipos.variables(T)
+          error.variables(isolate(input$idioma), T)
         }else{
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -652,14 +653,12 @@ shinyServer(function(input, output, session) {
 
   # Crea la tabla de atipicos
   output$mostrar.atipicos <- DT::renderDataTable({
-    tryCatch({
-      atipicos <- boxplot.stats(datos[, input$sel.distribucion.num])
-      datos <- datos[datos[, input$sel.distribucion.num] %in% atipicos$out, input$sel.distribucion.num, drop = F]
-      return(datos[order(datos[, input$sel.distribucion.num]), , drop = F])
-    },error = function(e){
-      return(data.frame())
-    })
-  }, options = list(dom = "t", scrollX = TRUE, scrollY = "10vh"))
+    atipicos <- boxplot.stats(datos[, input$sel.distribucion.num])
+    datos <- datos[datos[, input$sel.distribucion.num] %in% atipicos$out, input$sel.distribucion.num, drop = F]
+    datos <- datos[order(datos[, input$sel.distribucion.num]), , drop = F]
+    datatable(datos, options = list(dom = 't', scrollX = TRUE, scrollY = "28vh",pageLength = nrow(datos))) %>%
+             formatStyle(1, color = "white", backgroundColor = "#CBB051", target = "row")
+  })
 
   # Hace el grafico de Distribucion categorico
   observeEvent(c(input$loadButton, input$transButton), {
@@ -673,7 +672,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.categoricas(datos)) == 0){
-          error.plot.tipos.variables(F)
+          error.variables(isolate(input$idioma), T)
         }else{
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -689,7 +688,7 @@ shinyServer(function(input, output, session) {
 
   # Ejecuta el codigo cuando cambian los parametros
   observeEvent(input$sel.distribucion.cat, {
-    updatePlot$dya.cat <<- def.code.cat(data = "datos", variable = paste0("'", input$sel.distribucion.cat, "'"))
+    updatePlot$dya.cat <<- def.code.cat(variable = input$sel.distribucion.cat)
   })
 
   # Pagina de Correlacion ---------------------------------------------------------------------------------------------------
@@ -705,7 +704,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.numericas(datos)) == 0){
-          error.plot.tipos.variables(T)
+          error.variables(isolate(input$idioma), T)
         }else{
           showNotification(paste0("ERROR EN Correlacion: ", e),
                            duration = 10,
@@ -759,10 +758,10 @@ shinyServer(function(input, output, session) {
         updateAceEditor(session, "fieldCodePoderCat", value = cod.poder.cat)
         if (ncol(var.categoricas(datos)) > 1) {
           res <- isolate(eval(parse(text = cod.poder.cat)))
-          insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
+          insert.report(paste0?verbatimTextOutput("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
-          error.plot.tipos.variables(num = F)
+          error.variables(isolate(input$idioma), T)
         }
         return(res)
       }, error = function(e) {
@@ -780,11 +779,7 @@ shinyServer(function(input, output, session) {
   # Ejecuta el codigo cuando cambian los parametros
   observeEvent(input$sel.distribucion.poder, {
     if (input$sel.distribucion.poder != "") {
-      updatePlot$poder.cat <- plot.code.dist.porc(
-        input$sel.distribucion.poder,
-        input$sel.distribucion.poder,
-        variable.predecir, variable.predecir
-      )
+      updatePlot$poder.cat <- plot.code.dist.porc(input$sel.distribucion.poder, variable.predecir, label=tr("distpodcat"))
     } else {
       updatePlot$poder.cat <- ""
     }
@@ -801,7 +796,7 @@ shinyServer(function(input, output, session) {
           insert.report("poder.num",paste0("## Poder Predictivo Variables Numéricas \n```{r}\n", cod.poder.num, "\n```"))
           return(res)
         }else{
-          error.plot.tipos.variables(num = T)
+          error.variables(isolate(input$idioma), T)
         }
       }, error = function(e) {
         showNotification(paste0("Error en Poder Predictivo: ", e),
@@ -836,7 +831,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.den.",input$sel.density.poder),
                         paste0("## Densidad Según Variable Discriminante\n```{r}\n", cod.poder.den, "\n```"))
         }else{
-          error.plot.tipos.variables(num = T)
+          error.variables(isolate(input$idioma), T)
         }
         return(res)
       }, error = function(e) {
@@ -856,7 +851,7 @@ shinyServer(function(input, output, session) {
   # Ejecuta el codigo cuando cambian los parametros
   observeEvent(input$sel.density.poder, {
     if (input$sel.density.poder != "") {
-      updatePlot$poder.dens <- plot.numerico.dens( input$sel.density.poder)
+      updatePlot$poder.dens <- plot.numerico.dens(input$sel.density.poder,tr("denspodlab"))
     } else {
       updatePlot$poder.dens <- ""
     }
@@ -1032,9 +1027,7 @@ shinyServer(function(input, output, session) {
                            cod.knn.ind, "\nindices.generales(MC.knn.",input$kernel.knn,")\n```"))
 
       nombres <- c("knnPrecGlob", "knnErrorGlob")
-      titulos <- c("Precisión Global", "Error Global")
-
-      fill.gauges(nombres, titulos, indices.knn)
+      fill.gauges(nombres, indices.knn)
 
       # Cambia la tabla con la indices de knn
       output$knnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.knn,"KNN")),
@@ -1222,9 +1215,7 @@ shinyServer(function(input, output, session) {
                            cod.svm.ind, "\nindices.generales(MC.svm.",input$kernel.svm,")\n```"))
 
       nombres <- c("svmPrecGlob", "svmErrorGlob")
-      titulos <- c("Precisión Global", "Error Global")
-
-      fill.gauges(nombres, titulos, indices.svm)
+      fill.gauges(nombres, indices.svm)
 
       # Cambia la tabla con la indices de svm
       output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM")),
@@ -1250,7 +1241,7 @@ shinyServer(function(input, output, session) {
         exe(codigo)
       }else{
         if (!(ncol(var.numericas(datos)) >= 2)) {
-          error.plot.tipos.variables(num = T)
+          error.variables(isolate(input$idioma), num = T)
         }
         return(NULL)
       }},error=function(e){
@@ -1428,7 +1419,7 @@ shinyServer(function(input, output, session) {
     tryCatch({ # Se corren los codigo
       isolate(eval(parse(text = cod.dt.mc)))
       output$txtDtMC <- renderPrint(print(exe("MC.dt.",input$split.dt)))
-      isolate(eval(parse(text = plot.MC.code())))
+      eval(parse(text = plot.MC.code()))
       output$plot.dt.mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",input$split.dt,")")))
       insert.report(paste0("mc.dt.",input$split.dt),
                     paste0("## Matriz de Confusión del Modelo Árboles de Decisión\n```{r}\n", cod.dt.mc,
@@ -1455,9 +1446,7 @@ shinyServer(function(input, output, session) {
       insert.report(paste0("ind.dt.",input$split.dt), paste0("## Índices Generales \n```{r}\n", cod.dt.ind, "\nindices.generales(MC.dt.",input$split.dt,")\n```"))
 
       nombres <- c("dtPrecGlob", "dtErrorGlob")
-      titulos <- c("Precisión Global", "Error Global")
-
-      fill.gauges(nombres, titulos, indices.dt)
+      fill.gauges(nombres, indices.dt)
 
       # Cambia la tabla con la indices de dt
       output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")),
@@ -1676,9 +1665,7 @@ shinyServer(function(input, output, session) {
       insert.report("ind.rf",paste0("## Índices Generales\n```{r}\n", cod.rf.ind, "\nindices.generales(MC.rf)\n```"))
 
       nombres <- c("rfPrecGlob", "rfErrorGlob")
-      titulos <- c("Precisión Global", "Error Global")
-
-      fill.gauges(nombres, titulos, indices.rf)
+      fill.gauges(nombres, indices.rf)
 
       # Cambia la tabla con la indices de rf
       output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")),
@@ -1914,9 +1901,7 @@ shinyServer(function(input, output, session) {
                     paste0("## Índices Generales del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
                            cod.b.ind, "\nindices.generales(MC.boosting.",input$tipo.boosting,")\n```"))
       nombres <- c("boostingPrecGlob", "boostingErrorGlob")
-      titulos <- c("Precisión Global", "Error Global")
-
-      fill.gauges(nombres, titulos, indices.boosting)
+      fill.gauges(nombres, indices.boosting)
 
       # Cambia la tabla con la indices de boosting
       output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING")),
@@ -2043,27 +2028,18 @@ shinyServer(function(input, output, session) {
     if("contentsPred2" %in% tablas){
     output$contentsPred <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
                                                                editable = F,
-                                                               pageLength = 10,
-                                                               buttons = F,
-                                                               extensions = list(), dom = "frtip",
                                                                scrollY = "25vh"),
                                         server = F)
     }
     if("contentsPred2" %in% tablas){
     output$contentsPred2 <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
                                                                 editable = F,
-                                                                pageLength = 10,
-                                                                buttons = F,
-                                                                extensions = list(), dom = "frtip",
                                                                 scrollY = "25vh"),
                                          server = F)
     }
     if("contentsPred3" %in% tablas){
       output$contentsPred3 <- DT::renderDT(renderizar.tabla.datos(datos.prueba.completos,
                                                                   editable = F,
-                                                                  pageLength = 10,
-                                                                  buttons = F,
-                                                                  extensions = list(), dom = "frtip",
                                                                   scrollY = "25vh"),
                                            server = T)
     }
@@ -2089,12 +2065,9 @@ shinyServer(function(input, output, session) {
     if(!is.null(predic.nuevos)){
       datos.aux.prueba <- crear.datos.np()
       output$PrediTablePN <- DT::renderDT(renderizar.tabla.datos(datos.aux.prueba,
-                                                                  editable = F,
-                                                                  pageLength = 10,
-                                                                  buttons = F,
-                                                                  dom = "frtip",
-                                                                  scrollY = "25vh"),
-                                           server = T)
+                                                                 editable = F,
+                                                                 scrollY = "25vh"),
+                                          server = T)
     }else{
       output$PrediTablePN <- DT::renderDT(DT::datatable(data.frame()))
     }
@@ -2156,11 +2129,9 @@ shinyServer(function(input, output, session) {
                         Tipo = c(1:ncol(datos.aprendizaje.completos)),
                         Activa = c(1:ncol(datos.aprendizaje.completos)))
       res$Tipo <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0(
-        '<select id="Predsel', i, contadorPN, '"> <option value="categorico">Categórico</option>
-        <option value="numerico" ', ifelse(class(datos.aprendizaje.completos[, i]) %in% c("numeric", "integer"),
-                                           ' selected="selected"', ""
-      ),
-      '>Numérico</option> <option value="disyuntivo">Disyuntivo</option> </select>'
+        '<select id="Predsel', i, contadorPN, '"> <option value="categorico">Categórico</option>',
+        '<option value="numerico" ', ifelse(class(datos.aprendizaje.completos[, i]) %in% c("numeric", "integer"),' selected="selected"', ""),'>Numérico</option>',
+        '<option value="disyuntivo">Disyuntivo</option> </select>'
       ))
       res$Activa <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0('<input type="checkbox" id="Predbox', i, contadorPN, '" checked/>'))
     } else {
@@ -2396,11 +2367,66 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # Termina la Sesion -------------------------------------------------------------------------------------------------------
+  # Cambiar Idioma ----------------------------------------------------------------------------------------------------------
 
+  #Elimina NULLs
+  dropNulls <- function (x) {
+    x[!vapply(x, is.null, FUN.VALUE = logical(1))]
+  }
+
+  # translates text into current language
+  tr <- function(text) {
+    sapply(text, function(s) {
+      ifelse(is.null(translation[[s]][[input$idioma]]), s, translation[[s]][[input$idioma]])
+    }, USE.NAMES = F)
+  }
+
+  updateLabelInput <- function (session, labelid, value = NULL) {
+    message <- dropNulls(list(labelid = labelid))
+    if(length(labelid) == 1) {
+      labelid <- list(labelid)
+    }
+    ifelse(is.null(value), sentvalue <- tr(labelid),
+            ifelse(length(value) == 1, sentvalue <- list(value), sentvalue <- value))
+    session$sendCustomMessage(type = 'updateLabel',
+                              message = list(ids = labelid, values = sentvalue))
+  }
+
+  observeEvent(input$idioma, {
+    updateLabelInput(session, c("idioma","selidioma","data","basico","resumen","normalidad",
+                                "dispersion","distribucion","correlacion","poderpred","reporte",
+                                "aprendizaje","acercade","comparacion","predicnuevos","knnl","dtl",
+                                "rfl","bl","svml","cargar","header","Rownames","eliminana","si","no",
+                                "cargarchivo","subir","trans","aplicar","separador","coma","puntocoma",
+                                "tab","separadordec","punto","subir","configuraciones","semilla",
+                                "habilitada","deshabilitada","seleccionarPredecir","propA","propP",
+                                "generar","descargar","dataA","dataP","numerico","categorico","disyuntivo",
+                                "resumenvar","selvar","plotnormal","opciones", "selcolor","selvars",
+                                "selcolores","codigo","codedist","numericas","categoricas","ejecutar","selmetodo",
+                                "seltipo","resultados","distpred","distpredcat","pares","denspred","generatem",
+                                "predm","mc","indices","gclasificacion","garbol","reglas","evolerror",
+                                "varImp","selkernel","kmax","escal"
+                                ))
+    # actualizar.tabla()
+    # updateinitSelects("selHoriz", 1:input$cant.kmeans.cluster)
+    # updateinitSelects("sel.Khoriz", 1:input$cant.kmeans.cluster)
+    # updateinitSelects("selVert", colnames(var.numericas(datos)))
+    # updateinitSelects("sel.Kvert", colnames(var.numericas(datos)))
+    # updatePlot$pca.cvc <- code.pca.cvp(input$cvc.metodo, tr("cvc"))
+
+    updatePlot$normal <- default.normal("datos", input$sel.normal, input$col.normal, tr("curvanormal"))
+    updatePlot$dya.cat <- def.code.cat(variable = input$sel.distribucion.cat, titulox = tr("cantidadcasos"), tituloy = tr("categorias"))
+    updatePlot$calc.normal <- default.calc.normal(labelsi = tr("positivo"),labelno=tr("negativo"),labelsin=tr("sinasimetria"))
+    updatePlot$poder.pred <- plot.code.poder.pred(variable.predecir, label= tr("distrelvar"))
+    updatePlot$poder.dens <- plot.numerico.dens(input$sel.density.poder,tr("denspodlab"))
+    updatePlot$poder.cat <- plot.code.dist.porc(input$sel.distribucion.poder,variable.predecir, label=tr("distpodcat"))
+  })
+
+  # Termina la Sesion -------------------------------------------------------------------------------------------------------
   session$onSessionEnded(function() {
     rm(envir = .GlobalEnv, list = ls(envir = .GlobalEnv))
     unlink("figure", recursive = T)
+    recover.cat()
     stopApp()
   })
 

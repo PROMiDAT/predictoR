@@ -45,17 +45,14 @@ cod.indices <- function(){
    if(1 == dim(MC)[2]) {
       MC <- cbind(MC, 0)
    }
-
    precision.global <- (sum(diag(MC)) / sum(MC)) * 100
    error.global <- (1 - (sum(diag(MC)) / sum(MC))) * 100
    precision.clase <- diag(MC)/rowSums(MC) * 100
    error.clase <- 100 - precision.clase
-
-   res <- list( precision.global = precision.global,
-   error.global = error.global,
-   precision.clase = precision.clase,
-   error.clase = error.clase)
-   return(res)
+   return(list(precision.global = precision.global,
+               error.global = error.global,
+               precision.clase = precision.clase,
+               error.clase = error.clase))
 }')
 }
 
@@ -77,18 +74,18 @@ indices.error.table <- function(indices, nombre = ""){
 #Crea la tabla de precisiones que se grafica en los indices de todos los modelos
 indices.prec.table <- function(indices, nombre = ""){
   prec <- rbind(indices[[3]])
-  colnames(prec) <- paste0(c("Precisión."),colnames(prec))
+  colnames(prec) <- paste0(tr("prec"),".",colnames(prec))
   row.names(prec) <- nombre
   return(prec)
 }
 
 # Hace el grafico de la matriz de confusion
 plot.MC.code <- function(cm) {
-  return("
+  return(paste0("
 plot.MC <<- function(cm) {
   par(mar = c(2, 2, 2, 2))
   plot(c(1, 600), c(-100, 500), type = 'n', xlab = '', ylab = '', xaxt = 'n', yaxt = 'n')
-  title('Matriz de Confusión', cex.main = 2)
+  title('",tr("mc"),"', cex.main = 2)
 
   start <- 80
   len <- 500 - start
@@ -103,7 +100,7 @@ plot.MC <<- function(cm) {
   x2 <- (x1 <- start) + ancho
   y2 <- (y1 <- len) - alto
 
-  text(310, 485, 'Predición', cex = 1.3, font = 2)
+  text(310, 485, '",tr("pred"),"', cex = 1.3, font = 2)
   text(start - 55, 250, 'Real', cex = 1.3, srt = 90, font = 2)
 
   for (i in 0:(n.class - 1)) {
@@ -126,12 +123,23 @@ plot.MC <<- function(cm) {
   text(mean(c((x2 + (i + 1) * (ancho + 3)), (x1 + (i + 1) * (ancho + 3)))), y1 + 20, names.class[i + 2], cex = 1.2)
   text(mean(c((x2 + (i + 2) * (ancho + 3)), (x1 + (i + 2) * (ancho + 3)))), y1 + 20, names.class[i + 3], cex = 1.2)
   text(mean(c((x2 + (i + 3) * (ancho + 3)), (x1 + (i + 3) * (ancho + 3)))), y1 + 20, names.class[i + 4], cex = 1.2)
-}")
+}"))
 }
 
 as.string.c <- function(vect){
   return(paste0("c('",paste0(vect, collapse = "','"),"')"))
 }
+
+# createLog <- function(titulo = "", code = ""){
+#   paste0("\n\n## ", titulo, "\n\n#### Interpretación\n```{r}\n", code, "\n```")
+# }
+
+extract.code <- function(funcion) {
+  code <- paste(head(eval(parse(text = funcion)), 100), collapse = "\n")
+  code <- paste(funcion, "<-", code)
+  return(code)
+}
+
 
 
 # Pagina de Cargar y Transformar Datos --------------------------------------------------------------------------------------
@@ -219,81 +227,113 @@ cod.resum <- function(data = "datos"){
 }
 
 #Genera el resumen numerico de una variable
-resumen.numerico <- function(data, variable){
-  salida <- ""
-  datos.numericos <- list(Q1 = list(id = "q1", Label = "Primer Cuartil",
-                                    Value = format(round(quantile(data[, variable], .25), 3), scientific = F),
-                                    color = "green"),
-                          Mediana = list(id = "mediana", Label = "Mediana",
-                                         Value = format(round(median(data[, variable]), 3), scientific = F),
-                                         color = "orange"),
-                          Q3 = list(id = "q3", Label = "Tercer Cuartil",
-                                    Value = format(round(quantile(data[, variable], .75), 3), scientific = F),
-                                    color = "maroon"),
-                          Minimo = list(id = "minimo", Label = "Mínimo",
-                                        Value = format(round(min(data[, variable]), 3), scientific = F),
-                                        color = "red"),
-                          Promedio = list(id = "promedio", Label = "Promedio",
-                                          Value = format(round(mean(data[, variable]), 3), scientific = F),
-                                          color = "blue"),
-                          Maximo = list(id = "maximo", Label = "Máximo",
-                                        Value = format(round(max(data[, variable]), 3), scientific = F),
-                                        color = "purple"),
-                          DS <- list(id = "ds", Label = "Desviación Estandar",
-                                     Value = format(round(sd(data[, variable]), 3), scientific = FALSE, nsmall = 3),
-                                     color = "yellow"))
+resumen.numerico <- function(data, variable) {
+  datos.numericos <- list(
+    Q1 = list(
+      id = "q1", Label = tags$span(`data-id`="q1", tr("q1")), color = "green",
+      Value = format(round(quantile(data[, variable], .25), 3), scientific = F)
+    ),
+    Mediana = list(
+      id = "mediana", Label = tags$span(`data-id`="mediana", tr("mediana")),
+      Value = format(round(median(data[, variable]), 3), scientific = F),
+      color = "orange"),
+    Q3 = list(
+      id = "q3", Label = tags$span(`data-id`="q3", tr("q3")), color = "maroon",
+      Value = format(round(quantile(data[, variable], .75), 3), scientific = F)
+    ),
+    Minimo = list(
+      id = "minimo", Label = tags$span(`data-id`="minimo", tr("minimo")),
+      Value = format(round(min(data[, variable]), 3), scientific = F),
+      color = "red"),
+    Promedio = list(
+      id = "promedio", Label = tags$span(`data-id`="promedio", tr("promedio")),
+      Value = format(round(mean(data[, variable]), 3), scientific = F),
+      color = "blue"),
+    Maximo = list(
+      id = "maximo", Label = tags$span(`data-id`="maximo", tr("maximo")),
+      Value = format(round(max(data[, variable]), 3), scientific = F),
+      color = "purple"),
+    DS <- list(
+      id = "ds", Label = tags$span(`data-id`="ds", tr("ds")), color = "yellow",
+      Value = format(round(sd(data[, variable]), 3), scientific = FALSE, nsmall = 3)
+    )
+  )
 
-  for (calculo in datos.numericos) {
-    salida <- paste0(salida, "<div class='shiny-html-output col-sm-6 shiny-bound-output' id='", calculo$id,
-                     "'> <div class='small-box bg-", calculo$color,"'> <div class='inner'>",
-                     "<h3>", calculo$Value, "</h3> <p>", calculo$Label, "</p></div> <div class='icon-large'> <i class='",
-                     calculo$icon, "'></i></div></div></div>")
-  }
-  return(salida)
+  res <- lapply(datos.numericos, function(i) {
+    tags$div(
+      class='shiny-html-output col-sm-6 shiny-bound-output', id=i$id,
+      tags$div(
+        class=paste0('small-box bg-', i$color),
+        tags$div(class='inner', tags$h3(i$Value), tags$p(i$Label)),
+        tags$div(class='icon-large', tags$i(class=i$icon))
+      )
+    )
+  })
+  return(res)
 }
 
 #Genera el resumen categorico de una variable
 resumen.categorico <- function(data, variable){
-  salida <- ""
-  color <- c("red","yellow","aqua","navy","teal","olive","purple","maroon","black","blue","lime","orange","light-blue","green","fuchsia")
-  datos.categoricos <- summary(data[, variable])
-  for (i in 1:length(datos.categoricos)) {
-    salida <- paste0(salida, "<div class='shiny-html-output col-sm-6 shiny-bound-output' id='", variable, i,
-                     "'> <div class='small-box bg-", sample(color, 1), "'> <div class='inner'>",
-                     "<h3>", datos.categoricos[i], "</h3> <p>", levels(data[, variable])[i],
-                     "</p></div> <div class='icon-large'> <i class=''></i></div></div></div>")
-  }
-  return(salida)
+  color <- c("red","yellow","aqua","navy","teal","olive","purple","maroon",
+             "black","blue","lime","orange","light-blue","green","fuchsia")
+  datos.categoricos <- levels(data[, variable])
+  res <- lapply(datos.categoricos, function(i) {
+    tags$div(
+      class='shiny-html-output col-sm-6 shiny-bound-output', id=paste0(variable, i),
+      tags$div(
+        class=paste0('small-box bg-', sample(color, 1)),
+        tags$div(class='inner', tags$h3(summary(data[, variable])[i]), tags$p(i))
+      )
+    )
+  })
+  return(res)
 }
 
 # Pagina del Test de Normalidad ---------------------------------------------------------------------------------------------
 
 #Codigo de la genracion de la curva normal (test de normalidad)
-default.normal <- function(data = "datos", vars = NULL, color = "#00FF22AA"){
+default.normal <- function(data = "datos", vars = NULL, color = "#00FF22AA", labelcurva = "Curva Normal"){
   if(is.null(vars)){
     return(NULL)
   } else {
-    return(paste0("promedio <- mean(", data, "[, '", vars, "']) \n",
-                  "desviacion <- sd(", data, "[, '", vars, "']) \n",
-                  "values <- dnorm(", data, "[, '", vars, "'], mean = promedio, sd = desviacion) \n",
-                  "values <- c(values, hist(", data, "[, '", vars, "'],  plot = F)$density) \n",
-                  "hist(", data, "[, '", vars, "'], col = '", color, "', border=F, axes=F,\n",
-                  "  freq = F, ylim = range(0, max(values)), \n",
-                  "  main = paste0('Test de normalidad de la variable ','", vars, "')) \n",
-                  "axis(1, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025) \n",
-                  "axis(2, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025) \n",
-                  "curve(dnorm(x, mean = promedio, sd = desviacion), add=T, col='blue', lwd=2)\n",
-                  "legend('bottom', legend = 'Curva Normal', col = 'blue', lty=1, cex=1.5)"))
+    return(paste0(
+      "promedio <- mean(", data, "[, '", vars, "']) \n",
+      "desviacion <- sd(", data, "[, '", vars, "']) \n",
+      "values <- dnorm(", data, "[, '", vars, "'], mean = promedio, sd = desviacion) \n",
+      "values <- c(values, hist(", data, "[, '", vars, "'],  plot = F)$density) \n",
+      "hist(", data, "[, '", vars, "'], col = '", color, "', border=F, axes=F,\n",
+      "  freq = F, ylim = range(0, max(values)), ylab = '',xlab = '",vars,"', \n",
+      "  main = '", vars, "') \n",
+      "axis(1, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025) \n",
+      "axis(2, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025) \n",
+      "curve(dnorm(x, mean = promedio, sd = desviacion), add=T, col='blue', lwd=2)\n",
+      "legend('bottom', legend = '", labelcurva, "', col = 'blue', lty=1, cex=1.5)"))
   }
 }
 
+fisher.calc <- function (x, na.rm = FALSE, ...) {
+  if (!is.numeric(x)) {
+    stop("argument 'x' is must be numeric")
+  }
+  if (na.rm)
+    x <- x[!is.na(x)]
+  nx <- length(x)
+
+  sk <- sum((x - mean(x))^3/stats::sd(x)^3)/nx
+
+  return(sk)
+}
+
 #Genera  la tabla de normalidad
-default.calc.normal <- function(data = "datos"){
-  return(paste0("calc <- lapply(var.numericas(datos), function(i) modeest::skewness(i)[1]) \n",
-                "calc <- as.data.frame(calc) \n",
-                "calc <- rbind(calc, lapply(calc, function(i) ifelse(i > 0, 'Positiva', \n",
-                "                                                           ifelse(i < 0, 'Negativa', 'Sin Asimetría')))) \n",
-                "calc <- t(calc)\ncolnames(calc) <- c('Cálculo de Fisher', 'Asimetría')\ncalc"))
+default.calc.normal <- function(
+  data = "datos", labelsi = "Positiva", labelno = "Negativa",
+  labelsin = "Sin Asimetría") {
+  return(paste0(
+    "calc <- lapply(var.numericas(", data,"), function(i) fisher.calc(i)[1]) \n",
+    "calc <- as.data.frame(calc) \n",
+    "calc <- rbind(calc, lapply(calc, function(i) ifelse(i > 0, '", labelsi,
+    "',\n  ifelse(i < 0, '", labelno, "', '", labelsin, "')))) \n",
+    "calc <- t(calc)\ncalc"))
 }
 
 # Pagina de Dispersion ------------------------------------------------------------------------------------------------------
@@ -304,7 +344,7 @@ default.disp <- function(data = "datos", vars = NULL, color = "#FF0000AA"){
     return(NULL)
   } else if(length(vars) == 2) {
     return(paste0("ggplot(data = ", data, ", aes(x = ", vars[1], ", y = ", vars[2], ", label = rownames(", data, "))) +
-geom_point(color = '", color, "', size = 3) + geom_text(vjust = -0.7)"))
+geom_point(color = '", color, "', size = 3) + geom_text(vjust = -0.7) + theme_minimal()"))
   } else{
     return(paste0("scatterplot3d(", data, "[, '", vars[1], "'], ", data, "[, '",
                   vars[2], "'], ", data, "[, '", vars[3], "'], pch = 16, color = '", color, "')"))
@@ -319,36 +359,35 @@ def.code.num <- function(data = "datos", variable = "input$sel.distribucion", co
 }
 
 #Llama a la funcion que crea la distribuccion categorica
-def.code.cat <- function(data = "datos", variable = "input$sel.distribucion", color = 'input$col.dist'){
-  return(paste0("distribucion.categorico(", data, "[, ", variable,"], color = ", color, ")"))
+def.code.cat <- function(data = "datos", variable, titulox = tr("cantidadcasos"),
+  tituloy = tr("categorias")) {
+  paste0("distribucion.categorico(", data, "[, '", variable,"']) + ",
+         "labs(title = '", variable, "', x = '",titulox, "', y = '", tituloy, "')")
 }
 
 #Hace el grafico de la distribucion numerica
-default.func.num <- function(){
-  return(paste0("distribucion.numerico <<- function(var, nombre.var, color){
+distribucion.numerico <- function(var, nombre.var, color){
   nf <- graphics::layout(mat = matrix(c(1, 2), 2, 1, byrow=TRUE),  height = c(3,1))
   par(mar=c(3.1, 3.1, 1.1, 2.1))
-  hist(var, col = color, border=F, main = paste0('Distribución y atipicidad de la variable ', nombre.var), axes=F)
+  hist(var, col = color, border=F, axes=F, main = nombre.var)
   axis(1, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025)
   axis(2, col=par('bg'), col.ticks='grey81', lwd.ticks=1, tck=-0.025)
-  boxplot(var, col = color, boxcol = color, boxlty = 1, boxlwd = 3, boxwex = 1.5,
-  edcol = color, medlty = 1, medlwd = 8, medcol = color, whiskcol = color, whisklty = 3,
-  staplecol = color, staplelty = 1, staplelwd = 3, horizontal=TRUE, outline=TRUE,
-  frame=F, whisklwd = 2.5, outpch = 20, outcex = 1.5, outcol = 'red', axes=F)
-}"))
+  boxplot(var, col = color, boxcol = color, boxlty = 1, boxlwd = 3,
+          boxwex = 1.5, edcol = color, medlty = 1, medlwd = 8, axes=F,
+          medcol = color, whiskcol = color, whisklty = 3, staplecol = color,
+          staplelty = 1, staplelwd = 3, horizontal=TRUE, outline=TRUE,
+          frame=F, whisklwd = 2.5, outpch = 20, outcex = 1.5, outcol = 'red')
 }
 
 #Hace el grafico de la distribucion categorica
-default.func.cat <- function(){
-  return(paste0("distribucion.categorico <<- function(var, color = 'input$col.dist'){
-  colores <- sapply(c(1:length(levels(var))), function(i) rgb(sample(0:255, 1), sample(0:255, 1), sample(0:255, 1), 180, maxColorValue = 255))
+distribucion.categorico <- function(var) {
+  colores <- sapply(levels(var),
+                    function(i) rgb(runif(1), runif(1), runif(1), 0.8))
   data <- data.frame(label = levels(var), value = summary(var))
-  plot(ggplot(data, aes(label, value)) +
-  geom_bar(stat = 'identity', fill = colores) +
-  geom_text(aes(label = value, y = value), vjust = -0.5, size = 4) +
-  theme_minimal() +
-  labs(title = 'Distribución', y = 'Cantidad de casos', x = 'Categorias'))
-}"))
+  ggplot(data, aes(label, value)) +
+    geom_bar(stat = 'identity', fill = colores) +
+    geom_text(aes(label = value, y = value), vjust = -0.5, size = 4) +
+    theme_minimal()
 }
 
 # Pagina de Correlacion -----------------------------------------------------------------------------------------------------
@@ -369,14 +408,16 @@ correlaciones <- function(metodo = 'circle', tipo = "lower"){
 #Calcula proporciones
 dist.x.predecir <- function(data, variable, variable.predecir) {
   data. <- data %>%
-    group_by_(variable, variable.predecir) %>%
-    summarise(count = n()) %>%
-    mutate(prop = round(count/sum(count),4))
+    dplyr::group_by_(variable, variable.predecir) %>%
+    dplyr::summarise(count = n()) %>%
+    dplyr::group_by_(variable) %>%
+    dplyr::mutate(prop = round(count/sum(count),4))
   return(data.)
 }
 
 #Hace la grafica de proporciones segun la variable predictiva
-plot.code.dist.porc <- function(variable, nom.variable, var.predecir, nom.predecir, colores = NA, label.size = 9.5){
+plot.code.dist.porc <- function(variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
+  label = str_interp(label,list(X=variable,Y=var.predecir))
   return(paste0("colores <- gg_color_hue(length(unique(datos[,'",var.predecir,"'])))
 label.size <- ",label.size," - length(unique(datos[,'",variable,"']))
 label.size <- ifelse(label.size < 3, 3, label.size)
@@ -390,13 +431,13 @@ theme(text = element_text(size=15)) +
 scale_fill_manual(values = colores) +
 scale_y_continuous(labels = scales::percent)+
 coord_flip() +
-labs(title = 'Distribución relativa de la variable ",nom.variable," según la ",nom.predecir,"', x = '', y = '') +
+labs(title = '",label,"', x = '', y = '') +
 guides(fill = guide_legend(reverse=T)) +
 theme(legend.position = 'top', legend.title = element_blank())
 "))
 }
 
-plot.code.poder.pred <- function(var.predecir, colores = NA, label.size = 9.5){
+plot.code.poder.pred <- function(var.predecir, label.size = 9.5, label=""){
   return(paste0("colores <- gg_color_hue(length(unique(datos[,'",var.predecir,"'])))
 label.size <- ",label.size," - length(unique(datos[,'",var.predecir,"']))
 label.size <- ifelse(label.size < 3, 3, label.size)
@@ -410,7 +451,7 @@ theme(text = element_text(size=15)) +
 scale_fill_manual(values = colores) +
 scale_y_continuous(labels = scales::percent)+
 coord_flip()+
-labs(title = 'Distribución relativa de la variable ",var.predecir,"', x = '', y = '') +
+labs(title = '",label," \"",var.predecir,"\"', x = '', y = '') +
 guides(fill = guide_legend(reverse=T)) +
 theme(legend.position = 'top', legend.title = element_blank())
 "))
@@ -427,13 +468,14 @@ legend('topright', fill = unique(col[datos[,'",variable.predecir,"']]), legend =
 }
 
 #Grafica la densidad de las variables numericas
-plot.numerico.dens <- function(variable){
+plot.numerico.dens <- function(variable, label = "${X} ${Y}"){
+  label = str_interp(label,list(X=variable,Y=variable.predecir))
   return(paste0("ggplot(datos, aes_string('",variable,"', fill = '",variable.predecir,"')) +
 geom_density( alpha = .85) +
 theme_minimal() +
 theme(text = element_text(size=15)) +
 scale_fill_manual(values = gg_color_hue(length(levels(datos[,'",variable.predecir,"'])))) +
-labs(title = 'Densidad de la variable ",variable," según ",variable.predecir,"', y = '', x = '') +
+labs(title = '",label,"', y = '', x = '') +
 theme(legend.position = 'top', legend.title = element_blank(), text = element_text(size = 15))"))
 }
 
@@ -864,7 +906,7 @@ colnames(data)[length(colnames(data))] <- paste0(variable, '.', categoria)
 }
 }
 return(data)
-}\n", default.func.num(), "\n", default.func.cat(), "
+}\n\n
 ```
 \n", codigo.usuario, ""))
 }
@@ -941,10 +983,10 @@ semilla <<- FALSE
 
 
 correlacion <<- NULL
-cod.disp <- default.disp()
-cod.cor <- correlaciones()
-cod.dya.cat <- def.code.cat()
-cod.dya.num <- def.code.num()
+#cod.disp <- default.disp()
+#cod.cor <- correlaciones()
+#cod.dya.cat <- def.code.cat()
+#cod.dya.num <- def.code.num()
 
 cod.poder.cat <- NULL
 cod.poder.num <- NULL
