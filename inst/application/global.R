@@ -35,7 +35,7 @@ new.gauge <- function(id, val, lab){
                 gauge(round(",val,",2),
                 min = 0, max = 100, symbol = '%',
                 label = '",lab,"',
-                gaugeSectors( success = c(0, 100)))
+                gaugeSectors(success = c(0, 100)))
 })"))
 }
 

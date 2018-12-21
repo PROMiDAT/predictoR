@@ -984,64 +984,65 @@ shinyServer(function(input, output, session) {
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.knn(2)
       showNotification(paste0("Error al ejecutar la prediccion knn : ", e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la matriz de confusion
   ejecutar.knn.mc <- function() {
-    tryCatch({ # Se corren los codigo
-      eval(parse(text = cod.knn.mc))
-      output$txtknnMC <- renderPrint(print(exe("MC.knn.",input$kernel.knn)))
+    if(exists(paste0("prediccion.knn.",input$kernel.knn))){
+      tryCatch({ # Se corren los codigo
+        eval(parse(text = cod.knn.mc))
+        output$txtknnMC <- renderPrint(print(exe("MC.knn.",input$kernel.knn)))
 
-      eval(parse(text = plot.MC.code()))
-      output$plot.knn.mc <- renderPlot(exe("plot.MC(MC.knn.",input$kernel.knn,")"))
-      insert.report(paste0("mc.knn.",input$kernel.knn),
-                    paste0("## Matriz de confusión del Modelo KNN - ",
-                           input$kernel.knn,"\n```{r}\n", cod.knn.mc,
-                           "\nMC.knn.",input$kernel.knn,
-                           "\n```\n```{r}\nplot.MC(MC.knn.",input$kernel.knn,")\n",
-                           "MCs[['KNN - ",input$kernel.knn,"']] <<- MC.knn.",input$kernel.knn,"\n```"))
-      MCs[[paste0("KNN - ",input$kernel.knn)]] <<- exe("MC.knn.",input$kernel.knn)
-      actualizar.selector.comparativa()
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.knn(3)
-      showNotification(paste0("Error al ejecutar la matriz knn: ",e), duration = 15, type = "error")
+        eval(parse(text = plot.MC.code()))
+        output$plot.knn.mc <- renderPlot(exe("plot.MC(MC.knn.",input$kernel.knn,")"))
+        insert.report(paste0("mc.knn.",input$kernel.knn),
+                      paste0("## Matriz de confusión del Modelo KNN - ",
+                             input$kernel.knn,"\n```{r}\n", cod.knn.mc,
+                             "\nMC.knn.",input$kernel.knn,
+                             "\n```\n```{r}\nplot.MC(MC.knn.",input$kernel.knn,")\n",
+                             "MCs[['KNN - ",input$kernel.knn,"']] <<- MC.knn.",input$kernel.knn,"\n```"))
+        MCs[[paste0("KNN - ",input$kernel.knn)]] <<- exe("MC.knn.",input$kernel.knn)
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.knn(3)
+        showNotification(paste0("Error al ejecutar la matriz knn: ",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # Genera los indices
-  ejecutar.knn.ind <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.knn.ind)))
+  ejecutar.knn.ind <- function(){
+    if(exists(paste0("MC.knn.",input$kernel.knn))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.knn.ind)))
 
-      MC <- exe("MC.knn.",input$kernel.knn)
-      indices.knn <- indices.generales(MC)
-      eval(parse(text = paste0("indices.knn.",input$kernel.knn, "<<- indices.knn")))
-      indices.g("knn", MC)
+        MC <- exe("MC.knn.",input$kernel.knn)
+        indices.knn <- indices.generales(MC)
+        eval(parse(text = paste0("indices.knn.",input$kernel.knn, "<<- indices.knn")))
+        indices.g("knn", MC)
 
-      insert.report(paste0("ind.knn.",input$kernel.knn),
-                    paste0("## Índices Generales del Modelo KNN - ",input$kernel.knn,"\n```{r}\n",
-                           cod.knn.ind, "\nindices.generales(MC.knn.",input$kernel.knn,")\n```"))
+        insert.report(paste0("ind.knn.",input$kernel.knn),
+                      paste0("## Índices Generales del Modelo KNN - ",input$kernel.knn,"\n```{r}\n",
+                             cod.knn.ind, "\nindices.generales(MC.knn.",input$kernel.knn,")\n```"))
 
-      nombres <- c("knnPrecGlob", "knnErrorGlob")
-      fill.gauges(nombres, indices.knn)
+        nombres <- c("knnPrecGlob", "knnErrorGlob")
+        fill.gauges(nombres, indices.knn)
 
-      # Cambia la tabla con la indices de knn
-      output$knnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.knn,"KNN")),
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
+        # Cambia la tabla con la indices de knn
+        output$knnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.knn,"KNN")),
+                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
-      output$knnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.knn,"KNN")),
-                                                  bordered = T, width = "100%", align = "c", digits = 2)
+        output$knnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.knn,"KNN")),
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.knn(4)
-      showNotification(paste0("Error al ejecutar los indices: ",e), duration = 15, type = "error")
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.knn(4)
+        showNotification(paste0("Error al ejecutar los indices: ",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # PAGINA DE SVM -----------------------------------------------------------------------------------------------------------
@@ -1179,56 +1180,58 @@ shinyServer(function(input, output, session) {
   }
 
   # Genera la matriz de confusion
-  ejecutar.svm.mc <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.svm.mc)))
-      output$txtSvmMC <- renderPrint(exe("print(MC.svm.",input$kernel.svm,")"))
-      isolate(eval(parse(text = plot.MC.code())))
-      output$plot.svm.mc <- renderPlot(exe("plot.MC(MC.svm.",input$kernel.svm,")"))
-      insert.report(paste0("mc.svm.",input$kernel.svm),
-                    paste0("## Matriz de Confusión del Modelo SVM - ",input$kernel.svm,"\n```{r}\n",
-                           cod.svm.mc, "\nMC.svm.",input$kernel.svm,"\n```\n```{r}\nplot.MC(MC.svm.",input$kernel.svm,")\n",
-                           "MCs[['SVM -",input$kernel.svm,"']] <<- MC.svm.",input$kernel.svm,"\n```"))
+  ejecutar.svm.mc <- function(){
+    if(exists(paste0("prediccion.svm.",input$kernel.svm))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.svm.mc)))
+        output$txtSvmMC <- renderPrint(exe("print(MC.svm.",input$kernel.svm,")"))
+        isolate(eval(parse(text = plot.MC.code())))
+        output$plot.svm.mc <- renderPlot(exe("plot.MC(MC.svm.",input$kernel.svm,")"))
+        insert.report(paste0("mc.svm.",input$kernel.svm),
+                      paste0("## Matriz de Confusión del Modelo SVM - ",input$kernel.svm,"\n```{r}\n",
+                             cod.svm.mc, "\nMC.svm.",input$kernel.svm,"\n```\n```{r}\nplot.MC(MC.svm.",input$kernel.svm,")\n",
+                             "MCs[['SVM -",input$kernel.svm,"']] <<- MC.svm.",input$kernel.svm,"\n```"))
 
-      MCs[[paste0("SVM -",input$kernel.svm)]] <<- exe("MC.svm.",input$kernel.svm)
-      actualizar.selector.comparativa()
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.svm(3)
-      showNotification(paste0("Error al ejecutar la matriz svm:",e), duration = 15, type = "error")
+        MCs[[paste0("SVM -",input$kernel.svm)]] <<- exe("MC.svm.",input$kernel.svm)
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.svm(3)
+        showNotification(paste0("Error al ejecutar la matriz svm:",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # Genera los indices
-  ejecutar.svm.ind <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.svm.ind)))
+  ejecutar.svm.ind <- function(){
+    if(exists(paste0("MC.svm.",input$kernel.svm))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.svm.ind)))
 
-      MC <- exe("MC.svm.",input$kernel.svm)
-      indices.svm <- indices.generales(MC)
-      eval(parse(text = paste0("indices.svm.",input$kernel.svm, "<<- indices.svm")))
-      indices.g("svm", MC)
+        MC <- exe("MC.svm.",input$kernel.svm)
+        indices.svm <- indices.generales(MC)
+        eval(parse(text = paste0("indices.svm.",input$kernel.svm, "<<- indices.svm")))
+        indices.g("svm", MC)
 
-      insert.report(paste0("ind.svm.",input$kernel.svm),
-                    paste0("## Índices Generales del modelo SVM  - ",input$kernel.svm," \n```{r}\n",
-                           cod.svm.ind, "\nindices.generales(MC.svm.",input$kernel.svm,")\n```"))
+        insert.report(paste0("ind.svm.",input$kernel.svm),
+                      paste0("## Índices Generales del modelo SVM  - ",input$kernel.svm," \n```{r}\n",
+                             cod.svm.ind, "\nindices.generales(MC.svm.",input$kernel.svm,")\n```"))
 
-      nombres <- c("svmPrecGlob", "svmErrorGlob")
-      fill.gauges(nombres, indices.svm)
+        nombres <- c("svmPrecGlob", "svmErrorGlob")
+        fill.gauges(nombres, indices.svm)
 
-      # Cambia la tabla con la indices de svm
-      output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM")),
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
+        # Cambia la tabla con la indices de svm
+        output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM")),
+                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
-      output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")),
-                                                  bordered = T, width = "100%", align = "c", digits = 2)
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.knn(4)
-      showNotification(paste0("Error al ejecutar los indices svm: ",e), duration = 15, type = "error")
+        output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")),
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.knn(4)
+        showNotification(paste0("Error al ejecutar los indices svm: ",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   #Hace el grafico de svm
@@ -1416,50 +1419,52 @@ shinyServer(function(input, output, session) {
 
   # Genera la matriz de confusion
   ejecutar.dt.mc <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.dt.mc)))
-      output$txtDtMC <- renderPrint(print(exe("MC.dt.",input$split.dt)))
-      eval(parse(text = plot.MC.code()))
-      output$plot.dt.mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",input$split.dt,")")))
-      insert.report(paste0("mc.dt.",input$split.dt),
-                    paste0("## Matriz de Confusión del Modelo Árboles de Decisión\n```{r}\n", cod.dt.mc,
-                           "\nMC.dt.",input$split.dt,"\n```\n```{r}\nplot.MC(MC.dt.",input$split.dt,")\n",
-                           "MCs[['Árboles de Decisión - ",input$split.dt,"']] <<- MC.dt.",input$split.dt,"\n```"))
+    if(exists(paste0("prediccion.dt.",input$split.dt))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.dt.mc)))
+        output$txtDtMC <- renderPrint(print(exe("MC.dt.",input$split.dt)))
+        eval(parse(text = plot.MC.code()))
+        output$plot.dt.mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",input$split.dt,")")))
+        insert.report(paste0("mc.dt.",input$split.dt),
+                      paste0("## Matriz de Confusión del Modelo Árboles de Decisión\n```{r}\n", cod.dt.mc,
+                             "\nMC.dt.",input$split.dt,"\n```\n```{r}\nplot.MC(MC.dt.",input$split.dt,")\n",
+                             "MCs[['Árboles de Decisión - ",input$split.dt,"']] <<- MC.dt.",input$split.dt,"\n```"))
 
-      MCs[[paste0("Árboles de Decisión - ",input$split.dt)]] <<- exe("MC.dt.",input$split.dt)
-      actualizar.selector.comparativa()
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.dt(3)
-      showNotification(paste0("Error al ejecutar la matriz dt :", e), duration = 15, type = "error")
+        MCs[[paste0("Árboles de Decisión - ",input$split.dt)]] <<- exe("MC.dt.",input$split.dt)
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.dt(3)
+        showNotification(paste0("Error al ejecutar la matriz dt :", e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # Genera los indices
   ejecutar.dt.ind <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.dt.ind)))
-      indices.dt <<- indices.generales(exe("MC.dt.",input$split.dt))
-      indices.g("dt", exe("MC.dt.",input$split.dt))
+    if(exists(paste0("MC.dt.",input$split.dt))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.dt.ind)))
+        indices.dt <<- indices.generales(exe("MC.dt.",input$split.dt))
+        indices.g("dt", exe("MC.dt.",input$split.dt))
 
-      insert.report(paste0("ind.dt.",input$split.dt), paste0("## Índices Generales \n```{r}\n", cod.dt.ind, "\nindices.generales(MC.dt.",input$split.dt,")\n```"))
+        insert.report(paste0("ind.dt.",input$split.dt), paste0("## Índices Generales \n```{r}\n", cod.dt.ind, "\nindices.generales(MC.dt.",input$split.dt,")\n```"))
 
-      nombres <- c("dtPrecGlob", "dtErrorGlob")
-      fill.gauges(nombres, indices.dt)
+        nombres <- c("dtPrecGlob", "dtErrorGlob")
+        fill.gauges(nombres, indices.dt)
 
-      # Cambia la tabla con la indices de dt
-      output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")),
-                                                  bordered = T, width = "100%", align = "c", digits = 2)
+        # Cambia la tabla con la indices de dt
+        output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")),
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
-      output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")),
-                                                 bordered = T, width = "100%", align = "c", digits = 2)
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.dt(4)
-      showNotification(paste0("Error al ejecutar los indices dt :",e), duration = 15, type = "error")
+        output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")),
+                                                   bordered = T, width = "100%", align = "c", digits = 2)
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.dt(4)
+        showNotification(paste0("Error al ejecutar los indices dt :",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # PAGINA DE RF ------------------------------------------------------------------------------------------------------------
@@ -1620,7 +1625,7 @@ shinyServer(function(input, output, session) {
       isolate(eval(parse(text = cod.rf.pred)))
       scores[["Bosques Aleatorios"]] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = "prob")
       # Cambia la tabla con la prediccion de rf
-      output$rfPrediTable <- DT::renderDataTable(obj.predic(prediccion.rf),server = FALSE)
+      output$rfPrediTable <- DT::renderDataTable(obj.predic(prediccion.rf), server = FALSE)
       insert.report("pred.rf",
                     paste0("## Predicción del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.pred,
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.rf)))\n",
@@ -1630,56 +1635,57 @@ shinyServer(function(input, output, session) {
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rf(2)
       showNotification(paste0("Error al ejecutar la prediccion rf :", e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la matriz de confusion
   ejecutar.rf.mc <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.rf.mc)))
-      output$txtRfMC <- renderPrint(print(MC.rf))
-      isolate(eval(parse(text = plot.MC.code())))
-      output$plot.rf.mc <- renderPlot(isolate(eval(parse(text = "plot.MC(MC.rf)"))))
-      insert.report("mc.rf",paste0("## Matriz de Confusión del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.mc,
-                                   "\nMC.rf\n```\n```{r}\nplot.MC(MC.rf)\n",
-                                   "MCs[['Bosques Aleatorios']] <<- MC.rf\n```"))
+    if(exists("prediccion.rf")){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.rf.mc)))
+        output$txtRfMC <- renderPrint(print(MC.rf))
+        isolate(eval(parse(text = plot.MC.code())))
+        output$plot.rf.mc <- renderPlot(isolate(eval(parse(text = "plot.MC(MC.rf)"))))
+        insert.report("mc.rf",paste0("## Matriz de Confusión del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.mc,
+                                     "\nMC.rf\n```\n```{r}\nplot.MC(MC.rf)\n",
+                                     "MCs[['Bosques Aleatorios']] <<- MC.rf\n```"))
 
-      MCs[["Bosques Aleatorios"]] <<- MC.rf
-      actualizar.selector.comparativa()
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.rf(3)
-      showNotification(paste0("Error al ejecutar la matriz rf:",e), duration = 15, type = "error")
+        MCs[["Bosques Aleatorios"]] <<- MC.rf
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.rf(3)
+        showNotification(paste0("Error al ejecutar la matriz rf:",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # Genera los indices
   ejecutar.rf.ind <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.rf.ind)))
-      indices.rf <<- indices.generales(MC.rf)
-      indices.g("rf", MC.rf)
+    if(exists("MC.rf")){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.rf.ind)))
+        indices.rf <<- indices.generales(MC.rf)
+        indices.g("rf", MC.rf)
 
-      insert.report("ind.rf",paste0("## Índices Generales\n```{r}\n", cod.rf.ind, "\nindices.generales(MC.rf)\n```"))
+        insert.report("ind.rf",paste0("## Índices Generales\n```{r}\n", cod.rf.ind, "\nindices.generales(MC.rf)\n```"))
 
-      nombres <- c("rfPrecGlob", "rfErrorGlob")
-      fill.gauges(nombres, indices.rf)
+        nombres <- c("rfPrecGlob", "rfErrorGlob")
+        fill.gauges(nombres, indices.rf)
 
-      # Cambia la tabla con la indices de rf
-      output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")),
-                                                  bordered = T, width = "100%", align = "c", digits = 2)
+        # Cambia la tabla con la indices de rf
+        output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")),
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
-      output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")),
-                                                 bordered = T, width = "100%", align = "c", digits = 2)
+        output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")),
+                                                   bordered = T, width = "100%", align = "c", digits = 2)
 
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.rf(4)
-      showNotification(paste0("Error al ejecutar los indices rf :",e), duration = 15, type = "error")
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.rf(4)
+        showNotification(paste0("Error al ejecutar los indices rf :",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # PAGINA DE BOOSTING ------------------------------------------------------------------------------------------------------
@@ -1865,55 +1871,58 @@ shinyServer(function(input, output, session) {
 
   # Genera la matriz de confusion
   ejecutar.boosting.mc <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.b.mc)))
-      output$txtBoostingMC <- renderPrint(exe("print(MC.boosting.",input$tipo.boosting,")"))
+    if(exists(paste0("prediccion.boosting.",input$tipo.boosting))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.b.mc)))
+        output$txtBoostingMC <- renderPrint(exe("print(MC.boosting.",input$tipo.boosting,")"))
 
-      exe(plot.MC.code())
-      output$plot.boosting.mc <- renderPlot(exe("plot.MC(MC.boosting.",input$tipo.boosting,")"))
+        exe(plot.MC.code())
+        output$plot.boosting.mc <- renderPlot(exe("plot.MC(MC.boosting.",input$tipo.boosting,")"))
 
-      insert.report(paste0("mc.b.",input$tipo.boosting), paste0("## Matriz de Confusión del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
-                                                                cod.b.mc,"\nMC.boosting.",input$tipo.boosting,
-                                                                "\n```\n\n```{r}\nplot.MC(MC.boosting.",input$tipo.boosting,")\n",
-                                                                "MCs[['ADA-BOOSTING - ",input$tipo.boosting,"']] <<- MC.boosting.",input$tipo.boosting,"\n```"))
+        insert.report(paste0("mc.b.",input$tipo.boosting), paste0("## Matriz de Confusión del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
+                                                                  cod.b.mc,"\nMC.boosting.",input$tipo.boosting,
+                                                                  "\n```\n\n```{r}\nplot.MC(MC.boosting.",input$tipo.boosting,")\n",
+                                                                  "MCs[['ADA-BOOSTING - ",input$tipo.boosting,"']] <<- MC.boosting.",input$tipo.boosting,"\n```"))
 
-      MCs[[paste0("ADA-BOOSTING - ",input$tipo.boosting)]] <<- exe("MC.boosting.",input$tipo.boosting)
-      actualizar.selector.comparativa()
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.boosting(3)
-      showNotification(paste0("Error al ejecutar la matriz booting :",e), duration = 15, type = "error")
+        MCs[[paste0("ADA-BOOSTING - ",input$tipo.boosting)]] <<- exe("MC.boosting.",input$tipo.boosting)
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.boosting(3)
+        showNotification(paste0("Error al ejecutar la matriz booting :",e), duration = 15, type = "error")
+      })
     }
-    )
   }
 
   # Genera los indices
   ejecutar.boosting.ind <- function() {
-    tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.b.ind)))
+    if(exists(paste0("MC.boosting.",input$tipo.boosting))){
+      tryCatch({ # Se corren los codigo
+        isolate(eval(parse(text = cod.b.ind)))
 
-      MC <- exe("MC.boosting.",input$tipo.boosting)
-      indices.boosting <<- indices.generales(MC)
-      eval(parse(text = paste0("indices.boosting.",input$tipo.boosting, "<<- indices.boosting")))
-      indices.g("boosting", MC)
+        MC <- exe("MC.boosting.",input$tipo.boosting)
+        indices.boosting <<- indices.generales(MC)
+        eval(parse(text = paste0("indices.boosting.",input$tipo.boosting, "<<- indices.boosting")))
+        indices.g("boosting", MC)
 
-      insert.report(paste0("ind.b.",input$tipo.boosting),
-                    paste0("## Índices Generales del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
-                           cod.b.ind, "\nindices.generales(MC.boosting.",input$tipo.boosting,")\n```"))
-      nombres <- c("boostingPrecGlob", "boostingErrorGlob")
-      fill.gauges(nombres, indices.boosting)
+        insert.report(paste0("ind.b.",input$tipo.boosting),
+                      paste0("## Índices Generales del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
+                             cod.b.ind, "\nindices.generales(MC.boosting.",input$tipo.boosting,")\n```"))
+        nombres <- c("boostingPrecGlob", "boostingErrorGlob")
+        fill.gauges(nombres, indices.boosting)
 
-      # Cambia la tabla con la indices de boosting
-      output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING")),
-                                                        bordered = T, width = "100%", align = "c", digits = 2)
+        # Cambia la tabla con la indices de boosting
+        output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING")),
+                                                          bordered = T, width = "100%", align = "c", digits = 2)
 
-      output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")),
-                                                       bordered = T, width = "100%", align = "c", digits = 2)
-    },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.boosting(4)
-      showNotification(paste0("Error al ejecutar los indices booting :", e), duration = 15, type = "error")
-    })
+        output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")),
+                                                         bordered = T, width = "100%", align = "c", digits = 2)
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.boosting(4)
+        showNotification(paste0("Error al ejecutar los indices booting :", e), duration = 15, type = "error")
+      })
+    }
   }
 
   # TABLA COMPARATIVA -------------------------------------------------------------------------------------------------------
@@ -2420,6 +2429,14 @@ shinyServer(function(input, output, session) {
     updatePlot$poder.pred <- plot.code.poder.pred(variable.predecir, label= tr("distrelvar"))
     updatePlot$poder.dens <- plot.numerico.dens(input$sel.density.poder,tr("denspodlab"))
     updatePlot$poder.cat <- plot.code.dist.porc(input$sel.distribucion.poder,variable.predecir, label=tr("distpodcat"))
+    ejecutar.knn.mc()
+    ejecutar.knn.ind()
+    ejecutar.svm.mc()
+    ejecutar.svm.ind()
+    ejecutar.dt.mc()
+    ejecutar.dt.ind()
+    ejecutar.rf.mc()
+    ejecutar.rf.ind()
   })
 
   # Termina la Sesion -------------------------------------------------------------------------------------------------------
