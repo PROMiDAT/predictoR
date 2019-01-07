@@ -2,16 +2,26 @@
 % Please edit documentation in R/init_predictor.R
 \name{init_predictor}
 \alias{init_predictor}
-\title{STARTUP}
+\title{This function will start predictoR}
 \usage{
 init_predictor()
 }
 \value{
-Sniny app
+Nothing
 }
 \description{
-STARTUP
+An interactive Shiny application for exploring data.
 }
-\author{
-Andres
+\details{
+Start predictoR
+
+This starts the predictoR application on the user's local computer.
 }
+\examples{
+\dontrun{
+ if(interactive()){
+   init_predictor()
+ }
+}
+}
+\keyword{predictoR}
