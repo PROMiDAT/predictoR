@@ -2006,8 +2006,8 @@ shinyServer(function(input, output, session) {
       insert.report("tabla.comparativa",paste0("## Tabla Comparativa \n```{r}\ncalcular.areas('",input$roc.sel,"')\ntabla.comparativa( ",
                                                as.string.c(input$select.models)," )\n```"))
       DT::datatable(tabla.comparativa(input$select.models),
-                    selection = "none", editable = FALSE, extensions = c("Responsive"),
-                    options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+                    selection = "none", editable = FALSE,
+                    options = list(dom = "frtip", pageLength = 8, buttons = NULL))
     }
   },server = FALSE)
 
@@ -2138,9 +2138,9 @@ shinyServer(function(input, output, session) {
                         Tipo = c(1:ncol(datos.aprendizaje.completos)),
                         Activa = c(1:ncol(datos.aprendizaje.completos)))
       res$Tipo <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0(
-        '<select id="Predsel', i, contadorPN, '"> <option value="categorico">Categórico</option>',
-        '<option value="numerico" ', ifelse(class(datos.aprendizaje.completos[, i]) %in% c("numeric", "integer"),' selected="selected"', ""),'>Numérico</option>',
-        '<option value="disyuntivo">Disyuntivo</option> </select>'
+        '<select id="Predsel', i, contadorPN, '"> <option value="categorico">',tr("categorico"),'</option>',
+        '<option value="numerico" ', ifelse(class(datos.aprendizaje.completos[, i]) %in% c("numeric", "integer"),' selected="selected"', ""),'>', tr("numerico"),'</option>',
+        '<option value="disyuntivo">',tr("disyuntivo"),'</option> </select>'
       ))
       res$Activa <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0('<input type="checkbox" id="Predbox', i, contadorPN, '" checked/>'))
     } else {
@@ -2411,11 +2411,15 @@ shinyServer(function(input, output, session) {
                                 "habilitada","deshabilitada","seleccionarPredecir","propA","propP",
                                 "generar","descargar","dataA","dataP","numerico","categorico","disyuntivo",
                                 "resumenvar","selvar","plotnormal","opciones", "selcolor","selvars",
-                                "selcolores","codigo","codedist","numericas","categoricas","ejecutar","selmetodo",
-                                "seltipo","resultados","distpred","distpredcat","pares","denspred","generatem",
-                                "predm","mc","indices","gclasificacion","garbol","reglas","evolerror",
-                                "varImp","selkernel","kmax","escal"
-                                ))
+                                "selcolores","codigo","codedist","numericas","categoricas","ejecutar",
+                                "selmetodo","seltipo","resultados","distpred","distpredcat","pares",
+                                "denspred","generatem","predm","mc","indices","gclasificacion","garbol",
+                                "reglas","evolerror","varImp","selkernel","kmax","escal","minsplit",
+                                "maxdepth","splitIndex","numTree","numVars","ruleNumTree","selectAlg",
+                                "rocCurva","tablaComp","selectMod","selectCat", "reporte","titulo",
+                                "nombre","codreporte","salida","copyright","info","version","cargarNuev",
+                                "cargarDatos","transDatos","seleParModel","generarM"))
+
     # actualizar.tabla()
     # updateinitSelects("selHoriz", 1:input$cant.kmeans.cluster)
     # updateinitSelects("sel.Khoriz", 1:input$cant.kmeans.cluster)

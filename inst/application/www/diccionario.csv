@@ -72,10 +72,13 @@ deshabilitada;Deshabilitada;Disabled
 seleccionarPredecir;Seleccionar Variable a Predecir:;Select Variable to Predict:
 propA;Partición de Aprendizaje:;Training partitions:
 propP;Partición de Prueba;Test partitions:
+VarsPred;Variables Predictoras:;Variables Predictoras:;Predictor Variables:
 generar;Generar;Generate
+generarM;Generar Modelo;Generate Model
 tipo;Tipo;Type
 activa;Activa;Active
 aplicar;Aplicar;Apply
+cargarNuev;Cargar Individuos Nuevos;Load New Individuals
 resumen;Resumen Numérico;Numeric Summary
 normalidad;Test de Normalidad;Normality Test
 dispersion;Dispersión;Scatter Plot
@@ -88,6 +91,11 @@ selvars;Seleccionar Variables:;Select Variables:
 plotnormal;Gráfico Normalidad;Normal Plot
 titulonormal;Test de normalidad de;Normal Plot of
 curvanormal;Curva Normal;Normal Curve
+rocCurva;Curva ROC;ROC Curve
+selectMod;Seleccionar Modelo:;Select Model:
+selectCat;Seleccionar Categoría:;Select Category:
+cargarDatos;Cargar Datos;Load Data
+transDatos;Transformar Datos;Transform Data
 densidad;Densidad;Density
 opciones;Opciones;Options
 selcolor;Seleccionar Color:;Select Color:
@@ -157,6 +165,15 @@ q1;Primer Cuartil;First Quartile
 mediana;Mediana;Median
 q3;Tercer Cuartil;Third Quartile
 minimo;Mínimo;Minimum
+minsplit;Mínimo para dividir un nodo:;Minimum to split a node:
+maxdepth;Profundidad Máxima:;Max Depth
+splitIndex;Índice de división:;Split Index
+numTree;Número de Árboles:;Number of Trees:
+numVars;Número de variables:;Number of variables:
+selectAlg;Seleccionar Algoritmo:;Select Algorithm:
+ruleNumTree;Reglas del árbol número:;Rules of the tree number:
+tablaComp;Tabla Comparativa;Comparison Table
+seleParModel;Selección y Parametrización del Modelo;Selection and Parameterization of the Model
 promedio;Promedio;Mean
 maximo;Máximo;Maximum
 ds;Desviación Estandar;Standard deviation
