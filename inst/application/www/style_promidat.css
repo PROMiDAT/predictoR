@@ -15,6 +15,12 @@
   padding-left:0px;
 }
 
+/*tamaño minimo para el campo de texto de las matrices de confusion*/
+#txtknnMC, #txtSvmMC, #txtDtMC, #txtRfMC, #txtBoostingMC{
+  min-height: 100px !important;
+}
+
+
 .space-code{
   padding-left: 5px;
   padding-right: 5px;
@@ -61,6 +67,10 @@
 
 .skin-blue .main-header .navbar {
   background-color: #777777;
+}
+
+#calculo\.normal{
+  min-height: 350px;
 }
 
 .bg-promidat{
@@ -240,7 +250,8 @@ input[type="checkbox"]:hover:before {
 }
 
 #txtreport {
-  height: 28vh;
+  min-height: 25vh !important;
+  height: 25vh;
 }
 
 #rulesDt{
