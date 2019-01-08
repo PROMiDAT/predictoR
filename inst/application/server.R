@@ -1058,10 +1058,10 @@ shinyServer(function(input, output, session) {
         fill.gauges(nombres, indices.knn)
 
         # Cambia la tabla con la indices de knn
-        output$knnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.knn,"KNN")),
+        output$knnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.knn,"KNN")), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
 
-        output$knnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.knn,"KNN")),
+        output$knnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.knn,"KNN")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
       },
@@ -1248,10 +1248,10 @@ shinyServer(function(input, output, session) {
         fill.gauges(nombres, indices.svm)
 
         # Cambia la tabla con la indices de svm
-        output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM")),
+        output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM")), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
 
-        output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")),
+        output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
@@ -1481,10 +1481,10 @@ shinyServer(function(input, output, session) {
         fill.gauges(nombres, indices.dt)
 
         # Cambia la tabla con la indices de dt
-        output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")),
+        output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
-        output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")),
+        output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
@@ -1701,10 +1701,10 @@ shinyServer(function(input, output, session) {
         fill.gauges(nombres, indices.rf)
 
         # Cambia la tabla con la indices de rf
-        output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")),
+        output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
-        output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")),
+        output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
       },
@@ -1939,10 +1939,10 @@ shinyServer(function(input, output, session) {
         fill.gauges(nombres, indices.boosting)
 
         # Cambia la tabla con la indices de boosting
-        output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING")),
+        output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING")), spacing = "xs",
                                                           bordered = T, width = "100%", align = "c", digits = 2)
 
-        output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")),
+        output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")), spacing = "xs",
                                                          bordered = T, width = "100%", align = "c", digits = 2)
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error

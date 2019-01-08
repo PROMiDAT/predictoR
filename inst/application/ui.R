@@ -326,7 +326,7 @@ pagina.test.normalidad <- tabItem(tabName = "normalidad",
 
 # PAGINA DE DISPERSION -----------------------------------------------------------------------------------------------------
 
-tabs.dispersion  <-  tabsOptions(heights = c(30, 36),
+tabs.dispersion  <-  tabsOptions(heights = c(30, 39),
                                  tabs.content = list(list(h4(labelInput("opciones")), hr(),
                                                      colourpicker::colourInput("col.disp", labelInput("selcolor"),
                                                                                value = "#FF0000AA",allowTransparent = T)),
@@ -492,9 +492,9 @@ codigo.knn <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxKnn == 'tabKknIndex'",
                                     aceEditor("fieldCodeKnnIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 73),
+tabs.knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
                         tabs.content = list(opciones.knn, codigo.knn))
 
 panel.generar.knn <- tabPanel(title = labelInput("generatem"), value = "tabKknModelo",
@@ -550,9 +550,9 @@ codigo.svm <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxSvm == 'tabSvmIndex'",
                                     aceEditor("fieldCodeSvmIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.svm <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 73),
+tabs.svm <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 75),
                         tabs.content = list(opciones.svm, codigo.svm))
 
 panel.generar.svm <- tabPanel(title = labelInput("generatem"), value = "tabSvmModelo",
@@ -608,9 +608,9 @@ codigo.dt <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxDt == 'tabDtIndex'",
                                     aceEditor("fieldCodeDtIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 73),
+tabs.dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
                         tabs.content = list(opciones.dt, codigo.dt))
 
 panel.generar.dt <- tabPanel(title = labelInput("generatem"), value = "tabDtModelo",
@@ -673,9 +673,9 @@ codigo.rf  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxRf == 'tabRfIndex'",
                                     aceEditor("fieldCodeRfIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 73),
+tabs.rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 75),
                         tabs.content = list(opciones.rf, codigo.rf))
 
 panel.generar.rf <- tabPanel(title = labelInput("generatem"),value = "tabRfModelo",
@@ -747,9 +747,9 @@ codigo.b  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxB == 'tabBIndex'",
                                     aceEditor("fieldCodeBoostingIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.b  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(63, 73),
+tabs.b  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(63, 75),
                         tabs.content = list(opciones.b, codigo.b))
 
 panel.generar.boosting <- tabPanel(title = labelInput("generatem"), value = "tabBModelo",
@@ -801,7 +801,7 @@ opciones.comparacion <- list(fluidRow(column(width = 10,h4(labelInput("opciones"
                              fluidRow(column(selector.modelos, width = 12)))
 
 
-tabs.comparacion  <- tabsOptions(botones = list(icon("gear")), widths = c(50), heights = c(85),
+tabs.comparacion  <- tabsOptions(botones = list(icon("gear")), widths = c(50), heights = c(88),
                                  tabs.content = list(opciones.comparacion))
 
 panel.comparacion.tabla <- tabPanel(title = labelInput("tablaComp"),

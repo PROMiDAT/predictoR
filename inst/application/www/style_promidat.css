@@ -21,6 +21,11 @@
 }
 
 
+table.spacing-xs tr th{
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+}
+
 .space-code{
   padding-left: 5px;
   padding-right: 5px;
