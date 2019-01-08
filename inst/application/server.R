@@ -375,6 +375,33 @@ shinyServer(function(input, output, session) {
                                                         Shiny.bindAll(table.table().node());"))
                                     }, server = FALSE)
 
+  output$downloaDatos <- downloadHandler(
+    filename = function() {
+      input$file1$name
+    },
+    content = function(file) {
+      write.csv(datos, file, row.names = input$rowname)
+    }
+  )
+
+  output$downloaDatosA <- downloadHandler(
+    filename = function() {
+      paste0("(",tr("dataA"),")",input$file1$name)
+    },
+    content = function(file) {
+      write.csv(datos.aprendizaje, file, row.names = input$rowname)
+    }
+  )
+
+  output$downloaDatosP <- downloadHandler(
+    filename = function() {
+      paste0("(",tr("dataP"),")",input$file1$name)
+    },
+    content = function(file) {
+      write.csv(datos.prueba, file, row.names = input$rowname)
+    }
+  )
+
   # Pagina de Segmentar Datos -----------------------------------------------------------------------------------------------
 
   # Crea los datos de aprendizaje y prueba
@@ -529,7 +556,7 @@ shinyServer(function(input, output, session) {
         ))
         DT::datatable(
           res, selection = 'none', container = sketch,
-          options = list(dom = 'frtip', scrollY = "60vh")
+          options = list(dom = 'frtip', scrollY = "40vh")
         )
       }, error = function(e) {
         showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
@@ -758,7 +785,7 @@ shinyServer(function(input, output, session) {
         updateAceEditor(session, "fieldCodePoderCat", value = cod.poder.cat)
         if (ncol(var.categoricas(datos)) > 1) {
           res <- isolate(eval(parse(text = cod.poder.cat)))
-          insert.report(paste0?verbatimTextOutput("poder.cat.",input$sel.distribucion.poder),
+          insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
           error.variables(isolate(input$idioma), T)
@@ -2007,7 +2034,7 @@ shinyServer(function(input, output, session) {
                                                as.string.c(input$select.models)," )\n```"))
       DT::datatable(tabla.comparativa(input$select.models),
                     selection = "none", editable = FALSE,
-                    options = list(dom = "frtip", pageLength = 8, buttons = NULL))
+                    options = list(dom = "frtip", pageLength = 10, buttons = NULL))
     }
   },server = FALSE)
 
