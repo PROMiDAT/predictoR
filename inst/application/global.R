@@ -979,6 +979,8 @@ variable.predecir <<- NULL
 contador <<- 0
 semilla <<- FALSE
 
+nombres.modelos <<- c()
+
 # -------------------  Estadisticas Basicas
 
 

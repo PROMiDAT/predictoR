@@ -269,6 +269,14 @@ shinyServer(function(input, output, session) {
     areas <<- list()
     scores <<- list()
 
+    rm(list = nombres.modelos, envir = .GlobalEnv)
+    nombres.modelos <<- c()
+    updateCheckboxGroupButtons(session, inputId = "select.models",
+                               choices = c(" ---- " = "NoDisponible"),
+                               size = "sm", status = "primary",
+                               checkIcon = list(yes = icon("ok", lib = "glyphicon"),
+                                                no = icon("remove", lib = "glyphicon")))
+
     #Se usan como condicion para el codigo js
     output$txtknn <- renderPrint(invisible(""))
     output$txtSvm <- renderPrint(invisible(""))
@@ -985,10 +993,12 @@ shinyServer(function(input, output, session) {
       output$txtknn <- renderPrint(exe("modelo.knn.",input$kernel.knn))
       insert.report(paste0("modelo.knn.",input$kernel.knn),
                     paste0("## Generación del modelo KNN - ",input$kernel.knn,"\n```{r}\n",cod.knn.modelo, "\nmodelo.knn.",input$kernel.knn,"\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.knn.",input$kernel.knn))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.knn(1)
-      showNotification(paste0("Error al ejecutar el modelo knn : ", e), duration = 15, type = "error")
+      showNotification(paste0("Error (KNN-01) : ", e), duration = 15, type = "error")
     }
     )
   }
@@ -1006,11 +1016,12 @@ shinyServer(function(input, output, session) {
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.knn.",input$kernel.knn,")))\n",
                            "scores[['",paste0("KNN - ",input$kernel.knn),"']] <<- predict(modelo.knn.",input$kernel.knn,",datos.prueba, type = 'prob')\n```"))
 
+      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.knn.",input$kernel.knn))
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.knn(2)
-      showNotification(paste0("Error al ejecutar la prediccion knn : ", e), duration = 15, type = "error")
+      showNotification(paste0("Error (KNN-02) : ", e), duration = 15, type = "error")
     })
   }
 
@@ -1029,12 +1040,14 @@ shinyServer(function(input, output, session) {
                              "\nMC.knn.",input$kernel.knn,
                              "\n```\n```{r}\nplot.MC(MC.knn.",input$kernel.knn,")\n",
                              "MCs[['KNN - ",input$kernel.knn,"']] <<- MC.knn.",input$kernel.knn,"\n```"))
+
         MCs[[paste0("KNN - ",input$kernel.knn)]] <<- exe("MC.knn.",input$kernel.knn)
+        nombres.modelos <<- c(nombres.modelos, paste0("MC.knn.",input$kernel.knn))
         actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.knn(3)
-        showNotification(paste0("Error al ejecutar la matriz knn: ",e), duration = 15, type = "error")
+        showNotification(paste0("Error (KNN-03) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1064,10 +1077,11 @@ shinyServer(function(input, output, session) {
         output$knnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.knn,"KNN")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
 
+        nombres.modelos <<- c(nombres.modelos, paste0("indices.knn.",input$kernel.knn))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.knn(4)
-        showNotification(paste0("Error al ejecutar los indices: ",e), duration = 15, type = "error")
+        showNotification(paste0("Error (KNN-04) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1167,12 +1181,13 @@ shinyServer(function(input, output, session) {
       insert.report(paste0("modelo.svm.",input$kernel.svm),
                     paste0("## Generación del modelo SVM - ",input$kernel.svm,"\n```{r}\n",
                            cod.svm.modelo, "\nmodelo.svm.",input$kernel.svm,"\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.svm.",input$kernel.svm))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.svm(1)
-      showNotification(paste0("Error al ejecutar el modelo svm:",e), duration = 15, type = "error")
-    }
-    )
+      showNotification(paste0("Error (SVM-01) : ",e), duration = 15, type = "error")
+    })
   }
 
   # Genera la prediccion
@@ -1197,11 +1212,13 @@ shinyServer(function(input, output, session) {
                            input$kernel.svm,"',probability = T)\n",
                            "scores[['SVM -",input$kernel.svm,"']] <<- predict(modelo.svm.roc,datos.prueba, probability = T)\n```"))
 
+      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.svm.",input$kernel.svm))
+
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.svm(2)
-      showNotification(paste0("Error al ejecutar la prediccion svm:",e), duration = 15, type = "error")
+      showNotification(paste0("Error (SVM-02) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1219,12 +1236,14 @@ shinyServer(function(input, output, session) {
                              cod.svm.mc, "\nMC.svm.",input$kernel.svm,"\n```\n```{r}\nplot.MC(MC.svm.",input$kernel.svm,")\n",
                              "MCs[['SVM -",input$kernel.svm,"']] <<- MC.svm.",input$kernel.svm,"\n```"))
 
+        nombres.modelos <<- c(nombres.modelos, paste0("MC.svm.",input$kernel.svm))
+
         MCs[[paste0("SVM -",input$kernel.svm)]] <<- exe("MC.svm.",input$kernel.svm)
         actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.svm(3)
-        showNotification(paste0("Error al ejecutar la matriz svm:",e), duration = 15, type = "error")
+        showNotification(paste0("Error (SVM-03) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1253,10 +1272,12 @@ shinyServer(function(input, output, session) {
 
         output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
+
+        nombres.modelos <<- c(nombres.modelos, paste0("indices.svm.",input$kernel.svm))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.knn(4)
-        showNotification(paste0("Error al ejecutar los indices svm: ",e), duration = 15, type = "error")
+        showNotification(paste0("Error (SVM-04) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1415,10 +1436,12 @@ shinyServer(function(input, output, session) {
                            "\nmodelo.dt.",input$split.dt,"\n```"))
       plotear.arbol()
       mostrar.reglas.dt()
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.dt.", input$split.dt))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.dt(1)
-      showNotification(paste0("Error al ejecutar el modelo dt:",e), duration = 15, type = "error")
+      showNotification(paste0("Error (DT-01) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1435,11 +1458,13 @@ shinyServer(function(input, output, session) {
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.dt.",input$split.dt,")))\n",
                            "scores[['Árboles de Decisión - ",input$split.dt,"']] <<- predict(modelo.dt.",input$split.dt,", datos.prueba, type = 'prob')\n```"))
 
+      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",input$split.dt))
+
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.dt(2)
-      showNotification(paste0("Error al ejecutar la prediccion dt: ",e), duration = 15, type = "error")
+      showNotification(paste0("Error (DT-02) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1457,12 +1482,14 @@ shinyServer(function(input, output, session) {
                              "\nMC.dt.",input$split.dt,"\n```\n```{r}\nplot.MC(MC.dt.",input$split.dt,")\n",
                              "MCs[['Árboles de Decisión - ",input$split.dt,"']] <<- MC.dt.",input$split.dt,"\n```"))
 
+        nombres.modelos <<- c(nombres.modelos, paste0("MC.dt.",input$split.dt))
+
         MCs[[paste0("Árboles de Decisión - ",input$split.dt)]] <<- exe("MC.dt.",input$split.dt)
         actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.dt(3)
-        showNotification(paste0("Error al ejecutar la matriz dt :", e), duration = 15, type = "error")
+        showNotification(paste0("Error (DT-03) : ", e), duration = 15, type = "error")
       })
     }
   }
@@ -1486,10 +1513,12 @@ shinyServer(function(input, output, session) {
 
         output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
+
+        #nombres.modelos <- c(nombres.modelos, paste0("ind.dt.",input$split.dt))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.dt(4)
-        showNotification(paste0("Error al ejecutar los indices dt :",e), duration = 15, type = "error")
+        showNotification(paste0("Error (DT-04) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1638,10 +1667,12 @@ shinyServer(function(input, output, session) {
       plotear.rf.imp()
       plotear.rf.error()
       mostrar.reglas.rf(input$rules.rf.n)
+
+      nombres.modelos <<- c(nombres.modelos, "modelo.rf")
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rf(1)
-      showNotification(paste0("Error al ejecutar el modelo rf :",e), duration = 15, type = "error")
+      showNotification(paste0("Error (RF-01) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1657,11 +1688,14 @@ shinyServer(function(input, output, session) {
                     paste0("## Predicción del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.pred,
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.rf)))\n",
                            "scores[['Bosques Aleatorios']] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
+
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rf(2)
-      showNotification(paste0("Error al ejecutar la prediccion rf :", e), duration = 15, type = "error")
+      showNotification(paste0("Error (RF-02) : ", e), duration = 15, type = "error")
     })
   }
 
@@ -1677,12 +1711,14 @@ shinyServer(function(input, output, session) {
                                      "\nMC.rf\n```\n```{r}\nplot.MC(MC.rf)\n",
                                      "MCs[['Bosques Aleatorios']] <<- MC.rf\n```"))
 
+        nombres.modelos <<- c(nombres.modelos, "MC.rf")
+
         MCs[["Bosques Aleatorios"]] <<- MC.rf
         actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.rf(3)
-        showNotification(paste0("Error al ejecutar la matriz rf:",e), duration = 15, type = "error")
+        showNotification(paste0("Error (RF-03) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1707,10 +1743,12 @@ shinyServer(function(input, output, session) {
         output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
+        nombres.modelos <<- c(nombres.modelos, "indices.rf")
+
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.rf(4)
-        showNotification(paste0("Error al ejecutar los indices rf :",e), duration = 15, type = "error")
+        showNotification(paste0("Error (RF-04) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1866,10 +1904,12 @@ shinyServer(function(input, output, session) {
       insert.report(paste0("modelo.b.",input$tipo.boosting),
                     paste0("## Generación del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
                            cod.b.modelo, "\nmodelo.boosting.",input$tipo.boosting,"\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting.",input$tipo.boosting))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.boosting(1)
-      showNotification(paste0("Error al ejecutar el modelo boosting :",e), duration = 15, type = "error")
+      showNotification(paste0("Error (B-01) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1887,11 +1927,14 @@ shinyServer(function(input, output, session) {
                     cod.b.pred,"\nhead(dt.to.data.frame.predict(obj.predic(prediccion.boosting.",input$tipo.boosting,")))\n",
                     "scores[['ADA-BOOSTING - ",input$tipo.boosting,"']] <<- predict(modelo.boosting.",input$tipo.boosting,
                     ", datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting.",input$tipo.boosting))
+
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.boosting(2)
-      showNotification(paste0("Error al ejecutar la prediccion boosting :",e), duration = 15, type = "error")
+      showNotification(paste0("Error (B-02) : ",e), duration = 15, type = "error")
     }
     )
   }
@@ -1913,10 +1956,12 @@ shinyServer(function(input, output, session) {
 
         MCs[[paste0("ADA-BOOSTING - ",input$tipo.boosting)]] <<- exe("MC.boosting.",input$tipo.boosting)
         actualizar.selector.comparativa()
+
+        nombres.modelos <<- c(nombres.modelos, paste0("MC.boosting.",input$tipo.boosting))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.boosting(3)
-        showNotification(paste0("Error al ejecutar la matriz booting :",e), duration = 15, type = "error")
+        showNotification(paste0("Error (B-03) : ",e), duration = 15, type = "error")
       })
     }
   }
@@ -1944,10 +1989,12 @@ shinyServer(function(input, output, session) {
 
         output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")), spacing = "xs",
                                                          bordered = T, width = "100%", align = "c", digits = 2)
+
+        nombres.modelos <<- c(nombres.modelos, paste0("indices.boosting.",input$tipo.boosting))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.boosting(4)
-        showNotification(paste0("Error al ejecutar los indices booting :", e), duration = 15, type = "error")
+        showNotification(paste0("Error (B-04) : ", e), duration = 15, type = "error")
       })
     }
   }
@@ -2403,7 +2450,7 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # Cambiar Idioma ----------------------------------------------------------------------------------------------------------
+  # CAMBIAR IDIOMA ----------------------------------------------------------------------------------------------------------
 
   #Elimina NULLs
   dropNulls <- function (x) {
