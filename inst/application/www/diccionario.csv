@@ -2,26 +2,28 @@ key;es;en
 idioma;Idioma;Language
 selidioma;Seleccionar Idioma:;Select Language
 data;Datos;Data
-dataA;Datos de Aprendizaje;Training Dataset
-dataP;Datos de Prueba;Test Dataset
+dataA;Datos de Aprendizaje;Training Sample
+dataP;Datos de Prueba;Test Sample
 configuraciones;Configuraciones;Settings
 basico;Estadísticas Básicas;Basic Statistics
 poderpred;Poder Predictivo;Predictive Power
 aprendizaje;Apendizaje Supervisado;Supervised Learning
 comparacion;Comparación de Modelos;Model Comparison
-predicnuevos;Predicción Individuos Nuevos;Predict New Data
+predicnuevos;Predicción Individuos Nuevos;Predict New Cases
 pred;Predicción;Prediction
 acerto;Acertó;Matched
 fallo;Falló;Failed
-knnl;K Vecinos Más Cercanos;k nearest neighbors
+knnl;K Vecinos Más Cercanos;K Nearest Neighbors
 dtl;Árboles De Decisión;Decision Trees
 rfl;Bosques Aleatorios;Random Forests
 bl;Potenciación;Boosting
 svml;Soporte Vectorial;Support Vector Machines
+nn;Redes Neuronales;Neural Networks
+xgb;Extreme Gradient Boosting;Extreme Gradient Boosting
 reporte;Generar Reporte;Generate Report
 acercade;Acerca De;About
 cargar;Cargar;Load
-trans;Transformar;Convert
+trans;Transformar;Transform
 header;Encabezado;Header
 Rownames;Incluir nombre de filas;Rownames
 separador;Separador;Separator
@@ -69,16 +71,16 @@ variables;Variables;Variables
 semilla;Semilla Aleatoria:;Random Seed:
 habilitada;Habilitada;Enabled
 deshabilitada;Deshabilitada;Disabled
-seleccionarPredecir;Seleccionar Variable a Predecir:;Select Variable to Predict:
-propA;Partición de Aprendizaje:;Training partitions:
-propP;Partición de Prueba;Test partitions:
+seleccionarPredecir;Seleccionar la variable a predecir:;Select the variable to be predicted:
+propA;Partición de Aprendizaje:;Training partition:
+propP;Partición de Prueba;Test partition:
 VarsPred;Variables Predictoras:;Variables Predictoras:;Predictor Variables:
 generar;Generar;Generate
 generarM;Generar Modelo;Generate Model
 tipo;Tipo;Type
 activa;Activa;Active
 aplicar;Aplicar;Apply
-cargarNuev;Cargar Individuos Nuevos;Load New Individuals
+cargarNuev;Cargar Individuos Nuevos;Load New Cases
 resumen;Resumen Numérico;Numeric Summary
 normalidad;Test de Normalidad;Normality Test
 dispersion;Dispersión;Scatter Plot
@@ -86,7 +88,7 @@ distribuciones;Distribuciones;Distributions
 distribucion;Distribución;Distribution
 correlacion;Correlación;Correlation
 resumenvar;Resumen Numérico por Variable;Numeric Summary by Variable
-selvar;Seleccionar Variable:;Select Variable:
+selvar;Seleccionar la variable:;Select the variable:
 selvars;Seleccionar Variables:;Select Variables:
 plotnormal;Gráfico Normalidad;Normal Plot
 titulonormal;Test de normalidad de;Normal Plot of
@@ -209,3 +211,14 @@ repcosind;Coseno Individuos:;Individuals Cosine:
 repcosvar;Coseno Variables:;Variables Cosine:
 repdim;Dimensiones:;Dimentions:
 codreporte;Código del Reporte;Report Code
+tieneVP;Tiene que seleccionar una variable a predecir;You have to select a variable to predict
+tieneD;Tiene que ingresar datos;You have to enter data
+tieneDAP;Tiene que crear los datos de aprendizaje y de prueba;You have to create the learning and test data
+errorCData;Error al cargar los Datos: Revisar separadores;Error when loading the Data: Check separators
+tieneCData;Tiene que cargar los datos;You have to load the data
+errorSeg;Error al dividir los datos :;Error when dividing the data :
+tieneSVP;Tiene que seleccionar una variable a predecir;You have to select a variable to predict
+NoDRule;No se puede mostrar las reglas para el árbol seleccionado;Cannot display rules for selected tree
+RocNo;La curva ROC solo aplica para variables binarias;The ROC curve only applies to binary variables
+NoTamColum;Los datos no poseen las mismas columnas;Data does not have the same columns
+varp;Gráfico de importancia de variables;Variable Importance Chart

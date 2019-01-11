@@ -35,13 +35,19 @@ new.gauge <- function(id, val, lab){
                 gauge(round(",val,",2),
                 min = 0, max = 100, symbol = '%',
                 label = '",lab,"',
-                gaugeSectors(success = c(0, 100)))
-})"))
+                gaugeSectors(success = c(0, 100)))})"))
+}
+
+# Genera los gauges
+fill.gauges <- function(ids, indices) {
+  titulos <- c(tr("precG"), tr("errG"))
+  for (i in 1:length(ids)) {
+    exe(new.gauge(ids[i], indices[[i]], titulos[i]))
+  }
 }
 
 #Codigo del calculo de los indices
-cod.indices <- function(){
-  return('indices.generales <- function(MC) {
+indices.generales <- function(MC) {
    if(1 == dim(MC)[2]) {
       MC <- cbind(MC, 0)
    }
@@ -53,7 +59,6 @@ cod.indices <- function(){
                error.global = error.global,
                precision.clase = precision.clase,
                error.clase = error.clase))
-}')
 }
 
 #Convierte una tabla de prediccion html a data.frame
@@ -126,6 +131,11 @@ plot.MC <<- function(cm) {
 }"))
 }
 
+# Concatena y ejecuta un string como codigo
+exe <- function(...){
+  eval(parse(text = paste0(...)))
+}
+
 as.string.c <- function(vect){
   return(paste0("c('",paste0(vect, collapse = "','"),"')"))
 }
@@ -135,12 +145,10 @@ as.string.c <- function(vect){
 # }
 
 extract.code <- function(funcion) {
-  code <- paste(head(eval(parse(text = funcion)), 100), collapse = "\n")
+  code <- paste(head(exe(funcion), 100), collapse = "\n")
   code <- paste(funcion, "<-", code)
   return(code)
 }
-
-
 
 # Pagina de Cargar y Transformar Datos --------------------------------------------------------------------------------------
 
@@ -179,7 +187,7 @@ code.NA <- function(deleteNA = T, d.o = "datos.originales") {
                 paste0("Mode <- function(x) {\n  x[which.max(summary(x))]\n}\n",
                        "for (variable in colnames(",d.o,")) {\n",
                        "  if(any(is.na(",d.o,"[, variable]))){\n",
-                       "    ifelse(class(",d.o,"[, variable]) %in% c('numeric', 'integer'),\n",
+                       "   ifelse(class(",d.o,"[, variable]) %in% c('numeric', 'integer'),\n",
                        "           ",d.o,"[, variable][is.na(",d.o,"[, variable])] <<- \n",
                        "                                              mean(",d.o,"[, variable], na.rm = T),\n",
                        "           ",d.o,"[, variable][is.na(",d.o,"[, variable])] <<- \n",
@@ -195,7 +203,7 @@ code.trans <- function(variable, nuevo.tipo, d.o = "datos.originales",d="datos")
   } else if(nuevo.tipo == "numerico") {
     return(paste0(d,"[, '", variable, "'] <<- as.numeric(sub(',', '.', ",d,"[, '", variable, "'], fixed = TRUE))"))
   } else {
-    es.factor <- ifelse( eval(parse(text = "class(",d.o,"[, variable]) %in% c('numeric', 'integer')")),
+    es.factor <- ifelse( eval(parse(text = paste0("class(",d.o,"[, variable]) %in% c('numeric', 'integer')"))),
                         paste0(d,"[, '", variable, "'] <<- as.factor(",d,"[, '", variable, "']) \n"), "")
     return(paste0(es.factor, d, " <<- datos.disyuntivos(",d,", '", variable,"')"))
   }
@@ -325,9 +333,7 @@ fisher.calc <- function (x, na.rm = FALSE, ...) {
 }
 
 #Genera  la tabla de normalidad
-default.calc.normal <- function(
-  data = "datos", labelsi = "Positiva", labelno = "Negativa",
-  labelsin = "Sin Asimetría") {
+default.calc.normal <- function(data = "datos", labelsi = "Positiva", labelno = "Negativa",labelsin = "Sin Asimetría") {
   return(paste0(
     "calc <- lapply(var.numericas(", data,"), function(i) fisher.calc(i)[1]) \n",
     "calc <- as.data.frame(calc) \n",
@@ -359,8 +365,7 @@ def.code.num <- function(data = "datos", variable = "input$sel.distribucion", co
 }
 
 #Llama a la funcion que crea la distribuccion categorica
-def.code.cat <- function(data = "datos", variable, titulox = tr("cantidadcasos"),
-  tituloy = tr("categorias")) {
+def.code.cat <- function(data = "datos", variable, titulox = tr("cantidadcasos"), tituloy = tr("categorias")) {
   paste0("distribucion.categorico(", data, "[, '", variable,"']) + ",
          "labs(title = '", variable, "', x = '",titulox, "', y = '", tituloy, "')")
 }
@@ -712,7 +717,7 @@ varP <- function (x, plot.it = TRUE, type = c("none", "scores"), max.var.show = 
 
     print(ggplot(df, ggplot2::aes(x = label, y = val, fill = label)) +
             geom_bar(stat = "identity", position = "identity", width = 0.1) +
-            labs(title = "Gráfico de importancia de variables",  y = "", x = "") +
+            labs(title = tr("varp"),  y = "", x = "") +
             scale_y_continuous(labels = scales::comma) +
             coord_flip() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -725,6 +730,91 @@ varP <- function (x, plot.it = TRUE, type = c("none", "scores"), max.var.show = 
     return(t1)
   }
 }
+
+# Pagina de BAYES ---------------------------------------------------------------------------------------------------------
+
+#Crea el modelo Bayes
+bayes.modelo <- function(){
+  return(paste0("modelo.bayes <<- naiveBayes(",variable.predecir,"~., data = datos.aprendizaje)"))
+}
+
+bayes.modelo.np <- function(){
+  return(paste0("modelo.nuevos <<- naiveBayes(",variable.predecir,"~., data = datos.aprendizaje.completos)"))
+}
+
+#Codigo de la prediccion de Bayes
+bayes.prediccion <- function() {
+  return(paste0("prediccion.bayes <<- predict(modelo.bayes, datos.prueba[,-which(colnames(datos.prueba) == '",variable.predecir,"')])"))
+}
+
+bayes.prediccion.pn <- function() {
+  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos[,-which(colnames(datos.prueba.completos) == '",variable.predecir.pn,"')])"))
+}
+
+#Codigo de la matriz de confucion de Bayes
+bayes.MC <- function(){
+  return(paste0("MC.bayes <<- table(datos.prueba$",variable.predecir,", prediccion.bayes)"))
+}
+
+# Pagina de GX BOOSTING ---------------------------------------------------------------------------------------------------
+
+#Crea el modelo KNN
+xgb.modelo <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
+  browser()
+  num.class <- length(levels(datos.aprendizaje[,variable.predecir]))
+  if(num.class > 2){
+    tipo <- "multi:softprob"
+    str.num.class <- ""
+    eval.xgb <- "mlogloss"
+  }else{
+    tipo <- "binary:logistic"
+    str.num.class <- paste0(",num_class =",num.class)
+    eval.xgb <- "error"
+  }
+  categoricas <- colnames(var.categoricas(datos.aprendizaje))
+  categoricas <- paste0(categoricas,collapse = "','")
+  matrices <- paste0("d.aprendizaje <- mutate_all(datos.aprendizaje, funs(as.numeric))\n",
+                     "d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
+                     "d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
+                     "d.aprendizaje[,c('",categoricas,"')] <- mutate_all(d.aprendizaje, funs(as.numeric))\n",
+                     "d.prueba[,c('",categoricas,"')] <- mutate_all(d.prueba, funs(as.numeric))\n",
+                     "selector <- -which(colnames(d.aprendizaje) == '",variable.predecir,"')\n",
+                     "mxgb.aprendizaje <- xgb.DMatrix(data = data.matrix(d.aprendizaje[,selector]),",
+                     "label = data.matrix(d.aprendizaje$'",variable.predecir,"'))\n",
+                     "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
+                     "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
+  parametros <- paste0("parametros <- list(booster = '",booster,"', objective = '",tipo,"', max_depth=",max.depth, str.num.class,")\n")
+  modelo <- paste0("modelo.xgb.",booster," <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",
+                                        watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
+
+  return(paste0(matrices,parametros,modelo))
+}
+
+xgb.modelo.np <- function(booster = "gbtree"){
+
+  return(paste0("modelo.nuevos <<- train.kknn(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
+}
+
+#Codigo de la prediccion de knn
+kkn.prediccion <- function(kernel = "optimal") {
+  categoricas <- colnames(var.categoricas(datos.aprendizaje))
+  categoricas <- paste0(categoricas,collapse = "','")
+  pre <- paste0("d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
+                "d.prueba[,c('",categoricas,"')] <- mutate_all(d.prueba, funs(as.numeric))\n",
+                "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
+                "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
+  return(paste0(pre, "prediccion <- predict (modelo, ttesting)"))
+}
+
+kkn.prediccion.pn <- function() {
+  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos[,-which(colnames(datos.prueba.completos) == '",variable.predecir.pn,"')])"))
+}
+
+#Codigo de la matriz de confucion de knn
+knn.MC <- function(variable.p, kernel = "optimal"){
+  return(paste0("MC.knn.",kernel," <<- table(datos.prueba$",variable.p,", prediccion.knn.",kernel,")"))
+}
+
 
 # Pagina de TABLA COMPARATIVA -----------------------------------------------------------------------------------------------
 
@@ -831,7 +921,6 @@ ordenar.reporte <- function(lista){
   return(lista)
 }
 
-# Crea el codigo del reporte rmd
 def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
   codigo.usuario <- ""
   codigos <- env.report$codigo.reporte
@@ -843,72 +932,27 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
       }
     }
   }
-  return(paste0("---
-title: '", titulo, "'
-author: '", nombre, "'
-date: ", Sys.Date(), "
-output: word_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE,  fig.height = 10, fig.width = 15, error = TRUE)
-options(digits = 3)
-```
-
-```{r message=FALSE, warning=FALSE}
-library(promises)
-library(ggplot2)
-library(FactoMineR)
-library(factoextra)
-library(reshape)
-library(corrplot)
-library(dendextend)
-library(scatterplot3d)
-library(stringr)
-library(caret)
-library(kknn)
-library(e1071)
-library(e1071)
-library(rpart)
-library(rpart.plot)
-library(randomForest)
-library(ada)
-library(xgboost)
-library(nnet)
-library(dplyr)
-library(forcats)
-library(psych)
-library(ROCR)
-library(xtable)
-library(raster)
-```
-
-```{r}
-var.numericas <- function(data) {
-if(is.null(data)) return(NULL)
-res <- base::subset(data, select = sapply(data, class) %in% c('numeric', 'integer'))
-return(res)
-}
-
-var.categoricas <- function(data) {
-if(is.null(data)) return(NULL)
-res <- base::subset(data, select =! sapply(data, class) %in% c('numeric', 'integer'))
-return(res)
-}\ndatos.disyuntivos <- function(data, vars) {
-if (is.null(data)) return(NULL)
-cualitativas <- base::subset(data, select = colnames(data) %in% c(vars))
-data <- data[, !colnames(data) %in% vars]
-for (variable in colnames(cualitativas)) {
-for (categoria in unique(cualitativas[, variable])) {
-nueva.var <- as.numeric(cualitativas[, variable] == categoria)
-data <- cbind(data, nueva.var)
-colnames(data)[length(colnames(data))] <- paste0(variable, '.', categoria)
-}
-}
-return(data)
-}\n\n
-```
-\n", codigo.usuario, ""))
+  paste0(
+    "---\n", "title: '", titulo, "'\n", "author: '", nombre, "'\n",
+    "date: ", Sys.Date(), "\n", "output:\n  word_document:\n",
+    "    df_print: paged\n---\n\n",
+    "```{r setup, include=FALSE}\n",
+    "knitr::opts_chunk$set(echo = FALSE,  fig.height = 10, fig.width = 15)\n",
+    "```\n\n",
+    "```{r message=FALSE, warning=FALSE}\n",
+    "library(promises)\nlibrary(ggplot2)\nlibrary(FactoMineR)\n",
+    "library(FactoMineR)\nlibrary(factoextra)\nlibrary(reshape)\n",
+    "library(corrplot)\nlibrary(dendextend)\nlibrary(scatterplot3d)\n",
+    "library(stringr)\nlibrary(ggdendro)\n",
+    "library(caret)\nlibrary(kknn)\nlibrary(e1071)\nlibrary(rpart)\n",
+    "library(rpart.plot)\nlibrary(randomForest)\nlibrary(ada)\nlibrary(xgboost)\n",
+    "library(nnet)\nlibrary(dplyr)\nlibrary(forcats)\nlibrary(psych)\n",
+    "library(ROCR)\nlibrary(xtable)\nlibrary(raster)\n",
+    "```\n\n", "```{r}\n", extract.code("var.numericas"), "\n\n",
+    extract.code("var.categoricas"), "\n\n", extract.code("datos.disyuntivos"),
+    "\n\n", extract.code("distribucion.numerico"), "\n\n",
+    extract.code("distribucion.categorico"), "\n\n```",
+    codigo.usuario)
 }
 
 recover.cat <- function(){
@@ -983,15 +1027,13 @@ nombres.modelos <<- c()
 
 # -------------------  Estadisticas Basicas
 
-
 correlacion <<- NULL
+cod.poder.cat <- NULL
+cod.poder.num <- NULL
 #cod.disp <- default.disp()
 #cod.cor <- correlaciones()
 #cod.dya.cat <- def.code.cat()
 #cod.dya.num <- def.code.num()
-
-cod.poder.cat <- NULL
-cod.poder.num <- NULL
 
 # -------------------  Modelos
 
@@ -1037,6 +1079,13 @@ cod.b.modelo <<-  NULL
 cod.b.pred <<-  NULL
 cod.b.mc <<- NULL
 cod.b.ind <<- NULL
+
+# -------------------  KNN
+
+cod.bayes.modelo <<-  NULL
+cod.bayes.pred <<-  NULL
+cod.bayes.mc <<- NULL
+cod.bayes.ind <<- NULL
 
 # -------------------  Prediccion Nuevos
 

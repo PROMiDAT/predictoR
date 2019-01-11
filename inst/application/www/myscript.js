@@ -1,4 +1,4 @@
-var promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true};
+var promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true , xgb: true};
 
 function promidat_model_firt(e, model, id){
   if(promidat_flat_models[model]){
@@ -17,13 +17,32 @@ function promidat_model_firt(e, model, id){
   $("a[href^='#shiny-tab-rf']").on('click', (e) => promidat_model_firt(e,"rf","runRf"));
   $("a[href^='#shiny-tab-boosting']").on('click', (e) => promidat_model_firt(e,"boosting","runBoosting"));
   $("a[href^='#shiny-tab-svm']").on('click', (e) => promidat_model_firt(e,"svm","runSvm"));
+  $("a[href^='#shiny-tab-bayes']").on('click', (e) => promidat_model_firt(e,"bayes","runBayes"));
+  $("a[href^='#shiny-tab-xgb']").on('click', (e) => promidat_model_firt(e,"xgb","runXgb"));
   $("#segmentButton").on('click',function(e){
-    promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true};
+    promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true, xgb: true};
   });
 });
 
 
-/// Diego ---------------------------------------------------------------------------
+function eliminar_tabs_extras(){
+  $("ul#BoxNormal li")[2].remove();
+  $("ul#BoxDisp li")[1].remove();
+  $("ul#tabDyA li")[2].remove();
+  $("ul#tabCor li").last().remove();
+  $("ul#BoxKnn li").last().remove();
+  $("ul#BoxDt li").last().remove();
+  $("ul#BoxRf li").last().remove();
+  $("ul#BoxB li").last().remove();
+  $("ul#BoxSvm li").last().remove();
+  $("ul#BoxCom li").last().remove();
+  $("ul#BoxModelo li").last().remove();
+  $("ul#BoxModelo li").last().remove();
+  $("ul#BoxPodPred li").last().remove();
+  $("ul#BoxPodPred li").last().remove();
+  $("ul#BoxBayes li").last().remove();
+  $("ul#BoxXgb li").last().remove();
+}
 
 shinyjs.init = function() {
   $(".sidebar").on("click", ".disabled", function (e) {
@@ -71,11 +90,7 @@ shinyjs.init = function() {
     a.toggleClass("box-option-open-right")
   });
 
-  $("ul#BoxNormal li")[2].remove();
-  $("ul#BoxDisp li")[1].remove();
-  $("ul#tabDyA li")[2].remove();
-  $("ul#tabCor li")[2].remove();
-  $("ul#BoxKnn li").last().remove();
+  eliminar_tabs_extras()
 }
 
 Shiny.addCustomMessageHandler("updateLabel",
@@ -84,6 +99,9 @@ Shiny.addCustomMessageHandler("updateLabel",
       element = $("[data-id=" + message.ids[i] + "]")
       for (var j = 0; j < element.length; j++) {
         element[j].innerHTML = message.values[i];
+      }
+      if(message.ids[i] == "categorico" || message.ids[i] == "numerico" || message.ids[i] == "disyuntivo"){
+        $("option[value='"+message.ids[i]+"']").text(message.values[i])
       }
     }
   }

@@ -36,22 +36,19 @@ library(dplyr)
 campo.codigo <- function(runid, refid, fieldid, ...) {
   tags$div(class = "box box-solid bg-black",
            tags$div(style = "text-align:right;padding-right: 10px;",
-                    tags$button( id = runid, type = "button", class = "run-button action-button",
-                                 icon("play"), tags$a(labelInput("ejecutar"), style = "color:white"))),
-           tags$div( class = "box-body",
-                     aceEditor(fieldid, mode = "r", theme = "monokai", value = "", ...)))
+                    tags$button(id = runid, type = "button", class = "run-button action-button",
+                                icon("play"), tags$a(labelInput("ejecutar"), style = "color:white"))),
+           tags$div(class = "box-body",
+                    aceEditor(fieldid, mode = "r", theme = "monokai", value = "", ...)))
 }
 
 # Crea un cuadro para la inforación (ver página de información)
 infoBoxPROMiDAT <- function(titulo, valor, icono) {
-  tags$div(
-    class = "info-box bg-promidat",
-    tags$span(class = "info-box-icon", icono),
-    tags$div(class="info-box-content",
-             tags$span(class = "info-box-text", titulo),
-             tags$span(class = "info-box-number", valor)
-    )
-  )
+  tags$div(class = "info-box bg-promidat",
+           tags$span(class = "info-box-icon", icono),
+           tags$div(class="info-box-content",
+                    tags$span(class = "info-box-text", titulo),
+                    tags$span(class = "info-box-number", valor)))
 }
 
 # Un wrapper de texto que permite cambiar el idioma
@@ -59,21 +56,27 @@ labelInput <- function(inputId, value = ""){
   tags$span(`data-id` = inputId, value)
 }
 
+inputRadio <- function(inputId, value, isSelected) {
+  res <- tags$input(type="radio", name=inputId, value=value)
+  if(isSelected){
+    res$attribs$checked <- "checked"
+  }
+  return(res)
+}
+
 # Crea una radioButtons que puede cambiar de idioma
 radioButtonsTr <- function(inputId, label, values, names){
-  tags$div( id=inputId, class="form-group shiny-input-radiogroup shiny-input-container",
-            tags$label(class="control-label", `for`=inputId, labelInput(label)),
-            tags$div(class="shiny-options-group",
-                     lapply(1:length(values), function(i) {
-                       tags$div(class="radio",tags$label(inputRadio(inputId, values[i], i == 1),
-                                                         tags$span(labelInput(names[i]))))
-                       }))
-            )
+  item <- function(i){
+    tags$div(class="radio",tags$label(inputRadio(inputId, values[i], i == 1),tags$span(labelInput(names[i]))))
+  }
+  tags$div(id=inputId, class="form-group shiny-input-radiogroup shiny-input-container",
+           tags$label(class="control-label", `for`= inputId, labelInput(label)),
+           tags$div(class="shiny-options-group", lapply(1:length(values), item )))
 }
 
 #Genera los campos para las opciones y parametros
 tabsOptions <- function(botones = list(icon("gear"), icon("terminal")), widths = c(50, 100),
-                        heights = c(100, 50), tabs.content = list("", "")) {
+                        heights = c(100, 50), tabs.content = list("", "")){
   res <- ""
   codeButtons <- ""
   cant <- length(botones)
@@ -81,82 +84,64 @@ tabsOptions <- function(botones = list(icon("gear"), icon("terminal")), widths =
   if(cant == 2) {widgets <- c("left", "right")}
   if(cant == 3) {widgets <- c("left", "center", "right")}
   if(cant == 4) {widgets <- c("left", "centerleft", "centeright", "right")}
-  if(cant == 5) {
-    widgets <- c("left", "centerleft", "center", "centeright", "right")}
-  for (i in 1:cant) {
-    res <- paste0(
-      res, tags$div(
-        class = paste0("box-option box-option-", widgets[i]),
-        style = paste0("width:", widths[i], "%;height:", heights[i], "%;"),
-        tabs.content[[i]]), "\n")
-    codeButtons <- paste0(
-      codeButtons, "<button style='width:", 100/cant, "%' data-widget='",
-      widgets[i], "'>", botones[[i]], "</button>\n")
+  if(cant == 5) {widgets <- c("left", "centerleft", "center", "centeright", "right")}
+  for(i in 1:cant){
+    res <- paste0(res, tags$div(class = paste0("box-option box-option-", widgets[i]),
+                                style = paste0("width:", widths[i], "%;height:", heights[i], "%;"),
+                                tabs.content[[i]]), "\n")
+    codeButtons <- paste0(codeButtons, "<button style='width:", 100/cant, "%' data-widget='",
+                          widgets[i], "'>", botones[[i]], "</button>\n")
   }
-  res <- paste0(
-    res, tags$div(
-      class = "btn-options", style = "position:relative;",
-      width = "100%", HTML(codeButtons))
-  )
+  res <- paste0(res, tags$div(class = "btn-options", style = "position:relative;",width = "100%", HTML(codeButtons)))
   return(tags$div(HTML(res)))
 }
-
-inputRadio <- function(inputId, value, isSelected) {
-  res <- tags$input(type="radio", name=inputId, value=value)
-  if(isSelected) {
-    res$attribs$checked <- "checked"
-  }
-  return(res)
-}
-
-
-
-updateSelects <- function(datos) {
-  vars <- list("numericas" = colnames(var.numericas(datos)),
-               "categoricas" = colnames(var.categoricas(datos)),
-               "todas" = colnames(datos))
-  selects <- list(
-    list(id = "sel.normal", choices = "numericas", tipo = "Selectize"),
-    list(id = "select.var", choices = "numericas", tipo = "Selectize"),
-    list(id = "sel.distribucion.num", choices = "numericas", tipo = "Select"),
-    list(id = "sel.distribucion.cat", choices = "categoricas", tipo = "Select"),
-    list(id = "sel.resumen", choices = "todas", tipo = "Select"),
-    list(id = "selVert", choices = "numericas+", tipo = "Select"),
-    list(id = "sel.Kvert", choices = "numericas+", tipo = "Select"),
-    list(id = "sel.Kbar", choices = "categoricas", tipo = "Select"),
-    list(id = "selBar", choices = "categoricas", tipo = "Select"))
-  lapply(selects, function(sel) {
-    if(sel$tipo == "Selectize"){
-      updateSelectizeInput(session, sel$id, choices = vars[[sel$choices]])
-    } else {
-      updateSelectInput(session, sel$id, choices = vars[[sel$choices]])
-    }
-  })
-  updateinitSelects("selVert", colnames(var.numericas(datos)))
-  updateinitSelects("sel.Kvert", colnames(var.numericas(datos)))
-}
-
-updateinitSelects <- function(id, choices) {
-  vars <- c()
-  vars[tr("todos")] <- "todos"
-  vars <- c(vars, choices)
-  updateSelectInput(session, id, choices = vars)
-}
-
-updateMenu <- function(datos = NULL, init = F){
-  element <- "#sidebarItemExpanded li"
-  menu.values <- c(
-    "[class^=treeview]",  " a[data-value=acp]", " a[data-value=agrupacion]",
-    " a[data-value=kmedias]", " a[data-value=reporte]")
-
-  lapply(menu.values, function(i){
-    if(init || (is.null(datos) || ncol(datos) < 1)){
-      addClass(class = "disabled", selector = paste0(element, i))
-    } else {
-      removeClass(class = "disabled", selector = paste0(element, i))
-    }
-  })
-}
+#
+# updateSelects <- function(datos) {
+#   vars <- list("numericas" = colnames(var.numericas(datos)),
+#                "categoricas" = colnames(var.categoricas(datos)),
+#                "todas" = colnames(datos))
+#   selects <- list(
+#     list(id = "sel.normal", choices = "numericas", tipo = "Selectize"),
+#     list(id = "select.var", choices = "numericas", tipo = "Selectize"),
+#     list(id = "sel.distribucion.num", choices = "numericas", tipo = "Select"),
+#     list(id = "sel.distribucion.cat", choices = "categoricas", tipo = "Select"),
+#     list(id = "sel.resumen", choices = "todas", tipo = "Select"),
+#     list(id = "selVert", choices = "numericas+", tipo = "Select"),
+#     list(id = "sel.Kvert", choices = "numericas+", tipo = "Select"),
+#     list(id = "sel.Kbar", choices = "categoricas", tipo = "Select"),
+#     list(id = "selBar", choices = "categoricas", tipo = "Select"))
+#   lapply(selects, function(sel) {
+#     if(sel$tipo == "Selectize"){
+#       updateSelectizeInput(session, sel$id, choices = vars[[sel$choices]])
+#     } else {
+#       updateSelectInput(session, sel$id, choices = vars[[sel$choices]])
+#     }
+#   })
+#   updateinitSelects("selVert", colnames(var.numericas(datos)))
+#   updateinitSelects("sel.Kvert", colnames(var.numericas(datos)))
+# }
+#
+# updateinitSelects <- function(id, choices) {
+#   vars <- c()
+#   vars[tr("todos")] <- "todos"
+#   vars <- c(vars, choices)
+#   updateSelectInput(session, id, choices = vars)
+# }
+#
+# updateMenu <- function(datos = NULL, init = F){
+#   element <- "#sidebarItemExpanded li"
+#   menu.values <- c(
+#     "[class^=treeview]",  " a[data-value=acp]", " a[data-value=agrupacion]",
+#     " a[data-value=kmedias]", " a[data-value=reporte]")
+#
+#   lapply(menu.values, function(i){
+#     if(init || (is.null(datos) || ncol(datos) < 1)){
+#       addClass(class = "disabled", selector = paste0(element, i))
+#     } else {
+#       removeClass(class = "disabled", selector = paste0(element, i))
+#     }
+#   })
+# }
 
 # MENU --------------------------------------------------------------------------------------------------------------------
 
@@ -175,7 +160,10 @@ menu.aprendizaje.supervisado <- menuItem(labelInput("aprendizaje"), tabName = "p
                                          menuSubItem(labelInput("dtl"),tabName = "dt",icon = icon("tree")),
                                          menuSubItem(labelInput("rfl"),tabName = "rf",icon = icon("sitemap")),
                                          menuSubItem(labelInput("bl"),tabName = "boosting",icon = icon("superscript")),
-                                         menuSubItem(labelInput("svml"),tabName = "svm",icon = icon("line-chart")))
+                                         menuSubItem(labelInput("svml"),tabName = "svm",icon = icon("line-chart")),
+                                         menuSubItem("Bayes",tabName = "bayes",icon = icon("line-chart")),
+                                         menuSubItem(labelInput("nn"),tabName = "nn",icon = icon("line-chart")),
+                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("line-chart")))
 
 menu.reporte <- menuItem(labelInput("reporte"), tabName = "reporte", icon = icon("save-file",lib = "glyphicon"))
 
@@ -194,6 +182,8 @@ menu.idioma <- tags$li(class = "nodisabled treeview",
                               radioButtons('idioma', labelInput("selidioma"), c('Español'='es', 'English'='en')),
                               tags$br()))
 
+#Los sliderInput y colourpicker por un motivo imprevisto se tienen que inicializar
+#De lo contrario no se vana mostrar en algunas partes de la interfaz
 init.inputs <- tags$div(style = "display:none;",
                           sliderInput(inputId = "aux", min = 2, value = 2,
                                       label = "Cantidad de Clusters", max = 10),
@@ -213,16 +203,16 @@ mi.menu <- sidebarMenu(id = "principal",
               menu.idioma,
               init.inputs)
 
-
 # HEAD HTML ---------------------------------------------------------------------------------------------------------
 
+#Importa css y js. Tambien se decide el icono
 mi.head <- tags$head(
   tags$link(rel = "stylesheet", type = "text/css", href = "style_promidat.css"),
   tags$link(rel="icon", href="http://www.promidat.org/theme/image.php/formal_white/theme/1438713216/favicon"),
   useShinyjs(),
-  tags$script(src = "myscript.js")
-)
+  tags$script(src = "myscript.js"))
 
+#La  pagina de carga
 load.page <- conditionalPanel(condition="($('html').hasClass('shiny-busy'))",
                               div(id = "loaderWrapper", div(id="loader")))
 
@@ -444,7 +434,7 @@ tabs.poder.predit.uno <- conditionalPanel("input.BoxPodPred == 'preddist' || inp
                                                       tabs.content = list(codigo.poder.uno)))
 
 tabs.poder.predit.dos <- conditionalPanel("input.BoxPodPred == 'predcatdist' || input.BoxPodPred == 'preddens'",
-                                          tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(40, 58),
+                                          tabsOptions(botones = list(icon("gear"),icon("terminal")), widths = c(50,100), heights = c(40, 58),
                                                       tabs.content = list(opciones.poder.comp, codigo.poder.comp)))
 
 plot.pred.poder <- tabPanel(title = labelInput('distpred'), value = "preddist",
@@ -521,7 +511,6 @@ pagina.knn <- tabItem(tabName = "knn",
                              panel.indices.generales.knn,
                              tabs.knn))
 
-
 # PAGINA DE SVM -----------------------------------------------------------------------------------------------------------
 
 opciones.svm <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
@@ -585,8 +574,8 @@ pagina.svm <- tabItem(tabName = "svm",
 
 # PAGINA DE DT ------------------------------------------------------------------------------------------------------------
 
-opciones.dt <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
-                              column(width = 2,br(),actionButton("runDt", label = labelInput("ejecutar"), icon = icon("play")))),
+opciones.dt <- list(fluidRow(column(width = 9, h4(labelInput("opciones"))),
+                              column(width = 2, br(),actionButton("runDt", label = labelInput("ejecutar"), icon = icon("play")))),
                      hr(),
                      fluidRow(column(numericInput("minsplit.dt", labelInput("minsplit"), 20, width = "100%",min = 1), width = 6),
                               column(numericInput("maxdepth.dt", labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1),width = 6)),
@@ -608,7 +597,10 @@ codigo.dt <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxDt == 'tabDtIndex'",
                                     aceEditor("fieldCodeDtIG", mode = "r", theme = "monokai",
-                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")),
+                  conditionalPanel("input.BoxDt == 'tabDtReglas'",
+                                   aceEditor("fieldCodeDtRule", mode = "r", theme = "monokai",
+                                             value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
 tabs.dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
                         tabs.content = list(opciones.dt, codigo.dt))
@@ -632,7 +624,8 @@ panel.indices.generales.dt <- tabPanel(title = labelInput("indices"),value = "ta
                                        fluidRow(column(width = 12, shiny::tableOutput("dtIndPrecTable"))),
                                        fluidRow(column(width = 12, shiny::tableOutput("dtIndErrTable"))))
 
-panel.reglas.dt <- tabPanel(title = labelInput("reglas"), verbatimTextOutput("rulesDt"))
+panel.reglas.dt <- tabPanel(title = labelInput("reglas"),value = "tabDtReglas",
+                            verbatimTextOutput("rulesDt"))
 
 pagina.dt <- tabItem(tabName = "dt",
                      tabBox(id = "BoxDt", width = NULL, height ="80%",
@@ -673,7 +666,10 @@ codigo.rf  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxRf == 'tabRfIndex'",
                                     aceEditor("fieldCodeRfIG", mode = "r", theme = "monokai",
-                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")),
+                   conditionalPanel("input.BoxRf == 'tabRfRules'",
+                                    aceEditor("fieldCodeRfRules", mode = "r", theme = "monokai",
+                                              value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
 tabs.rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 75),
                         tabs.content = list(opciones.rf, codigo.rf))
@@ -747,7 +743,10 @@ codigo.b  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxB == 'tabBIndex'",
                                     aceEditor("fieldCodeBoostingIG", mode = "r", theme = "monokai",
-                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")),
+                  conditionalPanel("input.BoxB == 'tabBRules'",
+                                   aceEditor("fieldCodeBoostingRules", mode = "r", theme = "monokai",
+                                             value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
 tabs.b  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(63, 75),
                         tabs.content = list(opciones.b, codigo.b))
@@ -788,6 +787,158 @@ pagina.boosting <- tabItem(tabName = "boosting",
                                   reglas.boosting,
                                   tabs.b))
 
+# PAGINA DE BAYES ---------------------------------------------------------------------------------------------------------
+
+codigo.bayes <- list(fluidRow(column(width = 11,h4(labelInput("codigo"))),
+                              column(width = 1,actionButton("runBayes", label = labelInput("ejecutar"), icon = icon("play")))),
+                     hr(),
+                     conditionalPanel("input.BoxBayes == 'tabBayesModelo'",
+                                      aceEditor("fieldCodeBayes", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
+                     conditionalPanel("input.BoxBayes == 'tabBayesPred'",
+                                      aceEditor("fieldCodeBayesPred", mode = "r", theme = "monokai",
+                                                value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                     conditionalPanel("input.BoxBayes == 'tabBayesMC'",
+                                      aceEditor("fieldCodeBayesMC", mode = "r", theme = "monokai",
+                                                value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                     conditionalPanel("input.BoxBayes == 'tabBayesIndex'",
+                                      aceEditor("fieldCodeBayesIG", mode = "r", theme = "monokai",
+                                                value = "", height = "19vh", readOnly = F, autoComplete = "enabled")))
+
+tabs.bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(78),
+                          tabs.content = list(codigo.bayes))
+
+panel.generar.bayes <- tabPanel(title = labelInput("generatem"), value = "tabBayesModelo",
+                                verbatimTextOutput("txtbayes"))
+
+panel.prediccion.bayes <- tabPanel(title = labelInput("predm"), value = "tabBayesPred",
+                                   DT::dataTableOutput("bayesPrediTable"))
+
+panel.matriz.confucion.bayes <- tabPanel(title = labelInput("mc"), value = "tabBayesMC",
+                                        plotOutput('plot.bayes.mc', height = "45vh"),
+                                        verbatimTextOutput("txtbayesMC"))
+
+panel.indices.generales.bayes <- tabPanel(title = labelInput("indices"), value = "tabBayesIndex",
+                                         fluidRow(column(width = 6, gaugeOutput("bayesPrecGlob", width = "100%")),
+                                                  column(width = 6, gaugeOutput("bayesErrorGlob", width = "100%"))),
+                                         fluidRow(column(width = 12, shiny::tableOutput("bayesIndPrecTable"))),
+                                         fluidRow(column(width = 12, shiny::tableOutput("bayesIndErrTable"))))
+
+pagina.bayes <- tabItem(tabName = "bayes",
+                      tabBox(id = "BoxBayes", width = NULL, height ="80%",
+                             panel.generar.bayes,
+                             panel.prediccion.bayes,
+                             panel.matriz.confucion.bayes,
+                             panel.indices.generales.bayes,
+                             tabs.bayes))
+
+# PAGINA DE REDES NEURONALES ----------------------------------------------------------------------------------------------
+
+opciones.nn <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
+                              column(width = 2,br(),actionButton("runNn", label = labelInput("ejecutar"), icon = icon("play")))),
+                     hr(),
+                     fluidRow(column(numericInput("numNode.nn", labelInput("numNode"), min = 1,step = 1, value = 7), width = 6),
+                              column(selectInput(inputId = "kernel.nn", label = labelInput("selkernel"),selected = 1,
+                                                 choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
+                                                             "triweight", "cos","inv","gaussian")),width = 6)),
+                     fluidRow(column(switchInput(inputId = "switch.scale.nn", onStatus = "success", offStatus = "danger", value = T,
+                                                 label = labelInput("escal"), onLabel = labelInput("si"), offLabel = labelInput("no"), labelWidth = "100%"), width=7)))
+
+# size = número de de nodos en la capa oculta
+# rang = pesos iniciales
+# decay = grado de decrecimiento de los pesos
+# maxit = número máximo de iteraciones (default=100)
+# MaxNWts = Número máximo de pesos (default=1000)
+
+codigo.nn <- list(h4(labelInput("codigo")), hr(),
+                   conditionalPanel("input.BoxNn == 'tabNnModelo'",
+                                    aceEditor("fieldCodeNn", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
+                   conditionalPanel("input.BoxNn == 'tabNnPred'",
+                                    aceEditor("fieldCodeNnPred", mode = "r", theme = "monokai",
+                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                   conditionalPanel("input.BoxNn == 'tabNnMC'",
+                                    aceEditor("fieldCodeNnMC", mode = "r", theme = "monokai",
+                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                   conditionalPanel("input.BoxNn == 'tabNnIndex'",
+                                    aceEditor("fieldCodeNnIG", mode = "r", theme = "monokai",
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
+
+tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
+                        tabs.content = list(opciones.nn, codigo.nn))
+
+panel.generar.nn <- tabPanel(title = labelInput("generatem"), value = "tabNnModelo",
+                              verbatimTextOutput("txtnn"))
+
+panel.prediccion.nn <- tabPanel(title = labelInput("predm"), value = "tabNnPred",
+                                 DT::dataTableOutput("nnPrediTable"))
+
+panel.matriz.confucion.nn <- tabPanel(title = labelInput("mc"), value = "tabNnMC",
+                                       plotOutput('plot.nn.mc', height = "45vh"),
+                                       verbatimTextOutput("txtnnMC"))
+
+panel.indices.generales.nn <- tabPanel(title = labelInput("indices"), value = "tabNnIndex",
+                                        fluidRow(column(width = 6, gaugeOutput("nnPrecGlob", width = "100%")),
+                                                 column(width = 6, gaugeOutput("nnErrorGlob", width = "100%"))),
+                                        fluidRow(column(width = 12, shiny::tableOutput("nnIndPrecTable"))),
+                                        fluidRow(column(width = 12, shiny::tableOutput("nnIndErrTable"))))
+
+pagina.nn  <- tabItem(tabName = "nn",
+                      tabBox(id = "BoxNn", width = NULL, height ="80%",
+                             panel.generar.nn,
+                             panel.prediccion.nn,
+                             panel.matriz.confucion.nn,
+                             panel.indices.generales.nn,
+                             tabs.nn))
+
+# PAGINA DE XG BOOSTING ---------------------------------------------------------------------------------------------------
+
+opciones.xgb <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
+                              column(width = 2,br(),actionButton("runXgb", label = labelInput("ejecutar"), icon = icon("play")))),
+                     hr(),
+                     fluidRow(column(selectInput(inputId = "boosterXgb", label = labelInput("selbooster"),selected = 1,
+                                                 choices = c("gbtree", "gblinear", "dart")),width = 12)),
+                     fluidRow(column(numericInput("maxdepthXgb", labelInput("maxdepth"), min = 1,step = 1, value = 6), width = 6),
+                              column(numericInput("nroundsXgb", labelInput("selnrounds"), min = 0,step = 1, value = 1), width = 6)))
+
+codigo.xgb <- list(h4(labelInput("codigo")), hr(),
+                   conditionalPanel("input.BoxXgb == 'tabXgbModelo'",
+                                    aceEditor("fieldCodeXgb", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
+                   conditionalPanel("input.BoxXgb == 'tabXgbPred'",
+                                    aceEditor("fieldCodeXgbPred", mode = "r", theme = "monokai",
+                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                   conditionalPanel("input.BoxXgb == 'tabXgbMC'",
+                                    aceEditor("fieldCodeXgbMC", mode = "r", theme = "monokai",
+                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                   conditionalPanel("input.BoxXgb == 'tabXgbIndex'",
+                                    aceEditor("fieldCodeXgbIG", mode = "r", theme = "monokai",
+                                              value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
+
+tabs.xgb <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
+                        tabs.content = list(opciones.xgb, codigo.xgb))
+
+panel.generar.xgb <- tabPanel(title = labelInput("generatem"), value = "tabXgbModelo",
+                              verbatimTextOutput("txtxgb"))
+
+panel.prediccion.xgb <- tabPanel(title = labelInput("predm"), value = "tabXgbPred",
+                                 DT::dataTableOutput("xgbPrediTable"))
+
+panel.matriz.confucion.xgb <- tabPanel(title = labelInput("mc"), value = "tabXgbMC",
+                                       plotOutput('plot.xgb.mc', height = "45vh"),
+                                       verbatimTextOutput("txtxgbMC"))
+
+panel.indices.generales.xgb <- tabPanel(title = labelInput("indices"), value = "tabXgbIndex",
+                                        fluidRow(column(width = 6, gaugeOutput("xgbPrecGlob", width = "100%")),
+                                                 column(width = 6, gaugeOutput("xgbErrorGlob", width = "100%"))),
+                                        fluidRow(column(width = 12, shiny::tableOutput("xgbIndPrecTable"))),
+                                        fluidRow(column(width = 12, shiny::tableOutput("xgbIndErrTable"))))
+
+pagina.xgb <- tabItem(tabName = "xgb",
+                      tabBox(id = "BoxXgb", width = NULL, height ="80%",
+                             panel.generar.xgb,
+                             panel.prediccion.xgb,
+                             panel.matriz.confucion.xgb,
+                             panel.indices.generales.xgb,
+                             tabs.xgb))
+
 # PAGINA DE COMPARACION DE MODELOS ---------------------------------------------------------------------------------------
 
 selector.modelos <- checkboxGroupButtons("select.models", labelInput("selectMod"), c(" ---- " = "NoDisponible"),
@@ -811,7 +962,7 @@ plot.comparacion.roc <- tabPanel(title = labelInput("rocCurva"), plotOutput('plo
 
 
 pagina.comparacion <- tabItem(tabName = "comparar",
-                              tabBox(id = "BoxB", width = NULL, height ="80%",
+                              tabBox(id = "BoxCom", width = NULL, height ="80%",
                                      panel.comparacion.tabla,
                                      plot.comparacion.roc,
                                      tabs.comparacion))
@@ -961,7 +1112,7 @@ pagina.info <- tabItem(tabName = "acercaDe",
                        infoBoxPROMiDAT(labelInput("copyright"), "PROMiDAT S.A.", icono = icon("copyright")),
                        infoBoxPROMiDAT(labelInput("info"), tags$a( href="https://www.promidat.com/", style = "color:white;",
                                                                    target = "_blank", "https://www.promidat.com"), icono = icon("info")),
-                       infoBoxPROMiDAT(labelInput("version"), "1.0.9", icono = icon("file-code-o")))
+                       infoBoxPROMiDAT(labelInput("version"), "1.0.0", icono = icon("file-code-o")))
 
 # PAGINA COMPLETA ---------------------------------------------------------------------------------------------------------
 
@@ -987,6 +1138,8 @@ shinyUI(
                          pagina.dt,
                          pagina.rf,
                          pagina.boosting,
+                         pagina.bayes,
+                         pagina.xgb,
                          pagina.comparacion,
                          pagina.predicciones.nuevas,
                          pagina.generar.reporte,

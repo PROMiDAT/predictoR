@@ -16,7 +16,7 @@
 }
 
 /*tamaño minimo para el campo de texto de las matrices de confusion*/
-#txtknnMC, #txtSvmMC, #txtDtMC, #txtRfMC, #txtBoostingMC{
+#txtknnMC, #txtSvmMC, #txtDtMC, #txtRfMC, #txtBoostingMC,  #txtbayesMC, #txtxgbMC{
   min-height: 100px !important;
 }
 

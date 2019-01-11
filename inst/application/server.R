@@ -5,23 +5,15 @@ shinyServer(function(input, output, session) {
 
   # Crea una tabla dependiendo de los datos ingresados
   renderizar.tabla.datos <- function(data, editable = TRUE, dom = "frtip", pageLength = 10, scrollY = "27vh") {
-    if(input$idioma == "es"){
-      labelNum <- "Numérico"
-      labelCat <- "Categórico"
-    } else {
-      labelNum <- "Numerical"
-      labelCat <- "Categorical"
-    }
-    size <- nrow(data)
+    labelsNC <- ifelse(input$idioma == c("es", "es"), c("Numérico","Categórico"), c("Numerical","Categorical"))
     data <- head(data, n = 100)
     nombre.columnas <- c("ID", colnames(data))
     tipo.columnas <- sapply(colnames(data), function(i) ifelse(class(data[,i]) %in% c("numeric", "integer"),
-                                                                paste0("<span data-id='numerico'>", labelNum, "</span>"),
-                                                                paste0("<span data-id='categorico'>", labelCat, "</span>")))
-
-    sketch <- htmltools::withTags(table(
-      tableHeader(nombre.columnas),
-      tags$tfoot(tags$tr(tags$th(), lapply(tipo.columnas, function(i) tags$th(HTML(i))))) ))
+                                                                paste0("<span data-id='numerico'>", labelsNC[1], "</span>"),
+                                                                paste0("<span data-id='categorico'>", labelsNC[2], "</span>")))
+    tipo.columnas <- lapply(tipo.columnas, function(i)tags$th(HTML(i)))
+    sketch <- htmltools::withTags(table(tableHeader(nombre.columnas),
+                                        tags$tfoot(tags$tr(tags$th(), tipo.columnas))))
 
     return(DT::datatable(data, selection = 'none', editable = editable,  container = sketch,
                   options = list(dom = dom, pageLength = pageLength, scrollY = scrollY)))
@@ -55,19 +47,19 @@ shinyServer(function(input, output, session) {
   validar.datos <- function(print = TRUE) {
     # Validaciones
     if (is.null(variable.predecir) & print) {
-      showNotification("Tiene que seleccionar una variable a predecir", duration = 10, type = "error")
+      showNotification(tr("tieneVP"), duration = 10, type = "error")
     }
     if (is.null(datos) & print) {
-      showNotification("Tiene que ingresar datos", duration = 10, type = "error")
+      showNotification(tr("tieneD"), duration = 10, type = "error")
     }
     if (is.null(datos.aprendizaje) & print) {
-      showNotification("Tiene que crear los datos de aprendizaje y de prueba", duration = 10, type = "error")
+      showNotification(tr("tieneDAP"), duration = 10, type = "error")
     }
     return(!is.null(datos) & !is.null(variable.predecir) & !is.null(datos.aprendizaje))
   }
 
   # Crea la tabla de comparacion entre prediccion y datos reales (datos de prueba)
-  obj.predic <- function(predic.var = NULL) {
+  obj.predic <- function(predic.var = NULL){
     real <- as.character(datos.prueba[, variable.predecir])
     predi <- as.character(predic.var)
     acerto <- paste0("<span style='color:green'><b>",tr("acerto"),"</b></span>")
@@ -83,29 +75,19 @@ shinyServer(function(input, output, session) {
                          editable = FALSE,
                          escape = FALSE,
                          container = sketch,
-                         extensions = c("Responsive"),
-                         options = list(dom = "frtip", pageLength = 10)
-    ))
+                         options = list(dom = "frtip", pageLength = 10)))
   }
 
   # Mostar o ocultar los indices
-  indices.g <- function(id = "knn", mc = NA) {
-    if (!is.null(mc)) {
-      shinyjs::show(paste0(id, "PrecGlob"))
-      shinyjs::show(paste0(id, "ErrorGlob"))
-    } else {
-      shinyjs::hide(paste0(id, "PrecGlob"))
-      shinyjs::hide(paste0(id, "ErrorGlob"))
-    }
-  }
-
-  # Genera los gauges
-  fill.gauges <- function(ids, indices) {
-    titulos <- c(tr("precG"), tr("errG"))
-    for (i in 1:length(ids)) {
-      eval(parse(text = new.gauge(ids[i], indices[[i]], titulos[i])))
-    }
-  }
+  # indices.g <- function(id = "knn", mc = NA) {
+  #   if (!is.null(mc)) {
+  #     shinyjs::show(paste0(id, "PrecGlob"))
+  #     shinyjs::show(paste0(id, "ErrorGlob"))
+  #   } else {
+  #     shinyjs::hide(paste0(id, "PrecGlob"))
+  #     shinyjs::hide(paste0(id, "ErrorGlob"))
+  #   }
+  # }
 
   # Grafica un error de datos faltantes
   error.variables <- function(idioma = "es", num = T){
@@ -115,11 +97,6 @@ shinyServer(function(input, output, session) {
       img <- raster::stack(paste0("www/", idioma, "_errorCat.png"))
     }
     raster::plotRGB(img)
-  }
-
-  # Concatena y ejecuta un string como codigo
-  exe <- function(...){
-    eval(parse(text = paste0(...)))
   }
 
   # Configuraciones iniciales -----------------------------------------------------------------------------------------------
@@ -148,16 +125,13 @@ shinyServer(function(input, output, session) {
   updateAceEditor(session, "fieldFuncNum", extract.code("distribucion.numerico"))
   updateAceEditor(session, "fieldFuncCat", extract.code("distribucion.categorico"))
 
-  #close.menu("predNuevos", F)
 
   # Valores Reactivos -------------------------------------------------------------------------------------------------------
 
-  updatePlot <- reactiveValues(
-    calc.normal = default.calc.normal(), normal = NULL, disp = NULL,
-    cor = NULL, dya.num = NULL, dya.cat = NULL, poder.pred = NULL,
-    poder.cat = NULL, poder.num = NULL, poder.dens = NULL, roc = FALSE,
-    svm.graf = NULL
-  )
+  updatePlot <- reactiveValues(calc.normal = default.calc.normal(), normal = NULL, disp = NULL,
+                               cor = NULL, dya.num = NULL, dya.cat = NULL, poder.pred = NULL,
+                               poder.cat = NULL, poder.num = NULL, poder.dens = NULL, roc = FALSE,
+                               svm.graf = NULL)
 
   disp.ranges <- reactiveValues(x = NULL, y = NULL)
 
@@ -166,31 +140,30 @@ shinyServer(function(input, output, session) {
   # Carga datos
   cargar.datos <- function(codigo.carga = "") {
     tryCatch({
-      isolate(eval(parse(text = codigo.carga)))
+      isolate(exe(codigo.carga))
       if(ncol(datos) <= 1) {
-        showNotification(paste0("Error al cargar los Datos: Revisar separadores"), duration = 10, type = "error")
+        showNotification(tr("errorCData"), duration = 10, type = "error")
         return(NULL)
       }
       new.report()
     },
     error = function(e) {
-      showNotification(paste0("Error al cargar los Datos: ", e), duration = 10, type = "error")
+      showNotification(paste0("Error: ", e), duration = 10, type = "error")
       datos <<- NULL
       datos.originales <<- NULL
       return(NULL)
-    }
-    )
+    })
   }
 
   # Limpiado datos
-  limpiar.datos <- function() {
+  limpiar.datos <- function(){
     if (any(is.na(datos))) {
       tryCatch({
         codigo.na <- paste0(code.NA(deleteNA = input$deleteNA), "\n", "datos <<- datos.originales")
-        isolate(eval(parse(text = codigo.na)))
+        isolate(exe(codigo.na))
         insert.report("na.delete",paste0("\n# Imputación de Datos\n```{r}\n",codigo.na,"\nhead(datos)\nstr(datos)\n```"))
       }, error = function(e) {
-        showNotification(paste0("Error al eliminar NAs: ", e), duration = 10, type = "error")
+        showNotification(paste0("Error (NA): ", e), duration = 10, type = "error")
         datos <<- NULL
         datos.originales <<- NULL
         return(NULL)
@@ -221,9 +194,9 @@ shinyServer(function(input, output, session) {
       }
     }
 
-    isolate(eval(parse(text = code.res)))
+    isolate(exe(code.res))
     if (length(var.noactivas) > 0) {
-      isolate(eval(parse(text = code.desactivar(var.noactivas))))
+      isolate(exe(code.desactivar(var.noactivas)))
     }
 
     code.res <- paste0(code.res, "\n", code.desactivar(var.noactivas))
@@ -245,7 +218,7 @@ shinyServer(function(input, output, session) {
   # Crea las correlaciones
   ejecutar.modelo.cor <- function() {
     tryCatch({
-      isolate(eval(parse(text = modelo.cor())))
+      isolate(exe(text = modelo.cor()))
       output$txtcor <- renderPrint(print(correlacion))
     }, error = function(e) {
       return(datos <- NULL)
@@ -254,16 +227,11 @@ shinyServer(function(input, output, session) {
 
   # Borra los datos de los modelos
   borrar.modelos <- function(flag.datos = TRUE) {
-
-    # -------------------  DATA ------------------------ #
-
     if (flag.datos) {
       datos.prueba <<- NULL
       datos.aprendizaje <<- NULL
       variable.predecir <<- NULL
     }
-
-    # -------------------  Modelos ------------------------ #
 
     MCs <<- list()
     areas <<- list()
@@ -271,6 +239,7 @@ shinyServer(function(input, output, session) {
 
     rm(list = nombres.modelos, envir = .GlobalEnv)
     nombres.modelos <<- c()
+
     updateCheckboxGroupButtons(session, inputId = "select.models",
                                choices = c(" ---- " = "NoDisponible"),
                                size = "sm", status = "primary",
@@ -283,15 +252,14 @@ shinyServer(function(input, output, session) {
     output$txtDt <- renderPrint(invisible(""))
     output$txtRf <- renderPrint(invisible(""))
     output$txtBoosting <- renderPrint(invisible(""))
+    output$txtbayes <- renderPrint(invisible(""))
     updateSelectInput(session,"kernel.knn",selected = "optimal")
   }
 
   # Cunado es precionado el boton de cargar datos
   observeEvent(input$loadButton, {
-    codigo.carga <- code.carga(
-      nombre.filas = input$rowname, ruta = input$file1$datapath,
-      separador = input$sep, sep.decimal = input$dec, encabezado = input$header
-    )
+    codigo.carga <- code.carga(nombre.filas = input$rowname, ruta = input$file1$datapath,
+                               separador = input$sep, sep.decimal = input$dec, encabezado = input$header)
 
     # Carga los datos
     cargar.datos(codigo.carga)
@@ -361,17 +329,15 @@ shinyServer(function(input, output, session) {
       res$Activa <- sapply(colnames(datos), function(i) paste0('<input type="checkbox" id="box', i, contador, '" checked/>'))
     } else {
       res <- as.data.frame(NULL)
-      showNotification("Tiene que cargar los datos", duration = 10, type = "error")
+      showNotification(tr("tieneCData"), duration = 10, type = "error")
     }
     return(res)
   })
 
   # Cambia la tabla de con las opciones del panel de transformar
-  output$transData <- DT::renderDT({
-                                    variables <- tr("variables")
-                                    tipo <- tr("tipo")
-                                    activa <- tr("activa")
-                                    sketch <- htmltools::withTags(table(tags$thead(tags$tr(tags$th(variables), tags$th(tipo), tags$th(activa)))))
+  output$transData <- DT::renderDT({sketch <- htmltools::withTags(table(tags$thead(tags$tr(tags$th(tags$span(`data-id` = "variables", "Variables")),
+                                                                                           tags$th(tags$span(`data-id` = "tipo", "Tipo")),
+                                                                                           tags$th(tags$span(`data-id` = "activa", "Activa"))))))
                                     DT::datatable(update.trans(),
                                           escape = FALSE, selection = "none", container = sketch,
                                           options = list(dom = "t", paging = FALSE, ordering = FALSE, scrollY = "45vh"), rownames = F,
@@ -392,33 +358,15 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  output$downloaDatosA <- downloadHandler(
-    filename = function() {
-      paste0("(",tr("dataA"),")",input$file1$name)
-    },
-    content = function(file) {
-      write.csv(datos.aprendizaje, file, row.names = input$rowname)
-    }
-  )
-
-  output$downloaDatosP <- downloadHandler(
-    filename = function() {
-      paste0("(",tr("dataP"),")",input$file1$name)
-    },
-    content = function(file) {
-      write.csv(datos.prueba, file, row.names = input$rowname)
-    }
-  )
-
   # Pagina de Segmentar Datos -----------------------------------------------------------------------------------------------
 
   # Crea los datos de aprendizaje y prueba
   segmentar.datos <- function(codigo) {
     tryCatch({
-      isolate(eval(parse(text = codigo)))
+      isolate(exe(codigo))
       updateAceEditor(session, "fieldCodeSegment", value = codigo)
     }, error = function(e) {
-      showNotification(paste0("Error al dividir los datos : ", e), duration = 15, type = "error")
+      showNotification(paste0(tr("errorSeg"), e), duration = 15, type = "error")
     })
   }
 
@@ -438,14 +386,13 @@ shinyServer(function(input, output, session) {
 
   # Segmenta los datos en aprendizaje y prueba
   observeEvent(input$segmentButton, {
-    if (input$sel.predic.var != "") {
-      codigo <- particion.code(
-        "datos", input$segmentacionDatosA,
-        input$sel.predic.var,
-        input$semilla,
-        input$permitir.semilla)
-      semilla <<- input$permitir.semilla
+    if(input$sel.predic.var != ""){
+      codigo <- particion.code("datos", input$segmentacionDatosA,
+                               input$sel.predic.var,
+                               input$semilla,
+                               input$permitir.semilla)
 
+      semilla <<- input$permitir.semilla
       knn.stop.excu <<- FALSE
       rf.stop.excu <<- FALSE
 
@@ -466,8 +413,9 @@ shinyServer(function(input, output, session) {
       default.codigo.dt()
       deafult.codigo.rf(rf.def = TRUE)
       deault.codigo.boosting()
+      default.codigo.bayes()
     } else {
-      showNotification("Tiene que seleccionar una variable a predecir", duration = 15, type = "error")
+      showNotification(tr("tieneSVP"), duration = 15, type = "error")
     }
 
     # Cierre o abre el menu
@@ -497,22 +445,42 @@ shinyServer(function(input, output, session) {
     updateSliderInput(session, "segmentacionDatosA", value = 100 - input$segmentacionDatosT)
   })
 
+  output$downloaDatosA <- downloadHandler(
+    filename = function(){
+      paste0("(",tr("dataA"),")",input$file1$name)
+    },
+    content = function(file) {
+      write.csv(datos.aprendizaje, file, row.names = input$rowname)
+    }
+  )
+
+  output$downloaDatosP <- downloadHandler(
+    filename = function() {
+      paste0("(",tr("dataP"),")",input$file1$name)
+    },
+    content = function(file) {
+      write.csv(datos.prueba, file, row.names = input$rowname)
+    }
+  )
+
   # Pagina de Resumen -------------------------------------------------------------------------------------------------------
 
   # Cambia la tabla con el summary en la pagina de resumen
-  output$resumen.completo <- DT::renderDataTable(obj.resum(), options = list(dom = "ft", scrollX = TRUE), rownames = F)
+  output$resumen.completo <- DT::renderDataTable(obj.resum(),
+                                                 options = list(dom = "ft", scrollX = TRUE),
+                                                 rownames = F)
 
   # Se crea una tabla summary
-  obj.resum <- eventReactive(c(input$loadButton, input$transButton), {
+  obj.resum <- eventReactive(c(input$loadButton, input$transButton),{
     insert.report("resumen" ,c(paste0("\n## Resumen Numérico \n```{r} \nsummary(datos) \n```")))
     data.frame(unclass(summary(datos)), check.names = FALSE, stringsAsFactors = FALSE)
   })
 
   # Cambia los cuadros de summary por varibale
   output$resumen <- renderUI({
-    if (input$sel.resumen %in% colnames(var.numericas(datos))) {
+    if (input$sel.resumen %in% colnames(var.numericas(datos))){
       resumen.numerico(datos, input$sel.resumen)
-    } else {
+    }else{
       resumen.categorico(datos, input$sel.resumen)
     }
   })
@@ -524,7 +492,7 @@ shinyServer(function(input, output, session) {
    output$plot.normal <- renderPlot({
       tryCatch({
         cod.normal <<- updatePlot$normal
-        res <- isolate(eval(parse(text = cod.normal)))
+        res <- isolate(exe(cod.normal))
         updateAceEditor(session, "fieldCodeNormal", value = cod.normal)
         insert.report(paste0("normalidad.", input$sel.normal),paste0("## Test de Normalidad \n```{r}\n", cod.normal, "\n```"))
         return(res)
@@ -555,7 +523,7 @@ shinyServer(function(input, output, session) {
       tryCatch({
         #datos <- updateData$datos
         codigo <- updatePlot$calc.normal
-        res <- isolate(eval(parse(text = codigo)))
+        res <- isolate(exe(codigo))
         updateAceEditor(session, "fieldCalcNormal", value = codigo)
         fisher <- tr("fisher")
         asimetria <- tr("asimetria")
@@ -590,7 +558,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("dispersion.", paste(input$select.var, collapse = ".")),
                         paste0("## Dispersión \n```{r}\n", cod.disp, "\n```"))
         }
-        return(isolate(eval(parse(text = cod.disp))))
+        return(isolate(exe(cod.disp)))
       }, error = function(e) {
         if(ncol(var.numericas(datos)) <= 1){
           error.variables(isolate(input$idioma), T)
@@ -606,7 +574,7 @@ shinyServer(function(input, output, session) {
   output$plot.disp.zoom <- renderPlot({
     tryCatch({
       cod.disp <<- updatePlot$disp
-      res <- isolate(eval(parse(text = cod.disp)))
+      res <- isolate(exe(cod.disp))
       res <- res + coord_cartesian(xlim = disp.ranges$x, ylim = disp.ranges$y, expand = FALSE)
       return(res)
     }, error = function(e) {
@@ -657,7 +625,7 @@ shinyServer(function(input, output, session) {
     output$plot.num <- renderPlot({
       tryCatch({
         cod.dya.num <<- updatePlot$dya.num
-        res <- isolate(eval(parse(text = cod.dya.num)))
+        res <- isolate(exe(cod.dya.num))
         updateAceEditor(session, "fieldCodeNum", value = cod.dya.num)
         insert.report(paste0("dya.num.", input$sel.distribucion.num),
                       paste0("## Distribución y atipicidad \n```{r}\n", cod.dya.num,"\n```"))
@@ -700,7 +668,7 @@ shinyServer(function(input, output, session) {
     output$plot.cat <- renderPlot({
       tryCatch({
         cod.dya.cat <<- updatePlot$dya.cat
-        res <- isolate(eval(parse(text = cod.dya.cat)))
+        res <- isolate(exe(cod.dya.cat))
         updateAceEditor(session, "fieldCodeCat", value = cod.dya.cat)
         insert.report(paste0("dya.cat.", input$sel.distribucion.cat),
                       paste0("## Distribución \n```{r}\n", cod.dya.cat, "\n```"))
@@ -733,7 +701,7 @@ shinyServer(function(input, output, session) {
     output$plot.cor <- renderPlot({
       tryCatch({
         cod.cor <<- updatePlot$cor
-        res <- isolate(eval(parse(text = cod.cor)))
+        res <- isolate(exe(cod.cor))
         updateAceEditor(session, "fieldCodeCor", value = cod.cor)
         insert.report("correlacion", paste0("## Correlación \n```{r}\n", cod.cor, "\n```"))
         return(res)
@@ -767,7 +735,7 @@ shinyServer(function(input, output, session) {
     output$plot.pred.poder <- renderPlot({
       tryCatch({
         cod.poder <<- updatePlot$poder.pred
-        res <- isolate(eval(parse(text = cod.poder)))
+        res <- isolate(exe(cod.poder))
         updateAceEditor(session, "fieldCodePoderPred", value = cod.poder)
         insert.report("poder.pred", paste0("## Distribución Variable Discriminante \n```{r}\n", cod.poder, "\n```"))
         return(res)
@@ -792,7 +760,7 @@ shinyServer(function(input, output, session) {
         cod.poder.cat <<- updatePlot$poder.cat
         updateAceEditor(session, "fieldCodePoderCat", value = cod.poder.cat)
         if (ncol(var.categoricas(datos)) > 1) {
-          res <- isolate(eval(parse(text = cod.poder.cat)))
+          res <- isolate(exe(cod.poder.cat))
           insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
@@ -827,7 +795,7 @@ shinyServer(function(input, output, session) {
         cod.poder.num <<- updatePlot$poder.num
         updateAceEditor(session, "fieldCodePoderNum", value = cod.poder.num)
         if (ncol(var.numericas(datos)) >= 2) {
-          res <- isolate(eval(parse(text = cod.poder.num)))
+          res <- isolate(exe(cod.poder.num))
           insert.report("poder.num",paste0("## Poder Predictivo Variables Numéricas \n```{r}\n", cod.poder.num, "\n```"))
           return(res)
         }else{
@@ -862,7 +830,7 @@ shinyServer(function(input, output, session) {
         cod.poder.den <<- updatePlot$poder.dens
         updateAceEditor(session, "fieldCodePoderDens", value = cod.poder.den)
         if (ncol(var.numericas(datos)) >= 1) {
-          res <- isolate(eval(parse(text = cod.poder.den)))
+          res <- isolate(exe(cod.poder.den))
           insert.report(paste0("poder.den.",input$sel.density.poder),
                         paste0("## Densidad Según Variable Discriminante\n```{r}\n", cod.poder.den, "\n```"))
         }else{
@@ -947,7 +915,7 @@ shinyServer(function(input, output, session) {
     cod.knn.mc <<- codigo
 
     # Se genera el codigo de la indices
-    codigo <- cod.indices()
+    codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeKnnIG", value = codigo)
     cod.knn.ind <<- codigo
   }
@@ -958,20 +926,20 @@ shinyServer(function(input, output, session) {
       switch(i, {
         exe("modelo.knn.",input$kernel.knn," <<- NULL")
         output$txtknn <- renderPrint(invisible(""))
-        insert.report(paste0("modelo.knn.",input$kernel.knn), NULL)
+        remove.report.elem(paste0("modelo.knn.",input$kernel.knn))
       }, {
         exe("prediccion.knn.",input$kernel.knn," <<- NULL")
-        insert.report(paste0("pred.knn.",input$kernel.knn), NULL)
+        remove.report.elem(paste0("pred.knn.",input$kernel.knn))
         output$knnPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.knn.",input$kernel.knn," <<- NULL")
-        insert.report(paste0("mc.knn.",input$kernel.knn), NULL)
+        remove.report.elem(paste0("mc.knn.",input$kernel.knn))
         output$plot.knn.mc <- renderPlot(NULL)
         output$txtknnMC <- renderPrint(invisible(NULL))
         MCs[[paste0("KNN - ",input$kernel.knn)]] <<- NULL
       }, {
         exe("indices.knn.",input$kernel.knn," <<- NULL")
-        insert.report(paste0("ind.knn.",input$kernel.knn), NULL)
+        remove.report.elem(paste0("ind.knn.",input$kernel.knn))
       })
     }
   }
@@ -988,7 +956,7 @@ shinyServer(function(input, output, session) {
   ejecutar.knn <- function() {
     tryCatch({
 
-      eval(parse(text = cod.knn.modelo))
+      exe(cod.knn.modelo)
       updateAceEditor(session, "fieldCodeKnn", value = cod.knn.modelo)
       output$txtknn <- renderPrint(exe("modelo.knn.",input$kernel.knn))
       insert.report(paste0("modelo.knn.",input$kernel.knn),
@@ -1006,7 +974,7 @@ shinyServer(function(input, output, session) {
   # Genera la prediccion
   ejecutar.knn.pred <- function() {
     tryCatch({ # Se corren los codigo
-      eval(parse(text = cod.knn.pred))
+      exe(cod.knn.pred)
       scores[[paste0("KNN - ",input$kernel.knn)]] <<- predict(exe("modelo.knn.",input$kernel.knn), datos.prueba, type = "prob")
 
       # Cambia la tabla con la prediccion de knn
@@ -1029,10 +997,10 @@ shinyServer(function(input, output, session) {
   ejecutar.knn.mc <- function() {
     if(exists(paste0("prediccion.knn.",input$kernel.knn))){
       tryCatch({ # Se corren los codigo
-        eval(parse(text = cod.knn.mc))
+        exe(cod.knn.mc)
         output$txtknnMC <- renderPrint(print(exe("MC.knn.",input$kernel.knn)))
 
-        eval(parse(text = plot.MC.code()))
+        exe(plot.MC.code())
         output$plot.knn.mc <- renderPlot(exe("plot.MC(MC.knn.",input$kernel.knn,")"))
         insert.report(paste0("mc.knn.",input$kernel.knn),
                       paste0("## Matriz de confusión del Modelo KNN - ",
@@ -1056,12 +1024,13 @@ shinyServer(function(input, output, session) {
   ejecutar.knn.ind <- function(){
     if(exists(paste0("MC.knn.",input$kernel.knn))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.knn.ind)))
+        isolate(exe(cod.knn.ind))
+        #isolate(eval(parse(text = cod.knn.ind)))
 
-        MC <- exe("MC.knn.",input$kernel.knn)
-        indices.knn <- indices.generales(MC)
+        #MC <- exe("MC.knn.",input$kernel.knn)
+        indices.knn <- indices.generales(exe("MC.knn.",input$kernel.knn))
         eval(parse(text = paste0("indices.knn.",input$kernel.knn, "<<- indices.knn")))
-        indices.g("knn", MC)
+        #indices.g("knn", MC)
 
         insert.report(paste0("ind.knn.",input$kernel.knn),
                       paste0("## Índices Generales del Modelo KNN - ",input$kernel.knn,"\n```{r}\n",
@@ -1092,17 +1061,16 @@ shinyServer(function(input, output, session) {
   observeEvent(input$runSvm, {
     if (validar.datos()) { # Si se tiene los datos entonces :
       cod.svm.modelo <<- input$fieldCodeSvm
-      cod.svm.pred <<- input$fieldCodeSvmPred
-      cod.svm.mc <<- input$fieldCodeSvmMC
-      cod.svm.ind <<- input$fieldCodeSvmIG
-
+      cod.svm.pred   <<- input$fieldCodeSvmPred
+      cod.svm.mc     <<- input$fieldCodeSvmMC
+      cod.svm.ind    <<- input$fieldCodeSvmIG
       svm.full()
     }
   })
 
   # Si las opciones cambian
   observeEvent(c(input$switch.scale.svm, input$kernel.svm), {
-    if (validar.datos(print = FALSE)) {
+    if (validar.datos(print = FALSE)){
       default.codigo.svm()
       svm.full()
     }
@@ -1111,10 +1079,9 @@ shinyServer(function(input, output, session) {
   # Acualiza el codigo a la version por defecto
   default.codigo.svm <- function() {
     # Se acualiza el codigo del modelo
-    codigo <- svm.modelo(
-      variable.pr = variable.predecir,
-      scale = input$switch.scale.svm,
-      kernel = input$kernel.svm)
+    codigo <- svm.modelo(variable.pr = variable.predecir,
+                         scale = input$switch.scale.svm,
+                         kernel = input$kernel.svm)
 
     updateAceEditor(session, "fieldCodeSvm", value = codigo)
     cod.svm.modelo <<- codigo
@@ -1133,32 +1100,32 @@ shinyServer(function(input, output, session) {
     cod.svm.mc <<- codigo
 
     # Se genera el codigo de la indices
-    codigo <- cod.indices()
+    codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
     cod.svm.ind <<- codigo
   }
 
   # Limpia los datos segun el proceso donde se genera el error
-  limpia.svm <- function(capa = NULL) {
-    for (i in capa:4) {
+  limpia.svm <- function(capa = NULL){
+    for(i in capa:4){
       switch(i, {
         exe("modelo.svm.",input$kernel.svm,"<<- NULL")
         output$txtSvm <- renderPrint(invisible(""))
-        insert.report(paste0("modelo.svm.",input$kernel.svm), NULL)
-        insert.report(grepl(paste0("svm.plot.",input$kernel.svm), names.report()), NULL)
+        remove.report.elem(paste0("modelo.svm.",input$kernel.svm))
+        remove.report.elem(grepl(paste0("svm.plot.",input$kernel.svm), names.report()))
       }, {
         exe("prediccion.svm.",input$kernel.svm,"<<- NULL")
-        insert.report(paste0("pred.svm.",input$kernel.svm), NULL)
+        remove.report.elem(paste0("pred.svm.",input$kernel.svm))
         output$svmPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.svm.",input$kernel.svm,"<<- NULL")
-        insert.report(paste0("mc.svm.",input$kernel.svm), NULL)
+        remove.report.elem(paste0("mc.svm.",input$kernel.svm))
         output$txtSvmMC <- renderPrint(invisible(""))
         output$plot.svm.mc <- renderPlot(NULL)
         MCs[[paste0("SVM -",input$kernel.svm)]] <<- NULL
       }, {
         exe("indices.svm.",input$kernel.svm,"<<- NULL")
-        insert.report(paste0("ind.svm.",input$kernel.svm), NULL)
+        remove.report.elem(paste0("ind.svm.",input$kernel.svm))
       })
     }
   }
@@ -1174,10 +1141,10 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.svm <- function() {
     tryCatch({ # Se corren los codigo
-
-      isolate(eval(parse(text = cod.svm.modelo)))
+      isolate(exe(cod.svm.modelo))
       output$txtSvm <- renderPrint(exe("print(modelo.svm.",input$kernel.svm,")"))
       updateAceEditor(session, "fieldCodeSvm", value = cod.svm.modelo)
+
       insert.report(paste0("modelo.svm.",input$kernel.svm),
                     paste0("## Generación del modelo SVM - ",input$kernel.svm,"\n```{r}\n",
                            cod.svm.modelo, "\nmodelo.svm.",input$kernel.svm,"\n```"))
@@ -1193,7 +1160,7 @@ shinyServer(function(input, output, session) {
   # Genera la prediccion
   ejecutar.svm.pred <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.svm.pred)))
+      isolate(exe(cod.svm.pred))
 
       modelo.svm.roc <- svm(as.formula(paste0(variable.predecir, "~.")),
                             data = datos.aprendizaje,
@@ -1219,25 +1186,24 @@ shinyServer(function(input, output, session) {
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.svm(2)
       showNotification(paste0("Error (SVM-02) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la matriz de confusion
   ejecutar.svm.mc <- function(){
     if(exists(paste0("prediccion.svm.",input$kernel.svm))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.svm.mc)))
+        isolate(exe(cod.svm.mc))
         output$txtSvmMC <- renderPrint(exe("print(MC.svm.",input$kernel.svm,")"))
-        isolate(eval(parse(text = plot.MC.code())))
+        isolate(exe(plot.MC.code()))
         output$plot.svm.mc <- renderPlot(exe("plot.MC(MC.svm.",input$kernel.svm,")"))
+
         insert.report(paste0("mc.svm.",input$kernel.svm),
                       paste0("## Matriz de Confusión del Modelo SVM - ",input$kernel.svm,"\n```{r}\n",
                              cod.svm.mc, "\nMC.svm.",input$kernel.svm,"\n```\n```{r}\nplot.MC(MC.svm.",input$kernel.svm,")\n",
                              "MCs[['SVM -",input$kernel.svm,"']] <<- MC.svm.",input$kernel.svm,"\n```"))
 
         nombres.modelos <<- c(nombres.modelos, paste0("MC.svm.",input$kernel.svm))
-
         MCs[[paste0("SVM -",input$kernel.svm)]] <<- exe("MC.svm.",input$kernel.svm)
         actualizar.selector.comparativa()
       },
@@ -1252,12 +1218,12 @@ shinyServer(function(input, output, session) {
   ejecutar.svm.ind <- function(){
     if(exists(paste0("MC.svm.",input$kernel.svm))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.svm.ind)))
+        isolate(exe(cod.svm.ind))
 
         MC <- exe("MC.svm.",input$kernel.svm)
         indices.svm <- indices.generales(MC)
-        eval(parse(text = paste0("indices.svm.",input$kernel.svm, "<<- indices.svm")))
-        indices.g("svm", MC)
+        eval(parse(text =paste0("indices.svm.",input$kernel.svm, "<<- indices.svm")))
+        #indices.g("svm", MC)
 
         insert.report(paste0("ind.svm.",input$kernel.svm),
                       paste0("## Índices Generales del modelo SVM  - ",input$kernel.svm," \n```{r}\n",
@@ -1291,26 +1257,26 @@ shinyServer(function(input, output, session) {
                       paste0("\n```{r}\n",codigo, "\n```"))
         exe(codigo)
       }else{
-        if (!(ncol(var.numericas(datos)) >= 2)) {
+        if(!(ncol(var.numericas(datos)) >= 2)){
           error.variables(isolate(input$idioma), num = T)
         }
         return(NULL)
-      }},error=function(e){
+      }},error = function(e){
         return(NULL)
     })
   })
 
   # Cuando cambia el codigo del grafico de clasificacion svm
   observeEvent(c(input$runSvm, input$select.var.svm.plot),{
-    if (length(input$select.var.svm.plot) == 2) {
+    if (length(input$select.var.svm.plot) == 2){
       v <- colnames(datos)
       v <- v[v != variable.predecir]
       v <- v[!(v %in% input$select.var.svm.plot)]
-      if (length(v) == 0) {
+      if(length(v) == 0){
         v <- input$select.var.svm.plot
       }
       updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(input$select.var.svm.plot, v, input$kernel.svm))
-    } else {
+    }else{
       updatePlot$svm.graf <- NULL
     }
   })
@@ -1328,14 +1294,13 @@ shinyServer(function(input, output, session) {
       cod.dt.pred <<- input$fieldCodeDtPred
       cod.dt.mc <<- input$fieldCodeDtMC
       cod.dt.ind <<- input$fieldCodeDtIG
-
       dt.full()
     }
   })
 
   # Si las opciones cambian
   observeEvent(c(input$minsplit.dt, input$maxdepth.dt, input$split.dt), {
-    if (validar.datos(print = FALSE)) {
+    if (validar.datos(print = FALSE)){
       default.codigo.dt()
       dt.full()
     }
@@ -1367,7 +1332,7 @@ shinyServer(function(input, output, session) {
     cod.dt.mc <<- codigo
 
     # Se genera el codigo de la indices
-    codigo <- cod.indices()
+    codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeDtIG", value = codigo)
     cod.dt.ind <<- codigo
   }
@@ -1375,7 +1340,7 @@ shinyServer(function(input, output, session) {
   #Plotear el arbol
   plotear.arbol <- function(){
     tryCatch({
-      output$plot.dt <- renderPlot(isolate(eval(parse(text = input$fieldCodeDtPlot))))
+      output$plot.dt <- renderPlot(isolate(exe(input$fieldCodeDtPlot)))
       cod <- ifelse(input$fieldCodeDtPlot == "", dt.plot(), input$fieldCodeDtPlot)
       insert.report(paste0("modelo.dt.graf.", input$split.dt), paste0("\n```{r}\n", cod, "\n```"))
     },
@@ -1388,6 +1353,7 @@ shinyServer(function(input, output, session) {
   #Mostrar Reglas
   mostrar.reglas.dt <- function(){
     output$rulesDt <- renderPrint(rattle::asRules(exe("modelo.dt.",input$split.dt)))
+    updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",input$split.dt,")"))
     insert.report(paste0("modelo.dt.rules.",input$split.dt),
                   paste0("\n```{r}\nrattle::asRules(modelo.dt.",input$split.dt,")\n```"))
   }
@@ -1399,21 +1365,21 @@ shinyServer(function(input, output, session) {
         modelo.dt <<- NULL
         output$txtDt <- renderPrint(invisible(""))
         output$plot.dt <- renderPlot(NULL)
-        insert.report(paste0("modelo.dt.", input$split.dt), NULL)
-        insert.report(paste0("modelo.dt.graf.", input$split.dt), NULL)
+        remove.report.elem(paste0("modelo.dt.", input$split.dt))
+        remove.report.elem(paste0("modelo.dt.graf.", input$split.dt))
       }, {
         prediccion.dt <<- NULL
-        insert.report(paste0("pred.dt.", input$split.dt), NULL)
+        remove.report.elem(paste0("pred.dt.", input$split.dt))
         output$dtPrediTable <- DT::renderDataTable(NULL)
       }, {
         MC.dt <<- NULL
-        insert.report(paste0("mc.dt.", input$split.dt), NULL)
+        remove.report.elem(paste0("mc.dt.", input$split.dt))
         output$plot.dt.mc <- renderPlot(NULL)
         output$txtDtMC <- renderPrint(invisible(NULL))
         MCs[[paste0("Árboles de Decisión - ", input$split.dt)]] <<- NULL
       }, {
         indices.dt <<- rep(0, 10)
-        insert.report(paste0("ind.dt.",input$split.dt), NULL)
+        remove.report.elem(paste0("ind.dt.",input$split.dt))
       })
     }
   }
@@ -1429,53 +1395,50 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.dt <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.dt.modelo)))
+      isolate(exe(cod.dt.modelo))
       output$txtDt <- renderPrint(print(exe("modelo.dt.", input$split.dt)))
       insert.report(paste0("modelo.dt.", input$split.dt),
                     paste0("## Generación del modelo Árboles de Decisión\n```{r}\n", cod.dt.modelo,
                            "\nmodelo.dt.",input$split.dt,"\n```"))
       plotear.arbol()
       mostrar.reglas.dt()
-
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.dt.", input$split.dt))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.dt(1)
       showNotification(paste0("Error (DT-01) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la prediccion
   ejecutar.dt.pred <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.dt.pred)))
+      isolate(exe(cod.dt.pred))
       scores[[paste0("Árboles de Decisión - ", input$split.dt)]] <<- exe("predict(modelo.dt.",input$split.dt,", datos.prueba, type = 'prob')")
       # Cambia la tabla con la prediccion de dt
       output$dtPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.dt.",input$split.dt)),server = FALSE)
+
       insert.report(paste0("pred.dt.", input$split.dt),
                     paste0("## Predicción del Modelo Árboles de Decisión\n```{r}\n", cod.dt.pred,
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.dt.",input$split.dt,")))\n",
                            "scores[['Árboles de Decisión - ",input$split.dt,"']] <<- predict(modelo.dt.",input$split.dt,", datos.prueba, type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",input$split.dt))
-
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.dt(2)
       showNotification(paste0("Error (DT-02) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la matriz de confusion
   ejecutar.dt.mc <- function() {
     if(exists(paste0("prediccion.dt.",input$split.dt))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.dt.mc)))
+        isolate(exe(cod.dt.mc))
         output$txtDtMC <- renderPrint(print(exe("MC.dt.",input$split.dt)))
-        eval(parse(text = plot.MC.code()))
+        exe(plot.MC.code())
         output$plot.dt.mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",input$split.dt,")")))
         insert.report(paste0("mc.dt.",input$split.dt),
                       paste0("## Matriz de Confusión del Modelo Árboles de Decisión\n```{r}\n", cod.dt.mc,
@@ -1483,7 +1446,6 @@ shinyServer(function(input, output, session) {
                              "MCs[['Árboles de Decisión - ",input$split.dt,"']] <<- MC.dt.",input$split.dt,"\n```"))
 
         nombres.modelos <<- c(nombres.modelos, paste0("MC.dt.",input$split.dt))
-
         MCs[[paste0("Árboles de Decisión - ",input$split.dt)]] <<- exe("MC.dt.",input$split.dt)
         actualizar.selector.comparativa()
       },
@@ -1498,9 +1460,9 @@ shinyServer(function(input, output, session) {
   ejecutar.dt.ind <- function() {
     if(exists(paste0("MC.dt.",input$split.dt))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.dt.ind)))
+        isolate(exe(cod.dt.ind))
         indices.dt <<- indices.generales(exe("MC.dt.",input$split.dt))
-        indices.g("dt", exe("MC.dt.",input$split.dt))
+        #indices.g("dt", exe("MC.dt.",input$split.dt))
 
         insert.report(paste0("ind.dt.",input$split.dt), paste0("## Índices Generales \n```{r}\n", cod.dt.ind, "\nindices.generales(MC.dt.",input$split.dt,")\n```"))
 
@@ -1510,11 +1472,8 @@ shinyServer(function(input, output, session) {
         # Cambia la tabla con la indices de dt
         output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-
         output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
-
-        #nombres.modelos <- c(nombres.modelos, paste0("ind.dt.",input$split.dt))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.dt(4)
@@ -1532,7 +1491,6 @@ shinyServer(function(input, output, session) {
       cod.rf.pred <<- input$fieldCodeRfPred
       cod.rf.mc <<- input$fieldCodeRfMC
       cod.rf.ind <<- input$fieldCodeRfIG
-
       rf.full()
     }
   })
@@ -1554,8 +1512,7 @@ shinyServer(function(input, output, session) {
   })
 
   # Acualiza el codigo a la version por defecto
-  deafult.codigo.rf <- function(rf.def = FALSE) {
-
+  deafult.codigo.rf <- function(rf.def = FALSE){
     if(!is.null(datos.aprendizaje) & rf.def){
       mtry.value <- ifelse(rf.def, round(sqrt(ncol(datos.aprendizaje))), input$mtry.rf)
       updateNumericInput(session,"mtry.rf",value = mtry.value)
@@ -1564,11 +1521,9 @@ shinyServer(function(input, output, session) {
     }
 
     # Se acualiza el codigo del modelo
-    codigo <- rf.modelo(
-      variable.pr = variable.predecir,
-      ntree = input$ntree.rf,
-      mtry = mtry.value)
-
+    codigo <- rf.modelo(variable.pr = variable.predecir,
+                        ntree = input$ntree.rf,
+                        mtry = mtry.value)
 
     updateAceEditor(session, "fieldCodeRf", value = codigo)
     cod.rf.modelo <<- codigo
@@ -1589,32 +1544,32 @@ shinyServer(function(input, output, session) {
     cod.rf.mc <<- codigo
 
     # Se genera el codigo de la indices
-    codigo <- cod.indices()
+    codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRfIG", value = codigo)
     cod.rf.ind <<- codigo
   }
 
   # Limpia los datos segun el proceso donde se genera el error
-  limpia.rf <- function(capa = NULL) {
-    for (i in capa:4) {
+  limpia.rf <- function(capa = NULL){
+    for(i in capa:4){
       switch(i, {
         modelo.rf <<- NULL
         output$txtRf <- renderPrint(invisible(""))
-        insert.report("modelo.rf",NULL)
-        insert.report("modelo.rf.graf",NULL)
+        remove.report.elem("modelo.rf")
+        remove.report.elem("modelo.rf.graf")
       }, {
         prediccion.rf <<- NULL
-        insert.report("pred.rf",NULL)
+        remove.report.elem("pred.rf")
         output$rfPrediTable <- DT::renderDataTable(NULL)
       }, {
         MC.rf <<- NULL
-        insert.report("mc.rf",NULL)
+        remove.report.elem("mc.rf")
         output$plot.rf.mc <- renderPlot(NULL)
         output$txtRfMC <- renderPrint(invisible(NULL))
         MCs[["Bosques Aleatorios"]] <<- NULL
       }, {
         indices.rf <<- rep(0, 10)
-        insert.report("ind.rf",NULL)
+        remove.report.elem("ind.rf")
       })
     }
   }
@@ -1622,7 +1577,7 @@ shinyServer(function(input, output, session) {
   # Grafico de importancia
   plotear.rf.imp <- function() {
     tryCatch({
-      output$plot.rf <- renderPlot(isolate(eval(parse(text = input$fieldCodeRfPlot))))
+      output$plot.rf <- renderPlot(isolate(exe(input$fieldCodeRfPlot)))
       cod <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
       insert.report("modelo.rf.graf", paste0("## Importancia de las Variables\n```{r}\n", cod , "\n```"))
     }, error = function(e) {
@@ -1633,11 +1588,11 @@ shinyServer(function(input, output, session) {
 
   plotear.rf.error <- function(){
     tryCatch({
-      output$plot.error.rf <- renderPlot(isolate(eval(parse(text = input$fieldCodeRfPlotError))))
+      output$plot.error.rf <- renderPlot(isolate(exe(input$fieldCodeRfPlotError)))
       cod <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
       insert.report("modelo.rf.error.",
                     paste0("## Evolución del Error del Modelo Bosques Aleatorios\n```{r}\n", cod, "\n```"))
-    }, error = function(e) {
+    }, error = function(e){
       limpia.rf(1)
     })
   }
@@ -1645,13 +1600,18 @@ shinyServer(function(input, output, session) {
   #Mostrar Reglas
   mostrar.reglas.rf <- function(n){
     output$rulesRf <- renderPrint({
-      tryCatch({printRandomForests(modelo.rf, n)},
-                error = function(e) stop("No se puede mostrar las reglas para el árbol seleccionado"))})
+      tryCatch({
+          updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
+          printRandomForests(modelo.rf, n)
+        },error = function(e){
+          stop(tr("NoDRule"))
+      })
+    })
     insert.report(paste0("modelo.rf.rules.", n), paste0("\n## Reglas del árbol #",n," \n```{r}\nprintRandomForests(modelo.rf, ",n,")\n```"))
   }
 
   # Ejecuta el modelo, prediccion, mc e indices de rf
-  rf.full <- function() {
+  rf.full <- function(){
     ejecutar.rf()
     ejecutar.rf.pred()
     ejecutar.rf.mc()
@@ -1661,36 +1621,37 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.rf <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.rf.modelo)))
+      isolate(exe(cod.rf.modelo))
       output$txtRf <- renderPrint(print(modelo.rf))
-      insert.report("modelo.rf",paste0("## Generación del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.modelo, "\nmodelo.rf\n```"))
+
+      insert.report("modelo.rf",paste0("## Generación del Modelo Bosques Aleatorios\n```{r}\n",
+                                       cod.rf.modelo, "\nmodelo.rf\n```"))
+
       plotear.rf.imp()
       plotear.rf.error()
       mostrar.reglas.rf(input$rules.rf.n)
-
       nombres.modelos <<- c(nombres.modelos, "modelo.rf")
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rf(1)
       showNotification(paste0("Error (RF-01) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la prediccion
   ejecutar.rf.pred <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.rf.pred)))
+      isolate(exe(cod.rf.pred))
       scores[["Bosques Aleatorios"]] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = "prob")
       # Cambia la tabla con la prediccion de rf
       output$rfPrediTable <- DT::renderDataTable(obj.predic(prediccion.rf), server = FALSE)
+
       insert.report("pred.rf",
                     paste0("## Predicción del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.pred,
                            "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.rf)))\n",
                            "scores[['Bosques Aleatorios']] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
-
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
@@ -1703,16 +1664,16 @@ shinyServer(function(input, output, session) {
   ejecutar.rf.mc <- function() {
     if(exists("prediccion.rf")){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.rf.mc)))
+        isolate(exe(cod.rf.mc))
         output$txtRfMC <- renderPrint(print(MC.rf))
-        isolate(eval(parse(text = plot.MC.code())))
-        output$plot.rf.mc <- renderPlot(isolate(eval(parse(text = "plot.MC(MC.rf)"))))
+        isolate(exe(plot.MC.code()))
+        output$plot.rf.mc <- renderPlot(isolate(exe("plot.MC(MC.rf)")))
+
         insert.report("mc.rf",paste0("## Matriz de Confusión del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.mc,
                                      "\nMC.rf\n```\n```{r}\nplot.MC(MC.rf)\n",
                                      "MCs[['Bosques Aleatorios']] <<- MC.rf\n```"))
 
         nombres.modelos <<- c(nombres.modelos, "MC.rf")
-
         MCs[["Bosques Aleatorios"]] <<- MC.rf
         actualizar.selector.comparativa()
       },
@@ -1727,11 +1688,12 @@ shinyServer(function(input, output, session) {
   ejecutar.rf.ind <- function() {
     if(exists("MC.rf")){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.rf.ind)))
+        isolate(exe(cod.rf.ind))
         indices.rf <<- indices.generales(MC.rf)
-        indices.g("rf", MC.rf)
+        #indices.g("rf", MC.rf)
 
-        insert.report("ind.rf",paste0("## Índices Generales\n```{r}\n", cod.rf.ind, "\nindices.generales(MC.rf)\n```"))
+        insert.report("ind.rf",paste0("## Índices Generales\n```{r}\n",
+                                      cod.rf.ind, "\nindices.generales(MC.rf)\n```"))
 
         nombres <- c("rfPrecGlob", "rfErrorGlob")
         fill.gauges(nombres, indices.rf)
@@ -1739,12 +1701,10 @@ shinyServer(function(input, output, session) {
         # Cambia la tabla con la indices de rf
         output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-
         output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
 
         nombres.modelos <<- c(nombres.modelos, "indices.rf")
-
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.rf(4)
@@ -1758,15 +1718,14 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo boosting
   observeEvent(input$runBoosting, {
     if (length(levels(datos[, variable.predecir])) == 2) {
-      if (validar.datos()) { # Si se tiene los datos entonces :
+      if (validar.datos()){ # Si se tiene los datos entonces :
         cod.b.modelo <<- input$fieldCodeBoosting
         cod.b.pred <<- input$fieldCodeBoostingPred
         cod.b.mc <<- input$fieldCodeBoostingMC
         cod.b.ind <<- input$fieldCodeBoostingIG
-
         boosting.full()
       }
-    } else {
+    }else{
       showModal(modalDialog(
         title = "ADA - BOOSTING", "Este modelo solo se puede aplicar a variables binarias",
         footer = modalButton("Cerrar"), easyClose = T
@@ -1782,7 +1741,7 @@ shinyServer(function(input, output, session) {
 
   # Si las opciones cambian o actualizar el codigo
   observeEvent(c(input$iter.boosting, input$nu.boosting, input$tipo.boosting, input$minsplit.boosting, input$maxdepth.boosting), {
-    if (validar.datos(print = FALSE) & length(levels(datos[, variable.predecir])) == 2) {
+    if (validar.datos(print = FALSE) & length(levels(datos[, variable.predecir])) == 2){
       deault.codigo.boosting()
       boosting.full()
     }
@@ -1791,12 +1750,11 @@ shinyServer(function(input, output, session) {
   # Acualiza el codigo a la version por defecto
   deault.codigo.boosting <- function() {
     # Se acualiza el codigo del modelo
-    codigo <- boosting.modelo(
-      variable.pr = variable.predecir,
-      iter = input$iter.boosting,
-      maxdepth = input$maxdepth.boosting,
-      type = input$tipo.boosting,
-      minsplit = input$minsplit.boosting)
+    codigo <- boosting.modelo(variable.pr = variable.predecir,
+                              iter = input$iter.boosting,
+                              maxdepth = input$maxdepth.boosting,
+                              type = input$tipo.boosting,
+                              minsplit = input$minsplit.boosting)
 
     updateAceEditor(session, "fieldCodeBoosting", value = codigo)
     cod.b.modelo <<- codigo
@@ -1818,7 +1776,7 @@ shinyServer(function(input, output, session) {
     cod.b.mc <<- codigo
 
     # Se genera el codigo de la indices
-    codigo <- cod.indices()
+    codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
     cod.b.ind <<- codigo
   }
@@ -1831,22 +1789,22 @@ shinyServer(function(input, output, session) {
         output$txtBoosting <- renderPrint(invisible(""))
         output$plot.boosting <- renderPlot(NULL)
         output$plot.boosting.import <- renderPlot(NULL)
-        insert.report(paste0("modelo.b.",input$tipo.boosting),NULL)
-        insert.report(paste0("modelo.b.error.",input$tipo.boosting),NULL)
-        insert.report(paste0("modelo.b.imp.",input$tipo.boosting),NULL)
+        remove.report.elem(paste0("modelo.b.",input$tipo.boosting))
+        remove.report.elem(paste0("modelo.b.error.",input$tipo.boosting))
+        remove.report.elem(paste0("modelo.b.imp.",input$tipo.boosting))
       }, {
         exe("prediccion.boosting.",input$tipo.boosting," <<- NULL")
-        insert.report(paste0("pred.b.",input$tipo.boosting),NULL)
+        remove.report.elem(paste0("pred.b.",input$tipo.boosting))
         output$boostingPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.boosting.",input$tipo.boosting," <<- NULL")
-        insert.report(paste0("mc.b.",input$tipo.boosting),NULL)
+        remove.report.elem(paste0("mc.b.",input$tipo.boosting))
         output$plot.boosting.mc <- renderPlot(NULL)
         output$txtBoostingMC <- renderPrint(invisible(NULL))
         MCs[["ADA-BOOSTING"]] <<- NULL
       }, {
         exe("indices.boosting.",input$tipo.boosting," <<- NULL")
-        insert.report(paste0("ind.b.",input$tipo.boosting),NULL)
+        remove.report.elem(paste0("ind.b.",input$tipo.boosting))
       })
     }
   }
@@ -1864,7 +1822,7 @@ shinyServer(function(input, output, session) {
   # Grafico de boosting
   plotear.boosting <- function() {
     tryCatch({
-      output$plot.boosting <- renderPlot(isolate(eval(parse(text = input$fieldCodeBoostingPlot))))
+      output$plot.boosting <- renderPlot(isolate(exe(input$fieldCodeBoostingPlot)))
       cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
       insert.report(paste0("modelo.b.error.",input$tipo.boosting),
                     paste0("## Evolución del Error - ",input$tipo.boosting,"\n```{r}\n", cod, "\n```"))
@@ -1876,7 +1834,7 @@ shinyServer(function(input, output, session) {
   # Grafico de importancia
   plotear.boosting.imp <- function() {
     tryCatch({
-      output$plot.boosting.import <- renderPlot(isolate(eval(parse(text = input$fieldCodeBoostingPlotImport))))
+      output$plot.boosting.import <- renderPlot(isolate(exe(input$fieldCodeBoostingPlotImport)))
       cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
       insert.report(paste0("modelo.b.imp.",input$tipo.boosting),paste0("## Importancia de las Variables - ",input$tipo.boosting,"\n```{r}\n", cod , "\n```"))
     }, error = function(e) {
@@ -1887,8 +1845,13 @@ shinyServer(function(input, output, session) {
   #Mostrar Reglas
   mostrar.reglas.boosting <- function(n){
     output$rulesB <- renderPrint({
-      tryCatch({exe(rules.boosting(type = input$tipo.boosting, input$rules.b.n))},
-               error = function(e)stop("No se puede mostrar las reglas para el árbol seleccionado"))})
+      tryCatch({
+        updateAceEditor(session,"fieldCodeBoostingRules",rules.boosting(type = input$tipo.boosting, input$rules.b.n))
+        exe(rules.boosting(type = input$tipo.boosting, input$rules.b.n))
+      },error = function(e) {
+          stop(tr("NoDRule"))
+      }
+    )})
     insert.report(paste0("modelo.b.rules.", n), paste0("\n## Reglas del árbol #",n," \n```{r}\n",
                                                        rules.boosting(type = input$tipo.boosting, input$rules.b.n),"\n```"))
   }
@@ -1896,7 +1859,7 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.boosting <- function() {
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.b.modelo)))
+      isolate(exe(cod.b.modelo))
       output$txtBoosting <- renderPrint(exe("print(modelo.boosting.",input$tipo.boosting,")"))
       plotear.boosting()
       plotear.boosting.imp()
@@ -1910,14 +1873,13 @@ shinyServer(function(input, output, session) {
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.boosting(1)
       showNotification(paste0("Error (B-01) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la prediccion
-  ejecutar.boosting.pred <- function() {
+  ejecutar.boosting.pred <- function(){
     tryCatch({ # Se corren los codigo
-      isolate(eval(parse(text = cod.b.pred)))
+      isolate(exe(cod.b.pred))
       scores[[paste0("ADA-BOOSTING - ",input$tipo.boosting)]] <<- predict(exe("modelo.boosting.",input$tipo.boosting), datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = "prob")
 
       # Cambia la tabla con la prediccion de boosting
@@ -1929,21 +1891,19 @@ shinyServer(function(input, output, session) {
                     ", datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting.",input$tipo.boosting))
-
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.boosting(2)
       showNotification(paste0("Error (B-02) : ",e), duration = 15, type = "error")
-    }
-    )
+    })
   }
 
   # Genera la matriz de confusion
   ejecutar.boosting.mc <- function() {
     if(exists(paste0("prediccion.boosting.",input$tipo.boosting))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.b.mc)))
+        isolate(exe(cod.b.mc))
         output$txtBoostingMC <- renderPrint(exe("print(MC.boosting.",input$tipo.boosting,")"))
 
         exe(plot.MC.code())
@@ -1956,7 +1916,6 @@ shinyServer(function(input, output, session) {
 
         MCs[[paste0("ADA-BOOSTING - ",input$tipo.boosting)]] <<- exe("MC.boosting.",input$tipo.boosting)
         actualizar.selector.comparativa()
-
         nombres.modelos <<- c(nombres.modelos, paste0("MC.boosting.",input$tipo.boosting))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
@@ -1970,12 +1929,12 @@ shinyServer(function(input, output, session) {
   ejecutar.boosting.ind <- function() {
     if(exists(paste0("MC.boosting.",input$tipo.boosting))){
       tryCatch({ # Se corren los codigo
-        isolate(eval(parse(text = cod.b.ind)))
+        isolate(exe(cod.b.ind))
 
         MC <- exe("MC.boosting.",input$tipo.boosting)
         indices.boosting <<- indices.generales(MC)
-        eval(parse(text = paste0("indices.boosting.",input$tipo.boosting, "<<- indices.boosting")))
-        indices.g("boosting", MC)
+        exe("indices.boosting.",input$tipo.boosting, "<<- indices.boosting")
+        #indices.g("boosting", MC)
 
         insert.report(paste0("ind.b.",input$tipo.boosting),
                       paste0("## Índices Generales del Modelo ADA-BOOSTING - ",input$tipo.boosting,"\n```{r}\n",
@@ -1999,6 +1958,351 @@ shinyServer(function(input, output, session) {
     }
   }
 
+  # Pagina de BAYES -------------------------------------------------------------------------------------------------------
+
+  # Cuando se genera el modelo bayes
+  observeEvent(input$runBayes, {
+    if (validar.datos()) { # Si se tiene los datos entonces :
+      cod.bayes.modelo <<- input$fieldCodeBayes
+      cod.bayes.pred <<- input$fieldCodeBayesPred
+      cod.bayes.mc <<- input$fieldCodeBayesMC
+      cod.bayes.ind <<- input$fieldCodeBayesIG
+      bayes.full()
+    }
+  })
+
+  # Acualiza el codigo a la version por defecto
+  default.codigo.bayes <- function() {
+    # Se acualiza el codigo del modelo
+    codigo <- bayes.modelo()
+    updateAceEditor(session, "fieldCodeBayes", value = codigo)
+    cod.bayes.modelo <<- codigo
+
+    # Se genera el codigo de la prediccion
+    codigo <- bayes.prediccion()
+    updateAceEditor(session, "fieldCodeBayesPred", value = codigo)
+    cod.bayes.pred <<- codigo
+
+    # Se genera el codigo de la matriz
+    codigo <- bayes.MC()
+    updateAceEditor(session, "fieldCodeBayesMC", value = codigo)
+    cod.bayes.mc <<- codigo
+
+    # Se genera el codigo de la indices
+    codigo <- extract.code("indices.generales")
+    updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
+    cod.bayes.ind <<- codigo
+  }
+
+  # Limpia los datos segun el proceso donde se genera el error
+  limpia.bayes <- function(capa = NULL) {
+    for (i in capa:4) {
+      switch(i, {
+        modelo.bayes <<- NULL
+        output$txtbayes <- renderPrint(invisible(""))
+        remove.report.elem("modelo.bayes")
+      }, {
+        prediccion.bayes <<- NULL
+        remove.report.elem("pred.bayes")
+        output$bayesPrediTable <- DT::renderDataTable(NULL)
+      }, {
+        MC.bayes<<- NULL
+        remove.report.elem("mc.bayes")
+        output$plot.bayes.mc <- renderPlot(NULL)
+        output$txtbayesMC <- renderPrint(invisible(NULL))
+        MCs[["BAYES"]] <<- NULL
+      }, {
+        indices.bayes <<- NULL
+        remove.report.elem("ind.bayes")
+      })
+    }
+  }
+
+  # Ejecuta el modelo, prediccion, mc e indices de bayyes
+  bayes.full <- function() {
+    ejecutar.bayes()
+    ejecutar.bayes.pred()
+    ejecutar.bayes.mc()
+    ejecutar.bayes.ind()
+  }
+
+  # Genera el modelo
+  ejecutar.bayes <- function() {
+    tryCatch({
+
+      exe(cod.bayes.modelo)
+      updateAceEditor(session, "fieldCodeBayes", value = cod.bayes.modelo)
+      output$txtbayes <- renderPrint(modelo.bayes)
+      insert.report("modelo.bayes",
+                    paste0("## Generación del modelo BAYES\n```{r}\n",cod.bayes.modelo, "\nmodelo.bayes\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, "modelo.bayes")
+    },
+    error = function(e) { # Regresamos al estado inicial y mostramos un error
+      limpia.bayes(1)
+      showNotification(paste0("Error (BAYES-01) : ", e), duration = 15, type = "error")
+    })
+  }
+
+  # Genera la prediccion
+  ejecutar.bayes.pred <- function() {
+    tryCatch({ # Se corren los codigo
+      exe(cod.bayes.pred)
+      scores[["BAYES"]] <<- predict(modelo.bayes, datos.prueba, type = "raw")
+
+      # Cambia la tabla con la prediccion de bayes
+      output$bayesPrediTable <- DT::renderDataTable(obj.predic(prediccion.bayes), server = FALSE)
+      insert.report("pred.bayes",
+                    paste0("## Predicción del Modelo BAYES\n```{r}\n", cod.bayes.pred,
+                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.bayes)))\n",
+                           "scores[['BAYES']] <<- predict(modelo.bayes, datos.prueba, type = 'raw')\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, "prediccion.bayes")
+      updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
+    },
+    error = function(e) { # Regresamos al estado inicial y mostramos un error
+      limpia.bayes(2)
+      showNotification(paste0("Error (BAYES-02) : ", e), duration = 15, type = "error")
+    })
+  }
+
+  # Genera la matriz de confusion
+  ejecutar.bayes.mc <- function() {
+    if(exists("prediccion.bayes")){
+      tryCatch({ # Se corren los codigo
+        exe(cod.bayes.mc)
+        output$txtbayesMC <- renderPrint(print(MC.bayes))
+
+        exe(plot.MC.code())
+        output$plot.bayes.mc <- renderPlot(plot.MC(MC.bayes))
+        insert.report(paste0("mc.bayes"),
+                      paste0("## Matriz de confusión del Modelo BAYES\n```{r}\n", cod.bayes.mc,
+                             "\nMC.bayes\n```\n```{r}\nplot.MC(MC.bayes)\n",
+                             "MCs[['BAYES']] <<- MC.bayes\n```"))
+
+        MCs[["BAYES"]] <<- MC.bayes
+        nombres.modelos <<- c(nombres.modelos, "MC.bayes")
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.bayes(3)
+        showNotification(paste0("Error (BAYES-03) : ",e), duration = 15, type = "error")
+      })
+    }
+  }
+
+  # Genera los indices
+  ejecutar.bayes.ind <- function(){
+    if(exists("MC.bayes")){
+      tryCatch({ # Se corren los codigo
+        isolate(exe(cod.bayes.ind))
+        #isolate(eval(parse(text = cod.bayes.ind)))
+
+        indices.bayes <<- indices.generales(MC.bayes)
+        #eval(parse(text = paste0("indices.bayes <<- indices.knn")))
+        #indices.g("knn", MC)
+
+        insert.report("ind.bayes",
+                      paste0("## Índices Generales del Modelo BAYES\n```{r}\n",
+                             cod.bayes.ind, "\nindices.generales(MC.bayes)\n```"))
+
+        nombres <- c("bayesPrecGlob", "bayesErrorGlob")
+        fill.gauges(nombres, indices.bayes)
+
+        # Cambia la tabla con la indices de bayes
+        output$bayesIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.bayes,"BAYES")), spacing = "xs",
+                                                       bordered = T, width = "100%", align = "c", digits = 2)
+        output$bayesIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.bayes,"BAYES")), spacing = "xs",
+                                                      bordered = T, width = "100%", align = "c", digits = 2)
+        nombres.modelos <<- c(nombres.modelos, "indices.bayes")
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.bayes(4)
+        showNotification(paste0("Error (BAYES-04) : ",e), duration = 15, type = "error")
+      })
+    }
+  }
+
+  # Pagina de GX BOSTING --------------------------------------------------------------------------------------------------
+
+  # Cuando se genera el modelo xgb
+  observeEvent(input$runXgb, {
+    if (validar.datos()) { # Si se tiene los datos entonces :
+      cod.xgb.modelo <<- input$fieldCodeXgb
+      cod.xgb.pred <<- input$fieldCodeXgbPred
+      cod.xgb.mc <<- input$fieldCodeXgbMC
+      cod.xgb.ind <<- input$fieldCodeXgbIG
+      xgb.full()
+    }
+  })
+
+  # Si las opciones cambian
+  observeEvent(c(input$boosterXgb, input$maxdepthXgb, input$nroundsXgb), {
+    if (validar.datos(print = FALSE)) {
+      default.codigo.xgb()
+      xgb.full()
+    }
+  })
+
+  # Acualiza el codigo a la version por defecto
+  default.codigo.xgb <- function() {
+    # Se acualiza el codigo del modelo
+    codigo <- xgb.modelo(booster = input$boosterXgb,
+                         max.depth = input$maxdepthXgb,
+                         n.rounds = input$nroundsXgb)
+    updateAceEditor(session, "fieldCodeXgb", value = codigo)
+    cod.xgb.modelo <<- codigo
+
+    # Se genera el codigo de la prediccion
+    codigo <- xgb.prediccion(booter = input$boosterXgb)
+    updateAceEditor(session, "fieldCodeXgbPred", value = codigo)
+    cod.xgb.pred <<- codigo
+
+    # Se genera el codigo de la matriz
+    codigo <- xgb.MC(booter = input$boosterXgb)
+    updateAceEditor(session, "fieldCodeXgbMC", value = codigo)
+    cod.xgb.mc <<- codigo
+
+    # Se genera el codigo de la indices
+    codigo <- extract.code("indices.generales")
+    updateAceEditor(session, "fieldCodeXgbIG", value = codigo)
+    cod.xgb.ind <<- codigo
+  }
+
+  # Limpia los datos segun el proceso donde se genera el error
+  limpia.xgb <- function(capa = NULL) {
+    for (i in capa:4) {
+      switch(i, {
+        exe("modelo.xgb.",input$boosterXgb," <<- NULL")
+        output$txtxgb <- renderPrint(invisible(""))
+        remove.report.elem(paste0("modelo.xgb.",input$kernel.xgb))
+      }, {
+        exe("prediccion.xgb.",input$boosterXgb," <<- NULL")
+        remove.report.elem(paste0("pred.xgb.",input$boosterXgb))
+        output$xgbPrediTable <- DT::renderDataTable(NULL)
+      }, {
+        exe("MC.xgb.",input$boosterXgb," <<- NULL")
+        remove.report.elem(paste0("mc.xgb.",input$boosterXgb))
+        output$plot.xgb.mc <- renderPlot(NULL)
+        output$txtxgbMC <- renderPrint(invisible(NULL))
+        MCs[[paste0("XGB - ",input$boosterXgb)]] <<- NULL
+      }, {
+        exe("indices.xgb.",input$boosterXgb," <<- NULL")
+        remove.report.elem(paste0("ind.xgb.",input$boosterXgb))
+      })
+    }
+  }
+
+  # Ejecuta el modelo, prediccion, mc e indices de xgb
+  xgb.full <- function() {
+    ejecutar.xgb()
+    ejecutar.xgb.pred()
+    ejecutar.xgb.mc()
+    ejecutar.xgb.ind()
+  }
+
+  # Genera el modelo
+  ejecutar.xgb <- function() {
+    tryCatch({
+
+      exe(cod.xgb.modelo)
+      updateAceEditor(session, "fieldCodeKnn", value = cod.xgb.modelo)
+      output$txtxgb <- renderPrint(exe("modelo.xgb.",input$boosterXgb))
+      insert.report(paste0("modelo.xgb.",input$boosterXgb),
+                    paste0("## Generación del modelo KNN - ",input$boosterXgb,"\n```{r}\n",cod.xgb.modelo, "\nmodelo.xgb.",input$boosterXgb,"\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("modelo.xgb.",input$boosterXgb))
+    },
+    error = function(e) { # Regresamos al estado inicial y mostramos un error
+      limpia.xgb(1)
+      showNotification(paste0("Error (XGB-01) : ", e), duration = 15, type = "error")
+    })
+  }
+
+  # Genera la prediccion
+  ejecutar.xgb.pred <- function() {
+    tryCatch({ # Se corren los codigo
+      exe(cod.xgb.pred)
+      scores[[paste0("KNN - ",input$boosterXgb)]] <<- predict(exe("modelo.xgb.",input$boosterXgb), datos.prueba, type = "prob")
+
+      # Cambia la tabla con la prediccion de xgb
+      output$xgbPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.xgb.",input$boosterXgb)),server = FALSE)
+      insert.report(paste0("pred.xgb.",input$boosterXgb),
+                    paste0("## Predicción del Modelo KNN - ",input$boosterXgb,"\n```{r}\n", cod.xgb.pred,
+                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.xgb.",input$boosterXgb,")))\n",
+                           "scores[['",paste0("KNN - ",input$boosterXgb),"']] <<- predict(modelo.xgb.",input$boosterXgb,",datos.prueba, type = 'prob')\n```"))
+
+      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.xgb.",input$boosterXgb))
+      updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
+    },
+    error = function(e) { # Regresamos al estado inicial y mostramos un error
+      limpia.xgb(2)
+      showNotification(paste0("Error (XGB-02) : ", e), duration = 15, type = "error")
+    })
+  }
+
+  # Genera la matriz de confusion
+  ejecutar.xgb.mc <- function() {
+    if(exists(paste0("prediccion.xgb.",input$boosterXgb))){
+      tryCatch({ # Se corren los codigo
+        exe(cod.xgb.mc)
+        output$txtxgbMC <- renderPrint(print(exe("MC.xgb.",input$boosterXgb)))
+
+        exe(plot.MC.code())
+        output$plot.xgb.mc <- renderPlot(exe("plot.MC(MC.xgb.",input$boosterXgb,")"))
+        insert.report(paste0("mc.xgb.",input$boosterXgb),
+                      paste0("## Matriz de confusión del Modelo XGB - ",
+                             input$boosterXgb,"\n```{r}\n", cod.xgb.mc,
+                             "\nMC.xgb.",input$boosterXgb,
+                             "\n```\n```{r}\nplot.MC(MC.xgb.",input$boosterXgb,")\n",
+                             "MCs[['XGB - ",input$boosterXgb,"']] <<- MC.xgb.",input$boosterXgb,"\n```"))
+
+        MCs[[paste0("XGB - ",input$boosterXgb)]] <<- exe("MC.xgb.",input$boosterXgb)
+        nombres.modelos <<- c(nombres.modelos, paste0("MC.xgb.",input$boosterXgb))
+        actualizar.selector.comparativa()
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.xgb(3)
+        showNotification(paste0("Error (XGB-03) : ",e), duration = 15, type = "error")
+      })
+    }
+  }
+
+  # Genera los indices
+  ejecutar.xgb.ind <- function(){
+    if(exists(paste0("MC.xgb.",input$boosterXgb))){
+      tryCatch({ # Se corren los codigo
+        isolate(exe(cod.xgb.ind))
+        #isolate(eval(parse(text = cod.xgb.ind)))
+
+        #MC <- exe("MC.xgb.",input$boosterXgb)
+        indices.xgb <- indices.generales(exe("MC.xgb.",input$boosterXgb))
+        eval(parse(text = paste0("indices.xgb.",input$boosterXgb, "<<- indices.xgb")))
+        #indices.g("xgb", MC)
+
+        insert.report(paste0("ind.xgb.",input$boosterXgb),
+                      paste0("## Índices Generales del Modelo XGB - ",input$boosterXgb,"\n```{r}\n",
+                             cod.xgb.ind, "\nindices.generales(MC.xgb.",input$boosterXgb,")\n```"))
+
+        nombres <- c("xgbPrecGlob", "xgbErrorGlob")
+        fill.gauges(nombres, indices.xgb)
+
+        # Cambia la tabla con la indices de xgb
+        output$xgbIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.xgb,"XGB")), spacing = "xs",
+                                                     bordered = T, width = "100%", align = "c", digits = 2)
+
+        output$xgbIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.xgb,"XGB")), spacing = "xs",
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
+
+        nombres.modelos <<- c(nombres.modelos, paste0("indices.xgb.",input$boosterXgb))
+      },
+      error = function(e) { # Regresamos al estado inicial y mostramos un error
+        limpia.xgb(4)
+        showNotification(paste0("Error (XGB-04) : ",e), duration = 15, type = "error")
+      })
+    }
+  }
+
   # TABLA COMPARATIVA -------------------------------------------------------------------------------------------------------
 
   #Actualiza los selectores de la tabla comparativa
@@ -2011,26 +2315,23 @@ shinyServer(function(input, output, session) {
   # Crea la tabla comparativa
   tabla.comparativa <- function(sel) {
     tryCatch({
-      cant.class <- length(unique(datos[, variable.predecir]))
-      names.class <- as.character(unique(datos[, variable.predecir]))
-
       if(length(MCs) == 0) {
         return(data.frame())
       }
-
+      cant.class <- length(unique(datos[, variable.predecir]))
+      names.class <- as.character(unique(datos[, variable.predecir]))
       matrices <- MCs[sort(names(MCs))]
       matrices <- matrices[names(matrices) %in% sel]
       df  <- data.frame()
-
       if(length(matrices) == 0) {
         return(data.frame())
       }
-
-      for (i in seq_len(length(matrices))) {
-        if (is.null(matrices[[i]])) {
+      for (i in seq_len(length(matrices))){
+        if (is.null(matrices[[i]])){
           df <- rbind(df, c(names(matrices)[i], NA, rep(NA, cant.class), NA))
-        } else {
-          df <- rbind(df, c(NA,round((sum(diag(matrices[[i]])) / sum(matrices[[i]])) * 100, 4),
+        }else{
+          df <- rbind(df, c(NA,
+                            round((sum(diag(matrices[[i]])) / sum(matrices[[i]])) * 100, 4),
                             round(diag(matrices[[i]]) / rowSums(matrices[[i]]) * 100, 4),
                             ifelse(cant.class == 2,round(areas[[names(matrices)[i]]], 4), NA)))
           df[nrow(df),1] <- names(matrices)[i]
@@ -2039,7 +2340,7 @@ shinyServer(function(input, output, session) {
       }
       colnames(df) <- c('Modelo', 'Precisión Global', names.class, 'Área de ROC')
       return(df)
-    }, error = function(e) {
+    }, error = function(e){
       return(data.frame())
     })
   }
@@ -2047,8 +2348,8 @@ shinyServer(function(input, output, session) {
   # Calcula las areas de la curva roc de todos los modelos
   calcular.areas <- function(sel) {
     clase <- datos.prueba[, variable.predecir]
-    if (length(unique(clase)) == 2) {
-      for (nombre in names(scores)) {
+    if (length(unique(clase)) == 2){
+      for (nombre in names(scores)){
         if (is.factor(scores[[nombre]])) {
           areas[[nombre]] <<- areaROC(attributes(scores[[nombre]])$probabilities[, sel], clase)
         }else{
@@ -2067,7 +2368,7 @@ shinyServer(function(input, output, session) {
       plotROC(input$select.models)
     } else {
       insert.report("roc", NULL)
-      showNotification("La curva ROC solo aplica para variables binarias.", duration = 15, type = "warning")
+      showNotification(tr("RocNo"), duration = 15, type = "warning")
       return(NULL)
     }
   })
@@ -2094,8 +2395,7 @@ shinyServer(function(input, output, session) {
 
   varificar.datos.pn <- function(){
     if(any(!(c(colnames(datos.prueba.completos),variable.predecir.pn) %in% colnames(datos.originales.completos))))
-      stop("Los datos no poseen las mismas columnas")
-
+      stop(tr("NoTamColum"))
   }
 
   unificar.factores <- function(){
@@ -2109,22 +2409,19 @@ shinyServer(function(input, output, session) {
 
   actualizar.tabla.pn <- function(tablas = c("contentsPred", "contentsPred2")){
     if("contentsPred2" %in% tablas){
-    output$contentsPred <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
-                                                               editable = F,
-                                                               scrollY = "25vh"),
-                                        server = F)
+      output$contentsPred <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
+                                                                 editable = F,
+                                                                 scrollY = "25vh"), server = F)
     }
     if("contentsPred2" %in% tablas){
-    output$contentsPred2 <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
-                                                                editable = F,
-                                                                scrollY = "25vh"),
-                                         server = F)
+      output$contentsPred2 <- DT::renderDT(renderizar.tabla.datos(datos.aprendizaje.completos,
+                                                                  editable = F,
+                                                                  scrollY = "25vh"), server = F)
     }
     if("contentsPred3" %in% tablas){
       output$contentsPred3 <- DT::renderDT(renderizar.tabla.datos(datos.prueba.completos,
                                                                   editable = F,
-                                                                  scrollY = "25vh"),
-                                           server = T)
+                                                                  scrollY = "25vh"), server = T)
     }
   }
 
@@ -2149,8 +2446,7 @@ shinyServer(function(input, output, session) {
       datos.aux.prueba <- crear.datos.np()
       output$PrediTablePN <- DT::renderDT(renderizar.tabla.datos(datos.aux.prueba,
                                                                  editable = F,
-                                                                 scrollY = "25vh"),
-                                          server = T)
+                                                                 scrollY = "25vh"),server = T)
     }else{
       output$PrediTablePN <- DT::renderDT(DT::datatable(data.frame()))
     }
@@ -2168,30 +2464,30 @@ shinyServer(function(input, output, session) {
   )
 
   observeEvent(input$loadButtonNPred,{
-    codigo.carga <- code.carga( nombre.filas = input$rownameNPred,
-                                ruta = input$file2$datapath,
-                                separador = input$sepNPred,
-                                sep.decimal = input$decNPred,
-                                encabezado = input$headerNPred,
-                                d.o = "datos.originales.completos",
-                                d = "datos.aprendizaje.completos")
+    codigo.carga <- code.carga(nombre.filas = input$rownameNPred,
+                               ruta = input$file2$datapath,
+                               separador = input$sepNPred,
+                               sep.decimal = input$decNPred,
+                               encabezado = input$headerNPred,
+                               d.o = "datos.originales.completos",
+                               d = "datos.aprendizaje.completos")
 
     tryCatch({
-      isolate(eval(parse(text = codigo.carga)))
+      isolate(exe(codigo.carga))
       if(ncol(datos.originales.completos) <= 1) {
-        showNotification(paste0("Error al cargar los Datos: Revisar separadores"), duration = 10, type = "error")
+        showNotification(tr("errorSeg"), duration = 10, type = "error")
         return(NULL)
       }
       codigo.na <- ""
       codigo.na <- paste0(code.NA(deleteNA = input$deleteNAnPred, d.o = "datos.originales.completos"), "\n", "datos.aprendizaje.completos <<- datos.originales.completos")
-      isolate(eval(parse(text = codigo.na)))
+      isolate(exe( codigo.na))
 
       updateSelectInput(session, "sel.predic.var.nuevos", choices = rev(colnames.empty(var.categoricas(datos.aprendizaje.completos))))
       updateNumericInput(session, "kmax.knn.pred", value = round(sqrt(nrow(datos.aprendizaje.completos))))
       updateNumericInput(session, "mtry.rf.pred", value = round(sqrt(ncol(datos.aprendizaje.completos) -1)))
     },
     error = function(e) {
-      showNotification(paste0("Error al cargar los Datos: ", e), duration = 10, type = "error")
+      showNotification(paste0("Error: ", e), duration = 10, type = "error")
       datos.aprendizaje.completos <<- NULL
       datos.originales.completos <<- NULL
       return(NULL)
@@ -2219,7 +2515,7 @@ shinyServer(function(input, output, session) {
       res$Activa <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0('<input type="checkbox" id="Predbox', i, contadorPN, '" checked/>'))
     } else {
       res <- as.data.frame(NULL)
-      showNotification("Tiene que cargar los datos", duration = 10, type = "error")
+      showNotification(tr("tieneCData"), duration = 10, type = "error")
     }
     return(res)
   })
@@ -2254,10 +2550,10 @@ shinyServer(function(input, output, session) {
     }
 
 
-    isolate(eval(parse(text = code.res)))
+    isolate(exe(code.res))
     if (length(var.noactivas) > 0) {
       des <- code.desactivar(var.noactivas,"datos.aprendizaje.completos")
-      isolate(eval(parse(text = des)))
+      isolate(exe(des))
       code.res <- paste0(code.res, "\n", des)
     }
     code.res <- paste0(code.res, "\n")
@@ -2272,11 +2568,11 @@ shinyServer(function(input, output, session) {
                      ada = boosting.prediccion.np(),
                      svm = svm.prediccion.np())
     tryCatch({
-      eval(parse(text = codigo))
+      exe(codigo)
       actualizar.pred.pn(codigo)
     },
     error =  function(e){
-      showNotification(paste0("Error en la predicción: ", e), duration = 10, type = "error")
+      showNotification(paste0("Error :", e), duration = 10, type = "error")
     })
   }
 
@@ -2324,11 +2620,11 @@ shinyServer(function(input, output, session) {
       actualizar.pred.pn("")
 
       tryCatch({
-        eval(parse(text = codigo))
+        exe(codigo)
         actualizar.texto.modelo.pn(codigo)
       },
       error =  function(e){
-        showNotification(paste0("Error en el modelo: ", e), duration = 10, type = "error")
+        showNotification(paste0("Error: ", e), duration = 10, type = "error")
       })
   })
 
@@ -2342,17 +2638,17 @@ shinyServer(function(input, output, session) {
                                 d = "datos.prueba.completos")
 
     tryCatch({
-      isolate(eval(parse(text = codigo.carga)))
+      isolate(exe(codigo.carga))
       varificar.datos.pn()
       if(ncol(datos.prueba.completos) <= 1) {
-        showNotification(paste0("Error al cargar los Datos: Revisar separadores"), duration = 10, type = "error")
+        showNotification(tr("errorSeg"), duration = 10, type = "error")
         return(NULL)
       }
       codigo.na <- ""
       codigo.na <- paste0(code.NA(deleteNA = input$deleteNAnPred2,
                                   d.o = paste0("datos.prueba.completos")))
       datos.prueba.completos[,variable.predecir.pn] <<- NULL
-      isolate(eval(parse(text = codigo.na)))
+      isolate(exe( codigo.na))
       datos.prueba.completos[,variable.predecir.pn] <<- NA
       code.trans.pn <<- gsub("datos.originales.completos", "datos.prueba.completos", code.trans.pn)
       code.trans.pn <<- gsub("datos.aprendizaje.completos", "datos.prueba.completos", code.trans.pn)
@@ -2362,7 +2658,7 @@ shinyServer(function(input, output, session) {
       predecir.pn()
     },
     error = function(e) {
-      showNotification(paste0("Error al cargar los Datos: ", e), duration = 10, type = "error")
+      showNotification(paste0("Error: ", e), duration = 10, type = "error")
       datos.prueba.completos <<- NULL
       predic.nuevos <<- NULL
       return(NULL)
@@ -2373,6 +2669,10 @@ shinyServer(function(input, output, session) {
 
   len.report <- function(){
     length(env.report$codigo.reporte)
+  }
+
+  remove.report.elem <- function(id){
+    insert.report(id, NULL)
   }
 
   insert.report <- function(id, content, interpretation =  TRUE){
@@ -2492,7 +2792,8 @@ shinyServer(function(input, output, session) {
                                 "maxdepth","splitIndex","numTree","numVars","ruleNumTree","selectAlg",
                                 "rocCurva","tablaComp","selectMod","selectCat", "reporte","titulo",
                                 "nombre","codreporte","salida","copyright","info","version","cargarNuev",
-                                "cargarDatos","transDatos","seleParModel","generarM"))
+                                "cargarDatos","transDatos","seleParModel","generarM","variables","tipo",
+                                "activa","nn","xgb"))
 
     # actualizar.tabla()
     # updateinitSelects("selHoriz", 1:input$cant.kmeans.cluster)
@@ -2507,6 +2808,7 @@ shinyServer(function(input, output, session) {
     updatePlot$poder.pred <- plot.code.poder.pred(variable.predecir, label= tr("distrelvar"))
     updatePlot$poder.dens <- plot.numerico.dens(input$sel.density.poder,tr("denspodlab"))
     updatePlot$poder.cat <- plot.code.dist.porc(input$sel.distribucion.poder,variable.predecir, label=tr("distpodcat"))
+
     ejecutar.knn.mc()
     ejecutar.knn.ind()
     ejecutar.svm.mc()
@@ -2518,6 +2820,7 @@ shinyServer(function(input, output, session) {
   })
 
   # Termina la Sesion -------------------------------------------------------------------------------------------------------
+
   session$onSessionEnded(function() {
     rm(envir = .GlobalEnv, list = ls(envir = .GlobalEnv))
     unlink("figure", recursive = T)
