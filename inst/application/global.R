@@ -758,61 +758,90 @@ bayes.MC <- function(){
 
 # Pagina de GX BOOSTING ---------------------------------------------------------------------------------------------------
 
-#Crea el modelo KNN
+#Crea el modelo GX BOOSTING
 xgb.modelo <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
-  browser()
   num.class <- length(levels(datos.aprendizaje[,variable.predecir]))
   if(num.class > 2){
     tipo <- "multi:softprob"
-    str.num.class <- ""
+    str.num.class <- paste0(",num_class =",num.class)
     eval.xgb <- "mlogloss"
   }else{
     tipo <- "binary:logistic"
-    str.num.class <- paste0(",num_class =",num.class)
+    str.num.class <- ""
     eval.xgb <- "error"
   }
   categoricas <- colnames(var.categoricas(datos.aprendizaje))
   categoricas <- paste0(categoricas,collapse = "','")
   matrices <- paste0("d.aprendizaje <- mutate_all(datos.aprendizaje, funs(as.numeric))\n",
                      "d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
-                     "d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
-                     "d.aprendizaje[,c('",categoricas,"')] <- mutate_all(d.aprendizaje, funs(as.numeric))\n",
-                     "d.prueba[,c('",categoricas,"')] <- mutate_all(d.prueba, funs(as.numeric))\n",
+                     "d.aprendizaje[,c('",categoricas,"')] <- d.aprendizaje[,c('",categoricas,"')] - 1\n",
+                     "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
                      "selector <- -which(colnames(d.aprendizaje) == '",variable.predecir,"')\n",
                      "mxgb.aprendizaje <- xgb.DMatrix(data = data.matrix(d.aprendizaje[,selector]),",
                      "label = data.matrix(d.aprendizaje$'",variable.predecir,"'))\n",
                      "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
                      "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
   parametros <- paste0("parametros <- list(booster = '",booster,"', objective = '",tipo,"', max_depth=",max.depth, str.num.class,")\n")
-  modelo <- paste0("modelo.xgb.",booster," <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",
-                                        watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
-
+  modelo <- paste0("modelo.xgb.",booster," <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",verbose = 0,
+                   watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
   return(paste0(matrices,parametros,modelo))
 }
 
-xgb.modelo.np <- function(booster = "gbtree"){
-
-  return(paste0("modelo.nuevos <<- train.kknn(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
+xgb.modelo.np <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
+  num.class <- length(levels(datos.aprendizaje.completos[,variable.predecir.pn]))
+  if(num.class > 2){
+    tipo <- "multi:softprob"
+    str.num.class <- paste0(",num_class =",num.class)
+    eval.xgb <- "mlogloss"
+  }else{
+    tipo <- "binary:logistic"
+    str.num.class <- ""
+    eval.xgb <- "error"
+  }
+  categoricas <- colnames(var.categoricas(datos.aprendizaje.completos))
+  categoricas <- paste0(categoricas,collapse = "','")
+  matrices <- paste0("d.aprendizaje <- mutate_all(datos.aprendizaje.completos, funs(as.numeric))\n",
+                     "d.prueba <- mutate_all(datos.prueba.completos, funs(as.numeric))\n",
+                     "d.aprendizaje[,c('",categoricas,"')] <- d.aprendizaje[,c('",categoricas,"')] - 1\n",
+                     "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
+                     "selector <- -which(colnames(d.aprendizaje) == '",variable.predecir.pn,"')\n",
+                     "mxgb.aprendizaje <- xgb.DMatrix(data = data.matrix(d.aprendizaje[,selector]),",
+                     "label = data.matrix(d.aprendizaje$'",variable.predecir.pn,"'))\n",
+                     "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
+                     "label = data.matrix(d.prueba$'",variable.predecir.pn.pn,"'))\n")
+  parametros <- paste0("parametros <- list(booster = '",booster,"', objective = '",tipo,"', max_depth=",max.depth, str.num.class,")\n")
+  modelo <- paste0("modelo.nuevos <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",verbose = 0,
+                   watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
+  return(paste0(matrices,parametros,modelo))
 }
 
-#Codigo de la prediccion de knn
-kkn.prediccion <- function(kernel = "optimal") {
+#Codigo de la prediccion de xgb
+xgb.prediccion <- function(booster = "optimal") {
   categoricas <- colnames(var.categoricas(datos.aprendizaje))
   categoricas <- paste0(categoricas,collapse = "','")
   pre <- paste0("d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
+                "valor.var.xgb.",booster," <<- d.prueba[,'",variable.predecir,"']",
+                "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
+                "selector <- -which(colnames(d.prueba) == '",variable.predecir,"')\n",
+                "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector])\n,",
+                "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
+  return(paste0(pre, "prediccion.xgb.",booster," <<- predict(modelo.xgb.",booster,", mxgb.prueba)"))
+}
+
+xgb.prediccion.pn <- function() {
+  categoricas <- colnames(var.categoricas(datos.prueba.completos))
+  categoricas <- paste0(categoricas,collapse = "','")
+  pre <- paste0("d.prueba <- mutate_all(datos.prueba.completos, funs(as.numeric))\n",
                 "d.prueba[,c('",categoricas,"')] <- mutate_all(d.prueba, funs(as.numeric))\n",
                 "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
-                "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
-  return(paste0(pre, "prediccion <- predict (modelo, ttesting)"))
+                "label = data.matrix(d.prueba$'",variable.predecir.pn,"'))\n")
+  return(paste0(pre, "predic.nuevos <<- predict (modelo, ttesting)"))
 }
 
-kkn.prediccion.pn <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos[,-which(colnames(datos.prueba.completos) == '",variable.predecir.pn,"')])"))
-}
-
-#Codigo de la matriz de confucion de knn
-knn.MC <- function(variable.p, kernel = "optimal"){
-  return(paste0("MC.knn.",kernel," <<- table(datos.prueba$",variable.p,", prediccion.knn.",kernel,")"))
+#Codigo de la matriz de confucion de xgb
+xgb.MC <- function(booster = "optimal"){
+  paste0("prediccion.xgb.",booster," <- ifelse(prediccion.xgb.",booster," > 0.5, 2, 1)\n",
+         "MC.xgb.",booster," <- table(prediccion.xgb.",booster,", valor.var.xgb.",booster,")\n")
 }
 
 
@@ -1080,12 +1109,19 @@ cod.b.pred <<-  NULL
 cod.b.mc <<- NULL
 cod.b.ind <<- NULL
 
-# -------------------  KNN
+# -------------------  BAYES
 
 cod.bayes.modelo <<-  NULL
 cod.bayes.pred <<-  NULL
 cod.bayes.mc <<- NULL
 cod.bayes.ind <<- NULL
+
+# -------------------  GX BOOSTING
+
+cod.xgb.modelo <<-  NULL
+cod.xgb.pred <<-  NULL
+cod.xgb.mc <<- NULL
+cod.xgb.ind <<- NULL
 
 # -------------------  Prediccion Nuevos
 

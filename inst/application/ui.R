@@ -897,11 +897,11 @@ opciones.xgb <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
                      fluidRow(column(selectInput(inputId = "boosterXgb", label = labelInput("selbooster"),selected = 1,
                                                  choices = c("gbtree", "gblinear", "dart")),width = 12)),
                      fluidRow(column(numericInput("maxdepthXgb", labelInput("maxdepth"), min = 1,step = 1, value = 6), width = 6),
-                              column(numericInput("nroundsXgb", labelInput("selnrounds"), min = 0,step = 1, value = 1), width = 6)))
+                              column(numericInput("nroundsXgb", labelInput("selnrounds"), min = 0,step = 1, value = 50), width = 6)))
 
 codigo.xgb <- list(h4(labelInput("codigo")), hr(),
                    conditionalPanel("input.BoxXgb == 'tabXgbModelo'",
-                                    aceEditor("fieldCodeXgb", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
+                                    aceEditor("fieldCodeXgb", mode = "r", theme = "monokai", value = "", height = "19vh", readOnly = F)),
                    conditionalPanel("input.BoxXgb == 'tabXgbPred'",
                                     aceEditor("fieldCodeXgbPred", mode = "r", theme = "monokai",
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),

@@ -60,7 +60,15 @@ shinyServer(function(input, output, session) {
 
   # Crea la tabla de comparacion entre prediccion y datos reales (datos de prueba)
   obj.predic <- function(predic.var = NULL){
-    real <- as.character(datos.prueba[, variable.predecir])
+    real <- datos.prueba[, variable.predecir]
+    if(is.numeric(predic.var)){
+      for(nom in unique(real)) {
+        nom.num <- unique(real)
+        nom.num <- as.numeric(nom.num)[nom.num == nom]
+        predic.var[predic.var==nom.num] <- nom
+      }
+    }
+    real <- as.character(real)
     predi <- as.character(predic.var)
     acerto <- paste0("<span style='color:green'><b>",tr("acerto"),"</b></span>")
     fallo  <- paste0("<span style='color:red'><b>",tr("fallo"),"</b></span>")
@@ -414,6 +422,7 @@ shinyServer(function(input, output, session) {
       deafult.codigo.rf(rf.def = TRUE)
       deault.codigo.boosting()
       default.codigo.bayes()
+      default.codigo.xgb()
     } else {
       showNotification(tr("tieneSVP"), duration = 15, type = "error")
     }
@@ -2154,12 +2163,12 @@ shinyServer(function(input, output, session) {
     cod.xgb.modelo <<- codigo
 
     # Se genera el codigo de la prediccion
-    codigo <- xgb.prediccion(booter = input$boosterXgb)
+    codigo <- xgb.prediccion(booster = input$boosterXgb)
     updateAceEditor(session, "fieldCodeXgbPred", value = codigo)
     cod.xgb.pred <<- codigo
 
     # Se genera el codigo de la matriz
-    codigo <- xgb.MC(booter = input$boosterXgb)
+    codigo <- xgb.MC(booster = input$boosterXgb)
     updateAceEditor(session, "fieldCodeXgbMC", value = codigo)
     cod.xgb.mc <<- codigo
 
@@ -2175,7 +2184,7 @@ shinyServer(function(input, output, session) {
       switch(i, {
         exe("modelo.xgb.",input$boosterXgb," <<- NULL")
         output$txtxgb <- renderPrint(invisible(""))
-        remove.report.elem(paste0("modelo.xgb.",input$kernel.xgb))
+        remove.report.elem(paste0("modelo.xgb.",input$boosterXgb))
       }, {
         exe("prediccion.xgb.",input$boosterXgb," <<- NULL")
         remove.report.elem(paste0("pred.xgb.",input$boosterXgb))
@@ -2204,12 +2213,11 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.xgb <- function() {
     tryCatch({
-
       exe(cod.xgb.modelo)
       updateAceEditor(session, "fieldCodeKnn", value = cod.xgb.modelo)
       output$txtxgb <- renderPrint(exe("modelo.xgb.",input$boosterXgb))
       insert.report(paste0("modelo.xgb.",input$boosterXgb),
-                    paste0("## Generación del modelo KNN - ",input$boosterXgb,"\n```{r}\n",cod.xgb.modelo, "\nmodelo.xgb.",input$boosterXgb,"\n```"))
+                    paste0("## Generación del modelo XGB - ",input$boosterXgb,"\n```{r}\n",cod.xgb.modelo, "\nmodelo.xgb.",input$boosterXgb,"\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.xgb.",input$boosterXgb))
     },
@@ -2223,14 +2231,14 @@ shinyServer(function(input, output, session) {
   ejecutar.xgb.pred <- function() {
     tryCatch({ # Se corren los codigo
       exe(cod.xgb.pred)
-      scores[[paste0("KNN - ",input$boosterXgb)]] <<- predict(exe("modelo.xgb.",input$boosterXgb), datos.prueba, type = "prob")
+      scores[[paste0("XGB - ",input$boosterXgb)]] <<- exe("prediccion.xgb.",input$boosterXgb)
 
       # Cambia la tabla con la prediccion de xgb
-      output$xgbPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.xgb.",input$boosterXgb)),server = FALSE)
+      output$xgbPrediTable <- DT::renderDataTable(obj.predic(exe("ifelse(prediccion.xgb.",input$boosterXgb," > 0.5, 2, 1)")),server = FALSE)
       insert.report(paste0("pred.xgb.",input$boosterXgb),
                     paste0("## Predicción del Modelo KNN - ",input$boosterXgb,"\n```{r}\n", cod.xgb.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.xgb.",input$boosterXgb,")))\n",
-                           "scores[['",paste0("KNN - ",input$boosterXgb),"']] <<- predict(modelo.xgb.",input$boosterXgb,",datos.prueba, type = 'prob')\n```"))
+                           "\nhead(dt.to.data.frame.predict(obj.predic(ifelse(prediccion.xgb.",input$boosterXgb," > 0.5, 2, 1)))\n",
+                           "scores[['",paste0("XGB - ",input$boosterXgb),"']] <<- prediccion.xgb.",input$boosterXgb,"\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.xgb.",input$boosterXgb))
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -2244,6 +2252,7 @@ shinyServer(function(input, output, session) {
   # Genera la matriz de confusion
   ejecutar.xgb.mc <- function() {
     if(exists(paste0("prediccion.xgb.",input$boosterXgb))){
+      browser()
       tryCatch({ # Se corren los codigo
         exe(cod.xgb.mc)
         output$txtxgbMC <- renderPrint(print(exe("MC.xgb.",input$boosterXgb)))
@@ -2261,7 +2270,7 @@ shinyServer(function(input, output, session) {
         nombres.modelos <<- c(nombres.modelos, paste0("MC.xgb.",input$boosterXgb))
         actualizar.selector.comparativa()
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e){ # Regresamos al estado inicial y mostramos un error
         limpia.xgb(3)
         showNotification(paste0("Error (XGB-03) : ",e), duration = 15, type = "error")
       })
