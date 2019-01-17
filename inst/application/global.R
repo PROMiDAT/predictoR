@@ -7,6 +7,10 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
+max.col <- function(m){
+  base::max.col(apply(m, 1, function(x) max(x, na.rm = TRUE)) == m)
+}
+
 #Obtiene los nombres de columnas o regresa un string vacio
 colnames.empty <- function(res){
   res <- colnames(res)
@@ -623,11 +627,12 @@ rf.MC <- function(variable.p){
   return(paste0("MC.rf <<- table(datos.prueba$",variable.p,", prediccion.rf)"))
 }
 
-#Codigo del grafico de rf
+#Codigo del grafico de importancia de variables
 rf.plot <- function(){
   return("ggVarImp(modelo.rf)")
 }
 
+#Codigo del grafico de error del modelo
 plot.rf.error <- function(){
   return(paste0("plot(modelo.rf, main='')\n",
          "legend('topright', c('OOB','",
@@ -738,8 +743,8 @@ bayes.modelo <- function(){
   return(paste0("modelo.bayes <<- naiveBayes(",variable.predecir,"~., data = datos.aprendizaje)"))
 }
 
-bayes.modelo.np <- function(){
-  return(paste0("modelo.nuevos <<- naiveBayes(",variable.predecir,"~., data = datos.aprendizaje.completos)"))
+bayes.modelo.np <- function(variable.pr = ""){
+  return(paste0("modelo.nuevos <<- naiveBayes(",variable.pr,"~., data = datos.aprendizaje.completos)"))
 }
 
 #Codigo de la prediccion de Bayes
@@ -747,13 +752,84 @@ bayes.prediccion <- function() {
   return(paste0("prediccion.bayes <<- predict(modelo.bayes, datos.prueba[,-which(colnames(datos.prueba) == '",variable.predecir,"')])"))
 }
 
-bayes.prediccion.pn <- function() {
+bayes.prediccion.np <- function() {
   return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos[,-which(colnames(datos.prueba.completos) == '",variable.predecir.pn,"')])"))
 }
 
 #Codigo de la matriz de confucion de Bayes
 bayes.MC <- function(){
   return(paste0("MC.bayes <<- table(datos.prueba$",variable.predecir,", prediccion.bayes)"))
+}
+
+# Pagina de NN ------------------------------------------------------------------------------------------------------------
+
+#Crea el modelo NN
+nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
+  threshold <- ifelse(0.01>threshold, 0.01, threshold)
+  stepmax <- ifelse(1000>stepmax, 1000, stepmax)
+  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
+  selector <- -which(colnames(datos.aprendizaje) == variable.predecir)
+
+  paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje[,",selector,"])))\n",
+         "datos.dummies.apren['",variable.predecir,"'] <- datos.aprendizaje[,'",variable.predecir,"']\n",
+         "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
+         "\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
+         "nombres <- colnames(datos.dummies.apren)\n",
+         "formula.nn <- as.formula(paste('",paste0(levels(datos.aprendizaje[,variable.predecir]), collapse = "+"),
+         "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje[,variable.predecir])),"], collapse = '+')))\n",
+         "modelo.nn <<- neuralnet(formula.nn, data = datos.dummies.apren, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+         "threshold = ",threshold,", stepmax = ",stepmax,")\n")
+}
+
+nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000000, cant.cap = 2, ...){
+  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
+  stepmax <- ifelse(1000>stepmax, 1000, stepmax)
+  threshold <- ifelse(0.01>threshold, 0.01, threshold)
+  selector <- -which(colnames(datos.aprendizaje.completos) == variable.pr)
+
+  paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje.completos[,",selector,"])))\n",
+         "datos.dummies.apren['",variable.pr,"'] <- datos.aprendizaje.completos[,'",variable.pr,"']\n",
+         "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
+         "\t\t\t\ttidyr::spread(key = ",variable.pr,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
+         "nombres <- colnames(datos.dummies.apren)\n",
+         "formula.nn <- as.formula(paste('",paste0(levels(datos.aprendizaje.completos[,variable.pr]), collapse = "+"),
+         "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje.completos[,variable.pr])),"], collapse = '+')))\n",
+         "modelo.nuevos <<- neuralnet(formula.nn, data = datos.dummies.apren, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+         "threshold = ",threshold,", stepmax = ",stepmax,")\n")
+}
+
+#Codigo de la prediccion de xgb
+nn.prediccion <- function() {
+  selector <- -which(colnames(datos.prueba) == variable.predecir)
+
+  paste0("datos.dummies.prueb <- as.data.frame(scale(dummy.data.frame(datos.prueba[,",selector,"])))\n",
+         "datos.dummies.prueb['",variable.predecir,"'] <- NULL\n",
+         "prediccion.nn <<- neuralnet::compute(modelo.nn, datos.dummies.prueb)$net.result\n",
+         "max.col(prediccion.nn)")
+}
+
+nn.prediccion.pn <- function(){
+  selector <- -which(colnames(datos.prueba) == variable.predecir)
+
+  paste0("datos.dummies.prueb <- as.data.frame(scale(dummy.data.frame(datos.prueba.completos[,",selector,"])))\n",
+         "datos.dummies.prueb['",variable.predecir,"'] <- NULL\n",
+         "prediccion.nn <<- neuralnet::compute(modelo.nn, datos.dummies.prueb)$net.result\n",
+         "prediccion.nn <<- max.col(prediccion.nn)")
+}
+
+#Codigo de la matriz de confucion de xgb
+nn.MC <- function(){
+  paste0("predicion <- factor(max.col(prediccion.nn), levels = 1:length(levels(datos.prueba[,'",variable.predecir,"'])))\n",
+         "real <- as.numeric(datos.prueba[,'",variable.predecir,"'])\n",
+         "MC.nn <<- table(real,predicion)\n",
+         "rownames(MC.nn) <<- ",as.string.c(levels(datos.prueba[, variable.predecir])),"\n",
+         "colnames(MC.nn) <<- ",as.string.c(levels(datos.prueba[, variable.predecir])))
+}
+
+nn.plot <- function(){
+  paste0("plot(modelo.nn,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t\t",
+         "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t\t",
+         "dimension=15, radius = 0.2, fontsize = 10)")
 }
 
 # Pagina de GX BOOSTING ---------------------------------------------------------------------------------------------------
@@ -773,22 +849,18 @@ xgb.modelo <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
   categoricas <- colnames(var.categoricas(datos.aprendizaje))
   categoricas <- paste0(categoricas,collapse = "','")
   matrices <- paste0("d.aprendizaje <- mutate_all(datos.aprendizaje, funs(as.numeric))\n",
-                     "d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
                      "d.aprendizaje[,c('",categoricas,"')] <- d.aprendizaje[,c('",categoricas,"')] - 1\n",
-                     "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
                      "selector <- -which(colnames(d.aprendizaje) == '",variable.predecir,"')\n",
                      "mxgb.aprendizaje <- xgb.DMatrix(data = data.matrix(d.aprendizaje[,selector]),",
-                     "label = data.matrix(d.aprendizaje$'",variable.predecir,"'))\n",
-                     "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
-                     "label = data.matrix(d.prueba$'",variable.predecir,"'))\n")
+                     "label = data.matrix(d.aprendizaje$'",variable.predecir,"'))\n")
   parametros <- paste0("parametros <- list(booster = '",booster,"', objective = '",tipo,"', max_depth=",max.depth, str.num.class,")\n")
   modelo <- paste0("modelo.xgb.",booster," <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",verbose = 0,
-                   watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
+                   watchlist = list(train=mxgb.aprendizaje), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
   return(paste0(matrices,parametros,modelo))
 }
 
-xgb.modelo.np <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
-  num.class <- length(levels(datos.aprendizaje.completos[,variable.predecir.pn]))
+xgb.modelo.np <- function(variable.pr = "", booster = "gbtree", max.depth = 6, n.rounds = 60){
+  num.class <- length(levels(datos.aprendizaje.completos[,variable.pr]))
   if(num.class > 2){
     tipo <- "multi:softprob"
     str.num.class <- paste0(",num_class =",num.class)
@@ -801,26 +873,22 @@ xgb.modelo.np <- function(booster = "gbtree",max.depth = 6, n.rounds = 60){
   categoricas <- colnames(var.categoricas(datos.aprendizaje.completos))
   categoricas <- paste0(categoricas,collapse = "','")
   matrices <- paste0("d.aprendizaje <- mutate_all(datos.aprendizaje.completos, funs(as.numeric))\n",
-                     "d.prueba <- mutate_all(datos.prueba.completos, funs(as.numeric))\n",
                      "d.aprendizaje[,c('",categoricas,"')] <- d.aprendizaje[,c('",categoricas,"')] - 1\n",
-                     "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
-                     "selector <- -which(colnames(d.aprendizaje) == '",variable.predecir.pn,"')\n",
+                     "selector <- -which(colnames(d.aprendizaje) == '",variable.pr,"')\n",
                      "mxgb.aprendizaje <- xgb.DMatrix(data = data.matrix(d.aprendizaje[,selector]),",
-                     "label = data.matrix(d.aprendizaje$'",variable.predecir.pn,"'))\n",
-                     "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
-                     "label = data.matrix(d.prueba$'",variable.predecir.pn.pn,"'))\n")
+                     "label = data.matrix(d.aprendizaje$'",variable.pr,"'))\n")
   parametros <- paste0("parametros <- list(booster = '",booster,"', objective = '",tipo,"', max_depth=",max.depth, str.num.class,")\n")
   modelo <- paste0("modelo.nuevos <<- xgb.train(params = parametros, data = mxgb.aprendizaje, nrounds =",n.rounds,",verbose = 0,
-                   watchlist = list(train=mxgb.aprendizaje, test=mxgb.prueba), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
+                   watchlist = list(train=mxgb.aprendizaje), early_stop_round = 10, maximize = F , eval_metric = '",eval.xgb,"')")
   return(paste0(matrices,parametros,modelo))
 }
 
 #Codigo de la prediccion de xgb
-xgb.prediccion <- function(booster = "optimal") {
+xgb.prediccion <- function(booster = "gbtree") {
   categoricas <- colnames(var.categoricas(datos.aprendizaje))
   categoricas <- paste0(categoricas,collapse = "','")
   pre <- paste0("d.prueba <- mutate_all(datos.prueba, funs(as.numeric))\n",
-                "valor.var.xgb.",booster," <<- d.prueba[,'",variable.predecir,"']",
+                "valor.var.xgb.",booster," <<- d.prueba[,'",variable.predecir,"']\n",
                 "d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n",
                 "selector <- -which(colnames(d.prueba) == '",variable.predecir,"')\n",
                 "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector])\n,",
@@ -829,21 +897,110 @@ xgb.prediccion <- function(booster = "optimal") {
 }
 
 xgb.prediccion.pn <- function() {
+  clases <- levels(datos.aprendizaje.completos[,variable.predecir.pn])
+  num.class <- length(clases)
+  if(num.class > 2){
+    pred <- paste0("predic.nuevos <<- max.col(matrix(predic.nuevos, ncol=",num.class,", byrow=TRUE))\n")
+  }else{
+    pred <- paste0("predic.nuevos <<- ifelse(predic.nuevos > 0.5, 2, 1)\n")
+  }
+  x <- paste0("'",1:num.class,"'='%s'",collapse = ",")
+  recod <- do.call(sprintf, c(list(x), clases))
+
   categoricas <- colnames(var.categoricas(datos.prueba.completos))
-  categoricas <- paste0(categoricas,collapse = "','")
+  categoricas <- categoricas[variable.predecir.pn != categoricas]
+  if(length(categoricas) > 0){
+    categoricas <- paste0(categoricas,collapse = "','")
+    categoricas <- paste0("d.prueba[,c('",categoricas,"')] <- d.prueba[,c('",categoricas,"')] - 1\n")
+  }else{
+    ategoricas <- ""
+  }
   pre <- paste0("d.prueba <- mutate_all(datos.prueba.completos, funs(as.numeric))\n",
-                "d.prueba[,c('",categoricas,"')] <- mutate_all(d.prueba, funs(as.numeric))\n",
+                categoricas,
+                "selector <- -which(colnames(d.prueba) == '",variable.predecir.pn,"')\n",
                 "mxgb.prueba <- xgb.DMatrix(data = data.matrix(d.prueba[,selector]),",
-                "label = data.matrix(d.prueba$'",variable.predecir.pn,"'))\n")
-  return(paste0(pre, "predic.nuevos <<- predict (modelo, ttesting)"))
+                "label = data.matrix(d.prueba$'",variable.predecir.pn,"'))\n",
+                "predic.nuevos <<- predict(modelo.nuevos, mxgb.prueba)\n",
+                pred,
+                "predic.nuevos <<- recode(predic.nuevos, ",recod,")")
+  return(pre)
 }
 
 #Codigo de la matriz de confucion de xgb
-xgb.MC <- function(booster = "optimal"){
-  paste0("prediccion.xgb.",booster," <- ifelse(prediccion.xgb.",booster," > 0.5, 2, 1)\n",
-         "MC.xgb.",booster," <- table(prediccion.xgb.",booster,", valor.var.xgb.",booster,")\n")
+xgb.MC <- function(booster = "gbtree"){
+  num.class <- length(levels(datos.aprendizaje[,variable.predecir]))
+  if(num.class > 2){
+    pred <- paste0("prediccion.xgb.",booster," <- matrix(prediccion.xgb.",booster,", ncol=",num.class,", byrow=TRUE)\n",
+                   "prediccion.xgb.",booster," <- max.col(prediccion.xgb.",booster,")\n")
+  }else{
+    pred <- paste0("prediccion.xgb.",booster," <- ifelse(prediccion.xgb.",booster," > 0.5, 2, 1)\n")
+  }
+  paste0(pred,
+         "MC.xgb.",booster," <<- table(prediccion.xgb.",booster,", valor.var.xgb.",booster,")\n",
+         "rownames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])),"\n",
+         "colnames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])))
 }
 
+#Codigo interno del grafico de importancia
+xgb.plot.importance <- function (importance_matrix = NULL, top_n = NULL, measure = NULL, rel_to_first = FALSE,
+                                 left_margin = 10, cex = NULL, plot = TRUE, ...){
+  xgboost:::check.deprecation(...)
+  if (!data.table::is.data.table(importance_matrix)) {
+    stop("importance_matrix: must be a data.table")
+  }
+  imp_names <- colnames(importance_matrix)
+  if (is.null(measure)) {
+    if (all(c("Feature", "Gain") %in% imp_names)) {
+      measure <- "Gain"
+    }
+    else if (all(c("Feature", "Weight") %in% imp_names)) {
+      measure <- "Weight"
+    }
+    else {
+      stop("Importance matrix column names are not as expected!")
+    }
+  }
+  else {
+    if (!measure %in% imp_names)
+      stop("Invalid `measure`")
+    if (!"Feature" %in% imp_names)
+      stop("Importance matrix column names are not as expected!")
+  }
+  importance_matrix <- importance_matrix[, `:=`(Importance,
+                                                sum(get(measure))), by = Feature]
+  importance_matrix <- importance_matrix[order(-abs(Importance))]
+  if (!is.null(top_n)) {
+    top_n <- min(top_n, nrow(importance_matrix))
+    importance_matrix <- head(importance_matrix, top_n)
+  }
+  if (rel_to_first) {
+    importance_matrix[, `:=`(Importance, Importance/max(abs(Importance)))]
+  }
+  if (is.null(cex)) {
+    cex <- 2.5/log2(1 + nrow(importance_matrix))
+  }
+  if (plot) {
+    op <- par(no.readonly = TRUE)
+    mar <- op$mar
+    if (!is.null(left_margin))
+      mar[2] <- left_margin
+    par(mar = mar)
+    importance_matrix[nrow(importance_matrix):1, barplot(Importance,
+                                                         horiz = T, border = T, cex.names = cex, names.arg = Feature,
+                                                         las = 1, ...)]
+    grid(NULL, NA)
+    importance_matrix[nrow(importance_matrix):1, barplot(Importance,
+                                                         horiz = T, border = T, add = T, ...)]
+    par(op)
+  }
+  invisible(importance_matrix)
+}
+
+#Codigo del grafico de importancia de variables
+xgb.varImp <- function(booster = "gbtree"){
+  paste0("variables.importantes <- xgb.importance(feature_names = colnames(datos.aprendizaje), model = modelo.xgb.",booster,")\n",
+         "xgb.plot.importance(importance_matrix = variables.importantes, col = ",as.string.c(gg_color_hue(ncol(datos.aprendizaje))),")")
+}
 
 # Pagina de TABLA COMPARATIVA -----------------------------------------------------------------------------------------------
 
@@ -869,6 +1026,14 @@ plotROC <- function(sel) {
 
   if(length(SCORES) == 0) {
     return(NULL)
+  }
+
+  correcion.xgb <- names(scores)[grepl("XGB - ", names(scores))]
+
+  for (i in correcion.xgb) {
+    SCORES[[i]] <- data.frame(1-SCORES[[i]],SCORES[[i]])
+    colnames(SCORES[[i]]) <- levels(clase)
+    SCORES[[i]] <- as.matrix(SCORES[[i]])
   }
 
   for (nombre in names(SCORES)) {
@@ -1115,6 +1280,13 @@ cod.bayes.modelo <<-  NULL
 cod.bayes.pred <<-  NULL
 cod.bayes.mc <<- NULL
 cod.bayes.ind <<- NULL
+
+# -------------------  NN
+
+cod.nn.modelo <<-  NULL
+cod.nn.pred <<-  NULL
+cod.nn.mc <<- NULL
+cod.nn.ind <<- NULL
 
 # -------------------  GX BOOSTING
 

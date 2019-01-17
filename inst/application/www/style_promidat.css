@@ -16,10 +16,18 @@
 }
 
 /*tamaño minimo para el campo de texto de las matrices de confusion*/
-#txtknnMC, #txtSvmMC, #txtDtMC, #txtRfMC, #txtBoostingMC,  #txtbayesMC, #txtxgbMC{
+#txtknnMC, #txtSvmMC, #txtDtMC, #txtRfMC, #txtBoostingMC,  #txtbayesMC, #txtxgbMC, #txtnnMC{
   min-height: 100px !important;
 }
 
+.mini-numeric-select .form-group.shiny-input-container {
+    width: 10%;
+    position: relative;
+    min-height: 1px;
+    padding-right: 13px;
+    padding-left: 13px;
+    float: left;
+}
 
 table.spacing-xs tr th{
   padding-left: 1px !important;

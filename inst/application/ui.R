@@ -12,6 +12,7 @@ library(knitr)
 library(raster)
 library(rattle)
 library(xtable)
+library(dummies)
 library(xgboost)
 library(shinyjs)
 library(ggplot2)
@@ -19,6 +20,7 @@ library(stringr)
 library(forcats)
 library(shinyAce)
 library(corrplot)
+library(neuralnet)
 library(rpart.plot)
 library(dendextend)
 library(randomForest)
@@ -835,23 +837,22 @@ pagina.bayes <- tabItem(tabName = "bayes",
 
 opciones.nn <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
                               column(width = 2,br(),actionButton("runNn", label = labelInput("ejecutar"), icon = icon("play")))),
-                     hr(),
-                     fluidRow(column(numericInput("numNode.nn", labelInput("numNode"), min = 1,step = 1, value = 7), width = 6),
-                              column(selectInput(inputId = "kernel.nn", label = labelInput("selkernel"),selected = 1,
-                                                 choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
-                                                             "triweight", "cos","inv","gaussian")),width = 6)),
-                     fluidRow(column(switchInput(inputId = "switch.scale.nn", onStatus = "success", offStatus = "danger", value = T,
-                                                 label = labelInput("escal"), onLabel = labelInput("si"), offLabel = labelInput("no"), labelWidth = "100%"), width=7)))
-
-# size = número de de nodos en la capa oculta
-# rang = pesos iniciales
-# decay = grado de decrecimiento de los pesos
-# maxit = número máximo de iteraciones (default=100)
-# MaxNWts = Número máximo de pesos (default=1000)
+                    hr(),
+                    fluidRow(column(numericInput("threshold.nn",labelInput("threshold"),
+                                                 min = 0.01, step = 0.01, value = 0.01), width = 6),
+                             column(numericInput("stepmax.nn",labelInput("stepmax"),
+                                                 min = 1000, step = 1000, value = 10000), width = 6)),
+                    fluidRow(column(sliderInput(inputId = "cant.capas.nn", min = 2, max = 10,
+                                                 label = labelInput("selectCapas"), value = 2), width = 12)),
+                    fluidRow(lapply(1:10, function(i) tags$span(numericInput(paste0("nn.cap.",i), NULL,
+                                                                    min = 1, step = 1, value = 10),
+                                                                 class = "mini-numeric-select"))))
 
 codigo.nn <- list(h4(labelInput("codigo")), hr(),
                    conditionalPanel("input.BoxNn == 'tabNnModelo'",
                                     aceEditor("fieldCodeNn", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
+                  conditionalPanel("input.BoxNn == 'tabNnPlot'",
+                                   aceEditor("fieldCodeNnPlot", mode = "r", theme = "monokai", value = "", height = "4vh", readOnly = F)),
                    conditionalPanel("input.BoxNn == 'tabNnPred'",
                                     aceEditor("fieldCodeNnPred", mode = "r", theme = "monokai",
                                               value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
@@ -864,6 +865,9 @@ codigo.nn <- list(h4(labelInput("codigo")), hr(),
 
 tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
                         tabs.content = list(opciones.nn, codigo.nn))
+
+plot.nn <- tabPanel(title = labelInput("redPlot"), value = "tabNnPlot",
+                    plotOutput('plot.nn', height = "55vh"))
 
 panel.generar.nn <- tabPanel(title = labelInput("generatem"), value = "tabNnModelo",
                               verbatimTextOutput("txtnn"))
@@ -884,6 +888,7 @@ panel.indices.generales.nn <- tabPanel(title = labelInput("indices"), value = "t
 pagina.nn  <- tabItem(tabName = "nn",
                       tabBox(id = "BoxNn", width = NULL, height ="80%",
                              panel.generar.nn,
+                             plot.nn,
                              panel.prediccion.nn,
                              panel.matriz.confucion.nn,
                              panel.indices.generales.nn,
@@ -902,12 +907,14 @@ opciones.xgb <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
 codigo.xgb <- list(h4(labelInput("codigo")), hr(),
                    conditionalPanel("input.BoxXgb == 'tabXgbModelo'",
                                     aceEditor("fieldCodeXgb", mode = "r", theme = "monokai", value = "", height = "19vh", readOnly = F)),
+                   conditionalPanel("input.BoxXgb == 'tabXgbImp'",
+                                    aceEditor("fieldCodeXgbImp", mode = "r", theme = "monokai", value = "", height = "19vh", readOnly = F)),
                    conditionalPanel("input.BoxXgb == 'tabXgbPred'",
                                     aceEditor("fieldCodeXgbPred", mode = "r", theme = "monokai",
-                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                                              value = "", height = "12vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxXgb == 'tabXgbMC'",
                                     aceEditor("fieldCodeXgbMC", mode = "r", theme = "monokai",
-                                              value = "", height = "3vh", readOnly = F, autoComplete = "enabled")),
+                                              value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxXgb == 'tabXgbIndex'",
                                     aceEditor("fieldCodeXgbIG", mode = "r", theme = "monokai",
                                               value = "", height = "21vh", readOnly = F, autoComplete = "enabled")))
@@ -917,6 +924,9 @@ tabs.xgb <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50
 
 panel.generar.xgb <- tabPanel(title = labelInput("generatem"), value = "tabXgbModelo",
                               verbatimTextOutput("txtxgb"))
+
+plot.xgb <- tabPanel(title = labelInput("varImp"), value = "tabXgbImp",
+                    plotOutput('plot.xgb', height = "55vh"))
 
 panel.prediccion.xgb <- tabPanel(title = labelInput("predm"), value = "tabXgbPred",
                                  DT::dataTableOutput("xgbPrediTable"))
@@ -934,6 +944,7 @@ panel.indices.generales.xgb <- tabPanel(title = labelInput("indices"), value = "
 pagina.xgb <- tabItem(tabName = "xgb",
                       tabBox(id = "BoxXgb", width = NULL, height ="80%",
                              panel.generar.xgb,
+                             plot.xgb,
                              panel.prediccion.xgb,
                              panel.matriz.confucion.xgb,
                              panel.indices.generales.xgb,
@@ -1040,6 +1051,15 @@ opciones.boosting.pred <- list(fluidRow(column(width = 3, numericInput("iter.boo
                                    column(width = 3, selectInput(inputId = "tipo.boosting.pred", label = labelInput("selectAlg"),selected = 1, width = "100%",
                                                                  choices =  c("discrete", "real", "gentle")))))
 
+opciones.bayes.pred <- tags$span()#vacio
+
+opciones.xgb.pred <- tags$span()#vacio
+
+opciones.xgb.pred <- fluidRow(column(numericInput("maxdepthXgb.pred", labelInput("maxdepth"), min = 1,step = 1, value = 6), width = 4),
+                              column(numericInput("nroundsXgb.pred", labelInput("selnrounds"), min = 0,step = 1, value = 50), width = 4),
+                              column(selectInput(inputId = "boosterXgb.pred", label = labelInput("selbooster"),selected = 1,
+                                                 choices = c("gbtree", "gblinear", "dart")),width = 4))
+
 panel.crear.modelo.pred <- tabPanel(title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
                                     conditionalPanel(condition =  "input.selectModelsPred == 'knn'",
                                                      opciones.knn.pred),
@@ -1051,6 +1071,10 @@ panel.crear.modelo.pred <- tabPanel(title = labelInput("seleParModel"),solidHead
                                                      opciones.boosting.pred),
                                     conditionalPanel(condition =  "input.selectModelsPred == 'svm'",
                                                      opciones.svm.pred),
+                                    conditionalPanel(condition =  "input.selectModelsPred == 'bayes'",
+                                                     opciones.bayes.pred),
+                                    conditionalPanel(condition =  "input.selectModelsPred == 'xgb'",
+                                                     opciones.xgb.pred),
                                     verbatimTextOutput("txtPredNuevos"),
                                     actionButton("PredNuevosBttnModelo", labelInput("generarM"), width  = "100%" ))
 
@@ -1059,7 +1083,9 @@ opciones.modelo <- list(selectInput(inputId = "sel.predic.var.nuevos", label = l
                                                                        "<span data-id=\"dtl\"></span>" = "dt",
                                                                        "<span data-id=\"rfl\"></span>" = "rf",
                                                                        "<span data-id=\"bl\"></span>" = "ada",
-                                                                       "<span data-id=\"svml\"></span>" = "svm"),
+                                                                       "<span data-id=\"svml\"></span>" = "svm",
+                                                                       "Bayes" = "bayes",
+                                                                       "<span data-id=\"xgb\"></span>" = "xgb"),
                                           size = "sm", status = "primary",individual = FALSE, justified = FALSE, selected = "knn",
                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"),
                                                            no = icon("remove", lib = "glyphicon"))))
@@ -1139,6 +1165,7 @@ shinyUI(
                          pagina.rf,
                          pagina.boosting,
                          pagina.bayes,
+                         pagina.nn,
                          pagina.xgb,
                          pagina.comparacion,
                          pagina.predicciones.nuevas,
