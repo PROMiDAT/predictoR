@@ -2037,7 +2037,6 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.bayes <- function() {
     tryCatch({
-
       exe(cod.bayes.modelo)
       updateAceEditor(session, "fieldCodeBayes", value = cod.bayes.modelo)
       output$txtbayes <- renderPrint(modelo.bayes)
@@ -2083,7 +2082,7 @@ shinyServer(function(input, output, session) {
 
         exe(plot.MC.code())
         output$plot.bayes.mc <- renderPlot(plot.MC(MC.bayes))
-        insert.report(paste0("mc.bayes"),
+        insert.report("mc.bayes",
                       paste0("## Matriz de confusión del Modelo BAYES\n```{r}\n", cod.bayes.mc,
                              "\nMC.bayes\n```\n```{r}\nplot.MC(MC.bayes)\n",
                              "MCs[['BAYES']] <<- MC.bayes\n```"))
@@ -3015,13 +3014,17 @@ shinyServer(function(input, output, session) {
       paste(input$textTitulo,'-', input$textNombre, '.zip', sep='')
     },
     content = function(file) {
-      browser()
       owd <- setwd(tempdir())
       on.exit(setwd(owd))
       files <- NULL
 
       namermd <- paste(input$textTitulo,'-', input$textNombre, '.rmd', sep='')
-      writeLines(input$fieldCodeReport, namermd)
+      e <- options()$encoding
+      options(encoding = enc) #Variable global
+      write.table(input$fieldCodeReport,namermd,row.names=F,col.names=F,quote=F)
+      options(encoding = e)
+
+      #writeLines(input$fieldCodeReport, namermd)
       files <- c(namermd, files)
 
       src <- normalizePath(namermd)

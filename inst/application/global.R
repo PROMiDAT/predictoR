@@ -1132,6 +1132,10 @@ ordenar.reporte <- function(lista){
              nombres[grepl("modelo.rf.rules.", nombres)],
              combinar.nombres(c("modelo.b","modelo.b.error","modelo.b.imp","pred.b","mc.b","ind.b"),
                               c("discrete", "real", "gentle")),
+             "modelo.bayes", "pred.bayes", "mc.bayes", "ind.bayes",
+             "modelo.nn", "modelo.nn.graf", "pred.nn", "mc.nn", "ind.nn",
+             combinar.nombres(c("modelo.xgb", "modelo.xgb.graf", "pred.xgb", "mc.xgb", "ind.xgb"),
+                              c("gbtree", "gblinear", "dart")),
              "tabla.comparativa", "roc")
 
   orden <- c(orden, nombres[!(nombres %in% orden)])
