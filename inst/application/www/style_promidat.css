@@ -20,8 +20,12 @@
   min-height: 100px !important;
 }
 
+#rfPrediTable, #knnPrediTable, #svmPrediTable, #dtPrediTable, #rfPrediTable, #boostingPrediTable, #bayesPrediTable, #nnPrediTable, #xgbPrediTable {
+  min-height: 370px !important;
+}
+
 .mini-numeric-select .form-group.shiny-input-container {
-    width: 10%;
+    width: 15%;
     position: relative;
     min-height: 1px;
     padding-right: 13px;
@@ -185,7 +189,7 @@ input[type="checkbox"]:hover:before {
 
 .shiny-text-output{
   overflow-y:scroll !important;
-  min-height: 250px !important;
+  min-height: 360px !important;
   max-height: 400px !important;
 }
 

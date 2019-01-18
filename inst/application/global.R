@@ -512,7 +512,9 @@ kkn.prediccion.pn <- function() {
 
 #Codigo de la matriz de confucion de knn
 knn.MC <- function(variable.p, kernel = "optimal"){
-  return(paste0("MC.knn.",kernel," <<- table(datos.prueba$",variable.p,", prediccion.knn.",kernel,")"))
+  return(paste0("real <- datos.prueba$",variable.p,"\n",
+                "prediccion <- prediccion.knn.",kernel,"\n",
+                "MC.knn.",kernel," <<- table(real, prediccion)"))
 }
 
 # Pagina de SVM -------------------------------------------------------------------------------------------------------------
@@ -537,7 +539,9 @@ svm.prediccion.np <- function() {
 
 #Codigo de la matriz de confucion de svm
 svm.MC <- function(variable.p, kernel = "linear"){
-  return(paste0("MC.svm.",kernel," <<- table(datos.prueba$",variable.p,", prediccion.svm.",kernel," )"))
+  return(paste0("real <- datos.prueba$",variable.p,"\n",
+                "prediccion <- prediccion.svm.",kernel,"\n",
+                "MC.svm.",kernel," <<- table(real,prediccion)"))
 }
 
 #Codigo del grafico de svm
@@ -585,7 +589,9 @@ dt.prediccion.np <- function() {
 
 #Codigo de la matriz de confucion de dt
 dt.MC <- function(variable.p){
-  return(paste0("MC.dt.",input$split.dt," <<- table(datos.prueba$",variable.p,", prediccion.dt.",input$split.dt,")"))
+  return(paste0("real <- datos.prueba$",variable.p,"\n",
+                "prediccion <- prediccion.dt.",input$split.dt,"\n",
+                "MC.dt.",input$split.dt," <<- table(real, prediccion)"))
 }
 
 #Codigo del grafico de dt
@@ -624,7 +630,9 @@ rf.prediccion.np <- function() {
 
 #Codigo de la matriz de confucion de rf
 rf.MC <- function(variable.p){
-  return(paste0("MC.rf <<- table(datos.prueba$",variable.p,", prediccion.rf)"))
+  return(paste0("real <- datos.prueba$",variable.p,"\n",
+                "prediccion <- prediccion.rf\n",
+                "MC.rf <<- table(real, prediccion)"))
 }
 
 #Codigo del grafico de importancia de variables
@@ -671,7 +679,9 @@ boosting.prediccion.np <- function() {
 
 #Codigo de la matriz de confucion de boosting
 boosting.MC <- function(variable.p, type = "discrete"){
-  return(paste0("MC.boosting.",type," <<- table(datos.prueba$",variable.p,", prediccion.boosting.",type,")"))
+  return(paste0("real <- datos.prueba$",variable.p,"\n",
+                "prediccion <- prediccion.boosting.",type,"\n",
+                "MC.boosting.",type," <<- table(real, prediccion)"))
 }
 
 #Codigo del grafico de boosting
@@ -758,22 +768,24 @@ bayes.prediccion.np <- function() {
 
 #Codigo de la matriz de confucion de Bayes
 bayes.MC <- function(){
-  return(paste0("MC.bayes <<- table(datos.prueba$",variable.predecir,", prediccion.bayes)"))
+  return(paste0("real <- datos.prueba$",variable.predecir,"\n",
+                "prediccion <- prediccion.bayes\n",
+                "MC.bayes <<- table(real, prediccion.bayes)"))
 }
 
 # Pagina de NN ------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo NN
 nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
-  threshold <- ifelse(0.01>threshold, 0.01, threshold)
-  stepmax <- ifelse(1000>stepmax, 1000, stepmax)
+  threshold <- ifelse(threshold == 0, 0.01, threshold)
+  stepmax <- ifelse(stepmax < 100, 100, stepmax)
   capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
   selector <- -which(colnames(datos.aprendizaje) == variable.predecir)
 
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje[,",selector,"])))\n",
          "datos.dummies.apren['",variable.predecir,"'] <- datos.aprendizaje[,'",variable.predecir,"']\n",
          "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
-         "\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
+         "\t\t\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
          "nombres <- colnames(datos.dummies.apren)\n",
          "formula.nn <- as.formula(paste('",paste0(levels(datos.aprendizaje[,variable.predecir]), collapse = "+"),
          "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje[,variable.predecir])),"], collapse = '+')))\n",
@@ -781,11 +793,12 @@ nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
          "threshold = ",threshold,", stepmax = ",stepmax,")\n")
 }
 
-nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000000, cant.cap = 2, ...){
+nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
   stepmax <- ifelse(1000>stepmax, 1000, stepmax)
   threshold <- ifelse(0.01>threshold, 0.01, threshold)
   selector <- -which(colnames(datos.aprendizaje.completos) == variable.pr)
+
 
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje.completos[,",selector,"])))\n",
          "datos.dummies.apren['",variable.pr,"'] <- datos.aprendizaje.completos[,'",variable.pr,"']\n",
@@ -808,13 +821,19 @@ nn.prediccion <- function() {
          "max.col(prediccion.nn)")
 }
 
-nn.prediccion.pn <- function(){
+nn.prediccion.np <- function(){
   selector <- -which(colnames(datos.prueba) == variable.predecir)
 
+  clases <- levels(datos.aprendizaje.completos[,variable.predecir.pn])
+  num.class <- length(clases)
+  x <- paste0("'",1:num.class,"'='%s'",collapse = ",")
+  recod <- do.call(sprintf, c(list(x), clases))
+
   paste0("datos.dummies.prueb <- as.data.frame(scale(dummy.data.frame(datos.prueba.completos[,",selector,"])))\n",
-         "datos.dummies.prueb['",variable.predecir,"'] <- NULL\n",
-         "prediccion.nn <<- neuralnet::compute(modelo.nn, datos.dummies.prueb)$net.result\n",
-         "prediccion.nn <<- max.col(prediccion.nn)")
+         "datos.dummies.prueb['",variable.predecir.pn,"'] <- NULL\n",
+         "predic.nuevos <<- neuralnet::compute(modelo.nuevos, datos.dummies.prueb)$net.result\n",
+         "predic.nuevos <<- max.col(predic.nuevos)\n",
+         "predic.nuevos <<- recode(predic.nuevos, ",recod,")")
 }
 
 #Codigo de la matriz de confucion de xgb
@@ -827,8 +846,8 @@ nn.MC <- function(){
 }
 
 nn.plot <- function(){
-  paste0("plot(modelo.nn,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t\t",
-         "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t\t",
+  paste0("plot(modelo.nn,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t",
+         "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t",
          "dimension=15, radius = 0.2, fontsize = 10)")
 }
 
@@ -896,7 +915,7 @@ xgb.prediccion <- function(booster = "gbtree") {
   return(paste0(pre, "prediccion.xgb.",booster," <<- predict(modelo.xgb.",booster,", mxgb.prueba)"))
 }
 
-xgb.prediccion.pn <- function() {
+xgb.prediccion.np <- function() {
   clases <- levels(datos.aprendizaje.completos[,variable.predecir.pn])
   num.class <- length(clases)
   if(num.class > 2){
@@ -936,7 +955,9 @@ xgb.MC <- function(booster = "gbtree"){
     pred <- paste0("prediccion.xgb.",booster," <- ifelse(prediccion.xgb.",booster," > 0.5, 2, 1)\n")
   }
   paste0(pred,
-         "MC.xgb.",booster," <<- table(prediccion.xgb.",booster,", valor.var.xgb.",booster,")\n",
+         "real <- valor.var.xgb.",booster,"\n",
+         "prediccion <- prediccion.xgb.",booster,"\n",
+         "MC.xgb.",booster," <<- table(real,prediccion)\n",
          "rownames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])),"\n",
          "colnames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])))
 }
@@ -1028,7 +1049,7 @@ plotROC <- function(sel) {
     return(NULL)
   }
 
-  correcion.xgb <- names(scores)[grepl("XGB - ", names(scores))]
+  correcion.xgb <- names(SCORES)[grepl("XGB - ", names(SCORES))]
 
   for (i in correcion.xgb) {
     SCORES[[i]] <- data.frame(1-SCORES[[i]],SCORES[[i]])
@@ -1036,7 +1057,7 @@ plotROC <- function(sel) {
     SCORES[[i]] <- as.matrix(SCORES[[i]])
   }
 
-  if(!is.null(scores["Redes Neuronales"])){
+  if(!is.null(SCORES["Redes Neuronales"])){
     colnames(SCORES[["Redes Neuronales"]]) <- levels(clase)
   }
 
@@ -1053,8 +1074,8 @@ plotROC <- function(sel) {
     nombres <- c(nombres, nombre)
     index <- index + 1
   }
-  legend(x=0.85, y=0.65, legend = nombres, bty = "n", pch=19 ,
-         col = colores , text.col = "black", cex=0.8, pt.cex=0.8)
+  legend(x=0.85, y=0.8, legend = nombres, bty = "n", pch=19 ,
+         col = colores , text.col = "black", cex=0.7, pt.cex=0.7)
 }
 
 #Calcula el area de la curva ROC
@@ -1120,7 +1141,6 @@ ordenar.reporte <- function(lista){
 }
 
 def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
-  browser()
   codigo.usuario <- ""
   codigos <- env.report$codigo.reporte
   for (lista in codigos) {

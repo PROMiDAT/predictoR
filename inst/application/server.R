@@ -1,7 +1,7 @@
 
 shinyServer(function(input, output, session) {
 
-  # FUNCIONES Utilitarias ---------------------------------------------------------------------------------------------------
+  # FUNCIONES UTILITARIAS ---------------------------------------------------------------------------------------------------
 
   # Crea una tabla dependiendo de los datos ingresados
   renderizar.tabla.datos <- function(data, editable = TRUE, dom = "frtip", pageLength = 10, scrollY = "27vh") {
@@ -107,11 +107,12 @@ shinyServer(function(input, output, session) {
     raster::plotRGB(img)
   }
 
-  # CONFIGURACIONES iniciales -----------------------------------------------------------------------------------------------
+  # CONFIGURACIONES IICIALES -----------------------------------------------------------------------------------------------
 
   source("global.R", local = T)
   load("www/translation.bin")
   options(shiny.maxRequestSize = 200 * 1024^2,
+          width = 200,
           DT.options = list(aLengthMenu = c(10, 30, 50), iDisplayLength = 10,
                             scrollX = TRUE, language = list(search = HTML('<i class="fa fa-search"></i>'),
                                                             info = "", emptyTable = "", zeroRecords = "",
@@ -133,8 +134,7 @@ shinyServer(function(input, output, session) {
   updateAceEditor(session, "fieldFuncNum", extract.code("distribucion.numerico"))
   updateAceEditor(session, "fieldFuncCat", extract.code("distribucion.categorico"))
 
-
-  # VALORES Reactivos -------------------------------------------------------------------------------------------------------
+  # VALORES REACTIVOS -------------------------------------------------------------------------------------------------------
 
   updatePlot <- reactiveValues(calc.normal = default.calc.normal(), normal = NULL, disp = NULL,
                                cor = NULL, dya.num = NULL, dya.cat = NULL, poder.pred = NULL,
@@ -143,7 +143,7 @@ shinyServer(function(input, output, session) {
 
   disp.ranges <- reactiveValues(x = NULL, y = NULL)
 
-  # PAGINA DE Cargar y Transformar Datos ------------------------------------------------------------------------------------
+  # PAGINA DE CARGAR Y TRANSFORMAR DATOS ------------------------------------------------------------------------------------
 
   # Carga datos
   cargar.datos <- function(codigo.carga = "") {
@@ -366,7 +366,7 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # PAGINA DE Segmentar Datos -----------------------------------------------------------------------------------------------
+  # PAGINA DE SEGMENTAR DATOS -----------------------------------------------------------------------------------------------
 
   # Crea los datos de aprendizaje y prueba
   segmentar.datos <- function(codigo) {
@@ -473,7 +473,7 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # PAGINA DE Resumen -------------------------------------------------------------------------------------------------------
+  # PAGINA DE RESUMEN -------------------------------------------------------------------------------------------------------
 
   # Cambia la tabla con el summary en la pagina de resumen
   output$resumen.completo <- DT::renderDataTable(obj.resum(),
@@ -495,7 +495,7 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # PAGINA DEL Test de Normalidad -------------------------------------------------------------------------------------------
+  # PAGINA DEL TEST de Normalidad -------------------------------------------------------------------------------------------
 
   # Hace el grafico de la pagina de test de normalidad
   observeEvent(c(input$loadButton, input$transButton), {
@@ -2219,7 +2219,7 @@ shinyServer(function(input, output, session) {
       switch(i, {
         modelo.nn <<- NULL
         output$txtnn <- renderPrint(invisible(""))
-        #output$plot.nn <- renderPlot(NULL)
+        output$plot.nn <- renderPlot(NULL)
         remove.report.elem("modelo.nn")
         remove.report.elem("modelo.nn.graf")
       }, {
@@ -2703,6 +2703,20 @@ shinyServer(function(input, output, session) {
     }
   }
 
+  actualizar.nn.capas.np <- function(){
+    if(!is.null(datos.aprendizaje.completos) && !is.null(input$cant.capas.nn.pred)){
+      for (i in 1:10) {
+        if(i <= input$cant.capas.nn.pred) {
+          shinyjs::show(paste0("nn.cap.pred.", i))
+        } else {
+          shinyjs::hide(paste0("nn.cap.pred.", i))
+        }
+      }
+    }
+  }
+
+  actualizar.nn.capas.np()
+
   output$downloaDatosPred <- downloadHandler(
     filename = function() {
       input$file3$name
@@ -2713,6 +2727,10 @@ shinyServer(function(input, output, session) {
       }
     }
   )
+
+  observeEvent(c(input$cant.capas.nn.pred), {
+    actualizar.nn.capas.np()
+  })
 
   observeEvent(input$loadButtonNPred,{
     codigo.carga <- code.carga(nombre.filas = input$rownameNPred,
@@ -2764,6 +2782,7 @@ shinyServer(function(input, output, session) {
         '<option value="disyuntivo">',tr("disyuntivo"),'</option> </select>'
       ))
       res$Activa <- sapply(colnames(datos.aprendizaje.completos), function(i) paste0('<input type="checkbox" id="Predbox', i, contadorPN, '" checked/>'))
+      actualizar.nn.capas.np()
     } else {
       res <- as.data.frame(NULL)
       showNotification(tr("tieneCData"), duration = 10, type = "error")
@@ -2819,7 +2838,8 @@ shinyServer(function(input, output, session) {
                      ada = boosting.prediccion.np(),
                      svm = svm.prediccion.np(),
                      bayes = bayes.prediccion.np(),
-                     xgb = xgb.prediccion.pn())
+                     xgb = xgb.prediccion.np(),
+                     nn = nn.prediccion.np())
     tryCatch({
       exe(codigo)
       actualizar.pred.pn(codigo)
@@ -2870,7 +2890,16 @@ shinyServer(function(input, output, session) {
                      xgb = xgb.modelo.np(variable.pr=input$sel.predic.var.nuevos,
                                          booster = input$boosterXgb.pred,
                                          max.depth = input$maxdepthXgb.pred,
-                                         n.rounds = input$nroundsXgb.pred))
+                                         n.rounds = input$nroundsXgb.pred),
+                     nn = nn.modelo.np(variable.pr=input$sel.predic.var.nuevos,
+                                        input$threshold.nn.pred,
+                                        input$stepmax.nn.pred,
+                                        input$cant.capas.nn.pred,
+                                        input$nn.cap.pred.1,input$nn.cap.pred.2,
+                                        input$nn.cap.pred.3,input$nn.cap.pred.4,
+                                        input$nn.cap.pred.5,input$nn.cap.pred.6,
+                                        input$nn.cap.pred.7,input$nn.cap.pred.8,
+                                        input$nn.cap.pred.9,input$nn.cap.pred.10))
 
       variable.predecir.pn <<- input$sel.predic.var.nuevos
       modelo.seleccionado.pn  <<- input$selectModelsPred
@@ -2884,6 +2913,11 @@ shinyServer(function(input, output, session) {
       },
       error =  function(e){
         showNotification(paste0("Error: ", e), duration = 10, type = "error")
+      },
+      warning = function(w){
+        if(input$selectModelsPred == "nn"){
+          showNotification(paste0(tr("nnWar")," (NN-01) : ",w), duration = 20, type = "warning")
+        }
       })
   })
 
