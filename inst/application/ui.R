@@ -486,7 +486,7 @@ codigo.knn <- list(h4(labelInput("codigo")), hr(),
                                     aceEditor("fieldCodeKnnIG", mode = "r", theme = "monokai",
                                               value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
+tabs.knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 95),
                         tabs.content = list(opciones.knn, codigo.knn))
 
 panel.generar.knn <- tabPanel(title = labelInput("generatem"), value = "tabKknModelo",
