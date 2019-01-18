@@ -2250,7 +2250,6 @@ shinyServer(function(input, output, session) {
   # Genera el modelo
   ejecutar.nn <- function() {
     tryCatch({ # Se corren los codigo
-      browser()
       isolate(exe(cod.nn.modelo))
       output$txtnn <- renderPrint(print(modelo.nn))
       insert.report("modelo.nn",
