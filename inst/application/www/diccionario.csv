@@ -19,7 +19,7 @@ rfl;Bosques Aleatorios;Random Forests
 bl;Potenciación;Boosting
 svml;Soporte Vectorial;Support Vector Machines
 nn;Redes Neuronales;Neural Networks
-xgb;Potenciación de Gradiente Extremo;Extreme Gradient Boosting
+xgb;XGPotenciación;XGBoosting
 reporte;Generar Reporte;Generate Report
 acercade;Acerca De;About
 cargar;Cargar;Load

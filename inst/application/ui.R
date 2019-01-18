@@ -163,9 +163,9 @@ menu.aprendizaje.supervisado <- menuItem(labelInput("aprendizaje"), tabName = "p
                                          menuSubItem(labelInput("rfl"),tabName = "rf",icon = icon("sitemap")),
                                          menuSubItem(labelInput("bl"),tabName = "boosting",icon = icon("superscript")),
                                          menuSubItem(labelInput("svml"),tabName = "svm",icon = icon("line-chart")),
-                                         menuSubItem("Bayes",tabName = "bayes",icon = icon("line-chart")),
-                                         menuSubItem(labelInput("nn"),tabName = "nn",icon = icon("line-chart")),
-                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("line-chart")))
+                                         menuSubItem("Bayes",tabName = "bayes",icon = icon("dice")),
+                                         menuSubItem(labelInput("nn"),tabName = "nn",icon = icon("brain")),
+                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("project-diagram")))
 
 menu.reporte <- menuItem(labelInput("reporte"), tabName = "reporte", icon = icon("save-file",lib = "glyphicon"))
 
@@ -863,7 +863,7 @@ codigo.nn <- list(h4(labelInput("codigo")), hr(),
                                     aceEditor("fieldCodeNnIG", mode = "r", theme = "monokai",
                                               value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(100,100), heights = c(95, 95),
+tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(75,100), heights = c(95, 95),
                         tabs.content = list(opciones.nn, codigo.nn))
 
 plot.nn <- tabPanel(title = labelInput("redPlot"), value = "tabNnPlot",
