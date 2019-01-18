@@ -484,7 +484,7 @@ codigo.knn <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxKnn == 'tabKknIndex'",
                                     aceEditor("fieldCodeKnnIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
 tabs.knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 95),
                         tabs.content = list(opciones.knn, codigo.knn))
@@ -541,9 +541,9 @@ codigo.svm <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxSvm == 'tabSvmIndex'",
                                     aceEditor("fieldCodeSvmIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.svm <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 75),
+tabs.svm <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 95),
                         tabs.content = list(opciones.svm, codigo.svm))
 
 panel.generar.svm <- tabPanel(title = labelInput("generatem"), value = "tabSvmModelo",
@@ -599,12 +599,12 @@ codigo.dt <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxDt == 'tabDtIndex'",
                                     aceEditor("fieldCodeDtIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")),
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")),
                   conditionalPanel("input.BoxDt == 'tabDtReglas'",
                                    aceEditor("fieldCodeDtRule", mode = "r", theme = "monokai",
                                              value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 75),
+tabs.dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(80, 95),
                         tabs.content = list(opciones.dt, codigo.dt))
 
 panel.generar.dt <- tabPanel(title = labelInput("generatem"), value = "tabDtModelo",
@@ -668,12 +668,12 @@ codigo.rf  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxRf == 'tabRfIndex'",
                                     aceEditor("fieldCodeRfIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")),
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxRf == 'tabRfRules'",
                                     aceEditor("fieldCodeRfRules", mode = "r", theme = "monokai",
                                               value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 75),
+tabs.rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 95),
                         tabs.content = list(opciones.rf, codigo.rf))
 
 panel.generar.rf <- tabPanel(title = labelInput("generatem"),value = "tabRfModelo",
@@ -745,12 +745,12 @@ codigo.b  <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxB == 'tabBIndex'",
                                     aceEditor("fieldCodeBoostingIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")),
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")),
                   conditionalPanel("input.BoxB == 'tabBRules'",
                                    aceEditor("fieldCodeBoostingRules", mode = "r", theme = "monokai",
                                              value = "", height = "4vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.b  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(63, 75),
+tabs.b  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(63, 95),
                         tabs.content = list(opciones.b, codigo.b))
 
 panel.generar.boosting <- tabPanel(title = labelInput("generatem"), value = "tabBModelo",
@@ -804,9 +804,9 @@ codigo.bayes <- list(fluidRow(column(width = 11,h4(labelInput("codigo"))),
                                                 value = "", height = "8vh", readOnly = F, autoComplete = "enabled")),
                      conditionalPanel("input.BoxBayes == 'tabBayesIndex'",
                                       aceEditor("fieldCodeBayesIG", mode = "r", theme = "monokai",
-                                                value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                                value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(78),
+tabs.bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
                           tabs.content = list(codigo.bayes))
 
 panel.generar.bayes <- tabPanel(title = labelInput("generatem"), value = "tabBayesModelo",
@@ -861,9 +861,9 @@ codigo.nn <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "13vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxNn == 'tabNnIndex'",
                                     aceEditor("fieldCodeNnIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(100,100), heights = c(95, 80),
+tabs.nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(100,100), heights = c(95, 95),
                         tabs.content = list(opciones.nn, codigo.nn))
 
 plot.nn <- tabPanel(title = labelInput("redPlot"), value = "tabNnPlot",
@@ -917,9 +917,9 @@ codigo.xgb <- list(h4(labelInput("codigo")), hr(),
                                               value = "", height = "17vh", readOnly = F, autoComplete = "enabled")),
                    conditionalPanel("input.BoxXgb == 'tabXgbIndex'",
                                     aceEditor("fieldCodeXgbIG", mode = "r", theme = "monokai",
-                                              value = "", height = "29vh", readOnly = F, autoComplete = "enabled")))
+                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.xgb <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(55,100), heights = c(70, 75),
+tabs.xgb <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(55,100), heights = c(70, 95),
                         tabs.content = list(opciones.xgb, codigo.xgb))
 
 panel.generar.xgb <- tabPanel(title = labelInput("generatem"), value = "tabXgbModelo",
