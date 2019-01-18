@@ -2977,6 +2977,7 @@ shinyServer(function(input, output, session) {
       paste(input$textTitulo,'-', input$textNombre, '.zip', sep='')
     },
     content = function(file) {
+      browser()
       owd <- setwd(tempdir())
       on.exit(setwd(owd))
       files <- NULL
@@ -3015,7 +3016,9 @@ shinyServer(function(input, output, session) {
   # translates text into current language
   tr <- function(text) {
     sapply(text, function(s) {
-      ifelse(is.null(translation[[s]][[input$idioma]]), s, translation[[s]][[input$idioma]])
+      elem <- ifelse(is.null(translation[[s]][[input$idioma]]), s, translation[[s]][[input$idioma]])
+      Encoding(elem) <- enc
+      elem
     }, USE.NAMES = F)
   }
 

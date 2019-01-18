@@ -1134,10 +1134,9 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "knitr::opts_chunk$set(echo = FALSE,  fig.height = 10, fig.width = 15)\n",
     "```\n\n",
     "```{r message=FALSE, warning=FALSE}\n",
-    "library(promises)\nlibrary(ggplot2)\nlibrary(FactoMineR)\n",
-    "library(FactoMineR)\nlibrary(factoextra)\nlibrary(reshape)\n",
+    "library(promises)\nlibrary(ggplot2)\n",
     "library(corrplot)\nlibrary(dendextend)\nlibrary(scatterplot3d)\n",
-    "library(stringr)\nlibrary(ggdendro)\n",
+    "library(stringr)\n",
     "library(caret)\nlibrary(kknn)\nlibrary(e1071)\nlibrary(rpart)\n",
     "library(rpart.plot)\nlibrary(randomForest)\nlibrary(ada)\nlibrary(xgboost)\n",
     "library(nnet)\nlibrary(dplyr)\nlibrary(forcats)\nlibrary(psych)\n",
@@ -1313,3 +1312,16 @@ predic.nuevos <<- NULL
 
 env.report <<- new.env()
 env.report$codigo.reporte <- list()
+
+
+
+enc <<- ""
+info.sys <- Sys.info()
+if(is.null(info.sys)){
+  info.sys <- .Platform$OS.type
+}
+if(toupper(info.sys) != "WINDOWS"){
+  enc <<- "utf8"
+}else{
+  enc <<- "UTF-8"
+}
