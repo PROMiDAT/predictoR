@@ -1006,7 +1006,7 @@ xgb.varImp <- function(booster = "gbtree"){
 
 #Hace el grafico de una curba de roc
 plotROCInd <- function(prediccion,real,adicionar=FALSE,color="red") {
-  pred <- prediction(prediccion,real)
+  pred <- ROCR::prediction(prediccion,real)
   perf <- performance(pred,"tpr","fpr")
   plot(perf, col=color, add=adicionar, main="Curva ROC")
   segments(0,0,1,1, col='black')
@@ -1034,6 +1034,10 @@ plotROC <- function(sel) {
     SCORES[[i]] <- data.frame(1-SCORES[[i]],SCORES[[i]])
     colnames(SCORES[[i]]) <- levels(clase)
     SCORES[[i]] <- as.matrix(SCORES[[i]])
+  }
+
+  if(!is.null(scores["Redes Neuronales"])){
+    colnames(SCORES[["Redes Neuronales"]]) <- levels(clase)
   }
 
   for (nombre in names(SCORES)) {
@@ -1116,6 +1120,7 @@ ordenar.reporte <- function(lista){
 }
 
 def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
+  browser()
   codigo.usuario <- ""
   codigos <- env.report$codigo.reporte
   for (lista in codigos) {
@@ -1287,6 +1292,8 @@ cod.nn.pred <<-  NULL
 cod.nn.mc <<- NULL
 cod.nn.ind <<- NULL
 
+NN_EXECUTION <<- TRUE
+
 # -------------------  GX BOOSTING
 
 cod.xgb.modelo <<-  NULL
@@ -1315,11 +1322,7 @@ env.report$codigo.reporte <- list()
 
 
 
-enc <<- ""
-info.sys <- Sys.info()
-if(is.null(info.sys)){
-  info.sys <- .Platform$OS.type
-}
+info.sys <- .Platform$OS.type
 if(toupper(info.sys) != "WINDOWS"){
   enc <<- "utf8"
 }else{

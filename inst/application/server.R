@@ -1,7 +1,7 @@
 
 shinyServer(function(input, output, session) {
 
-  # Funciones Utilitarias ---------------------------------------------------------------------------------------------------
+  # FUNCIONES Utilitarias ---------------------------------------------------------------------------------------------------
 
   # Crea una tabla dependiendo de los datos ingresados
   renderizar.tabla.datos <- function(data, editable = TRUE, dom = "frtip", pageLength = 10, scrollY = "27vh") {
@@ -107,7 +107,7 @@ shinyServer(function(input, output, session) {
     raster::plotRGB(img)
   }
 
-  # Configuraciones iniciales -----------------------------------------------------------------------------------------------
+  # CONFIGURACIONES iniciales -----------------------------------------------------------------------------------------------
 
   source("global.R", local = T)
   load("www/translation.bin")
@@ -134,7 +134,7 @@ shinyServer(function(input, output, session) {
   updateAceEditor(session, "fieldFuncCat", extract.code("distribucion.categorico"))
 
 
-  # Valores Reactivos -------------------------------------------------------------------------------------------------------
+  # VALORES Reactivos -------------------------------------------------------------------------------------------------------
 
   updatePlot <- reactiveValues(calc.normal = default.calc.normal(), normal = NULL, disp = NULL,
                                cor = NULL, dya.num = NULL, dya.cat = NULL, poder.pred = NULL,
@@ -143,7 +143,7 @@ shinyServer(function(input, output, session) {
 
   disp.ranges <- reactiveValues(x = NULL, y = NULL)
 
-  # Pagina de Cargar y Transformar Datos ------------------------------------------------------------------------------------
+  # PAGINA DE Cargar y Transformar Datos ------------------------------------------------------------------------------------
 
   # Carga datos
   cargar.datos <- function(codigo.carga = "") {
@@ -366,7 +366,7 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # Pagina de Segmentar Datos -----------------------------------------------------------------------------------------------
+  # PAGINA DE Segmentar Datos -----------------------------------------------------------------------------------------------
 
   # Crea los datos de aprendizaje y prueba
   segmentar.datos <- function(codigo) {
@@ -473,7 +473,7 @@ shinyServer(function(input, output, session) {
     }
   )
 
-  # Pagina de Resumen -------------------------------------------------------------------------------------------------------
+  # PAGINA DE Resumen -------------------------------------------------------------------------------------------------------
 
   # Cambia la tabla con el summary en la pagina de resumen
   output$resumen.completo <- DT::renderDataTable(obj.resum(),
@@ -495,7 +495,7 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # Pagina del Test de Normalidad -------------------------------------------------------------------------------------------
+  # PAGINA DEL Test de Normalidad -------------------------------------------------------------------------------------------
 
   # Hace el grafico de la pagina de test de normalidad
   observeEvent(c(input$loadButton, input$transButton), {
@@ -556,7 +556,7 @@ shinyServer(function(input, output, session) {
     updatePlot$calc.normal <- input$fieldCalcNormal
   })
 
-  # Pagina de Dispersion ----------------------------------------------------------------------------------------------------
+  # PAGINA DE Dispersion ----------------------------------------------------------------------------------------------------
 
   # Hace el grafico de dispersion
   observeEvent(c(input$loadButton, input$transButton), {
@@ -628,7 +628,7 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # Pagina de Distribucion --------------------------------------------------------------------------------------------------
+  # PAGINA DE Distribucion --------------------------------------------------------------------------------------------------
 
   # Hace el grafico de Distribucion numerico
   observeEvent(c(input$loadButton, input$transButton), {
@@ -704,7 +704,7 @@ shinyServer(function(input, output, session) {
     updatePlot$dya.cat <<- def.code.cat(variable = input$sel.distribucion.cat)
   })
 
-  # Pagina de Correlacion ---------------------------------------------------------------------------------------------------
+  # PAGINA DE Correlacion ---------------------------------------------------------------------------------------------------
 
   # Hace el grafico de correlacion
   observeEvent(c(input$loadButton, input$transButton, input$fieldModelCor), {
@@ -738,7 +738,7 @@ shinyServer(function(input, output, session) {
     updatePlot$cor <- correlaciones(metodo = input$cor.metodo, tipo = input$cor.tipo)
   })
 
-  # Pagina de Poder Predictivo ----------------------------------------------------------------------------------------------
+  # PAGINA DE Poder Predictivo ----------------------------------------------------------------------------------------------
 
   # Hace el grafico de poder predictivo distribucion de la variable predictora
   observeEvent(input$segmentButton, {
@@ -870,7 +870,7 @@ shinyServer(function(input, output, session) {
     }
   })
 
-  # Pagina de KNN -----------------------------------------------------------------------------------------------------------
+  # Pagina DE KNN -----------------------------------------------------------------------------------------------------------
 
   # Cuando se genera el modelo knn
   observeEvent(input$runKnn, {
@@ -1966,7 +1966,7 @@ shinyServer(function(input, output, session) {
     }
   }
 
-  # Pagina de BAYES -------------------------------------------------------------------------------------------------------
+  # PAGINA DE BAYES -------------------------------------------------------------------------------------------------------
 
   # Cuando se genera el modelo bayes
   observeEvent(input$runBayes, {
@@ -2131,7 +2131,7 @@ shinyServer(function(input, output, session) {
     }
   }
 
-  # Pagina de NN ----------------------------------------------------------------------------------------------------------
+  # PAGINA DE NN ----------------------------------------------------------------------------------------------------------
 
   observeEvent(c(input$cant.capas.nn, input$segmentButton), {
     if(!is.null(datos.aprendizaje) && !is.null(input$cant.capas.nn)){
@@ -2242,9 +2242,11 @@ shinyServer(function(input, output, session) {
   # Ejecuta el modelo, prediccion, mc e indices de nn
   nn.full <- function() {
     ejecutar.nn()
-    ejecutar.nn.pred()
-    ejecutar.nn.mc()
-    ejecutar.nn.ind()
+    if(NN_EXECUTION){
+      ejecutar.nn.pred()
+      ejecutar.nn.mc()
+      ejecutar.nn.ind()
+    }
   }
 
   # Genera el modelo
@@ -2257,6 +2259,7 @@ shinyServer(function(input, output, session) {
                            "\nmodelo.nn\n```"))
       plotear.red()
       nombres.modelos <<- c(nombres.modelos,"modelo.nn")
+      NN_EXECUTION <<- TRUE
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.nn(1)
@@ -2264,7 +2267,8 @@ shinyServer(function(input, output, session) {
     },
     warning = function(w){
       limpia.nn(1)
-      showNotification(paste0(tr("nnWar")," (NN-01) : ",w), duration = 20, type = "error")
+      NN_EXECUTION <<- FALSE
+      showNotification(paste0(tr("nnWar")," (NN-01) : ",w), duration = 20, type = "warning")
     })
   }
 
@@ -2279,7 +2283,7 @@ shinyServer(function(input, output, session) {
 
       insert.report("pred.nn",
                     paste0("## Predicción del Modelo Redes Neuronales\n```{r}\n", cod.nn.pred,
-                           "\nhead(nn.to.data.frame.predict(obj.predic(max.col(prediccion.nn))))\n",
+                           "\nhead(obj.predic(max.col(prediccion.nn)))\n",
                            "scores[['Redes Neuronales']] <<- prediccion.nn\n```"))
 
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
@@ -2341,7 +2345,7 @@ shinyServer(function(input, output, session) {
     }
   }
 
-  # Pagina de GX BOSTING --------------------------------------------------------------------------------------------------
+  # PAGINA DE GX BOSTING --------------------------------------------------------------------------------------------------
 
   # Cuando se genera el modelo xgb
   observeEvent(input$runXgb, {
@@ -3052,14 +3056,7 @@ shinyServer(function(input, output, session) {
                                 "nombre","codreporte","salida","copyright","info","version","cargarNuev",
                                 "cargarDatos","transDatos","seleParModel","generarM","variables","tipo",
                                 "activa","nn","xgb","selbooster","selnrounds","selectCapas","threshold",
-                                "stepmax"))
-
-    # actualizar.tabla()
-    # updateinitSelects("selHoriz", 1:input$cant.kmeans.cluster)
-    # updateinitSelects("sel.Khoriz", 1:input$cant.kmeans.cluster)
-    # updateinitSelects("selVert", colnames(var.numericas(datos)))
-    # updateinitSelects("sel.Kvert", colnames(var.numericas(datos)))
-    # updatePlot$pca.cvc <- code.pca.cvp(input$cvc.metodo, tr("cvc"))
+                                "stepmax","redPlot"))
 
     updatePlot$normal <- default.normal("datos", input$sel.normal, input$col.normal, tr("curvanormal"))
     updatePlot$dya.cat <- def.code.cat(variable = input$sel.distribucion.cat, titulox = tr("cantidadcasos"), tituloy = tr("categorias"))
@@ -3078,7 +3075,7 @@ shinyServer(function(input, output, session) {
     ejecutar.rf.ind()
   })
 
-  # Termina la Sesion -------------------------------------------------------------------------------------------------------
+  # TERMINA LA SESION -------------------------------------------------------------------------------------------------------
 
   session$onSessionEnded(function() {
     rm(envir = .GlobalEnv, list = ls(envir = .GlobalEnv))
