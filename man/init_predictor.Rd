@@ -10,7 +10,7 @@ init_predictor()
 Nothing
 }
 \description{
-An interactive Shiny application for exploring data.
+An interactive Shiny application for data prediction.
 }
 \details{
 Start predictoR

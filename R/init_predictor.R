@@ -1,9 +1,7 @@
-
-
 #' Start predictoR
 #' @title This function will start predictoR
 #' @return Nothing
-#' @description An interactive Shiny application for exploring data.
+#' @description An interactive Shiny application for data prediction.
 #' @details This starts the predictoR application on the user's local computer.
 #' @keywords predictoR
 #' @examples
