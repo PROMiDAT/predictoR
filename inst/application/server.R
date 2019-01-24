@@ -2202,9 +2202,17 @@ shinyServer(function(input, output, session) {
   # Plotear el arbol
   plotear.red <- function(){
     tryCatch({
-      output$plot.nn <- renderPlot(isolate(exe(input$fieldCodeNnPlot)))
-      cod <- ifelse(input$fieldCodeNnPlot == "", nn.plot(), input$fieldCodeNnPlot)
-      insert.report("modelo.nn.graf", paste0("\n```{r}\n", cod, "\n```"))
+      capas <- c(input$nn.cap.1,input$nn.cap.2,input$nn.cap.3,input$nn.cap.4,
+      input$nn.cap.5,input$nn.cap.6,input$nn.cap.7,input$nn.cap.8,input$nn.cap.9,input$nn.cap.10)
+      capas <- capas[1:input$cant.capas.nn]
+      browser()
+      if(input$cant.capas.nn * sum(capas) <= 1500 & ncol(modelo.nn$covariate) <= 20){
+        output$plot.nn <- renderPlot(isolate(exe(input$fieldCodeNnPlot)))
+        cod <- ifelse(input$fieldCodeNnPlot == "", nn.plot(), input$fieldCodeNnPlot)
+        insert.report("modelo.nn.graf", paste0("\n```{r}\n", cod, "\n```"))
+      }else{
+        showNotification(tr("bigPlot"), duration = 10, type = "message")
+      }
     },
     error = function(e){
       output$plot.nn <- renderPlot(NULL)
@@ -2267,7 +2275,7 @@ shinyServer(function(input, output, session) {
     warning = function(w){
       limpia.nn(1)
       NN_EXECUTION <<- FALSE
-      showNotification(paste0(tr("nnWar")," (NN-01) : ",w), duration = 20, type = "warning")
+      showNotification(paste0(tr("nnWar")," (NN-01) : ",w), duration = 10, type = "warning")
     })
   }
 

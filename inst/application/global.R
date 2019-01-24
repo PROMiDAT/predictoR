@@ -781,13 +781,14 @@ nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   stepmax <- ifelse(stepmax < 100, 100, stepmax)
   capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
   selector <- -which(colnames(datos.aprendizaje) == variable.predecir)
+  foemula.1 <- paste0(paste0("`",levels(datos.aprendizaje[,variable.predecir]),"`"), collapse = "+")
 
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje[,",selector,"])))\n",
          "datos.dummies.apren['",variable.predecir,"'] <- datos.aprendizaje[,'",variable.predecir,"']\n",
          "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
          "\t\t\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
          "nombres <- colnames(datos.dummies.apren)\n",
-         "formula.nn <- as.formula(paste('",paste0(levels(datos.aprendizaje[,variable.predecir]), collapse = "+"),
+         "formula.nn <- as.formula(paste('",foemula.1,
          "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje[,variable.predecir])),"], collapse = '+')))\n",
          "modelo.nn <<- neuralnet(formula.nn, data = datos.dummies.apren, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
          "threshold = ",threshold,", stepmax = ",stepmax,")\n")
@@ -798,14 +799,14 @@ nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant
   stepmax <- ifelse(1000>stepmax, 1000, stepmax)
   threshold <- ifelse(0.01>threshold, 0.01, threshold)
   selector <- -which(colnames(datos.aprendizaje.completos) == variable.pr)
-
+  foemula.1 <- paste0(paste0("`",levels(datos.aprendizaje[,variable.predecir]),"`"), collapse = "+")
 
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje.completos[,",selector,"])))\n",
          "datos.dummies.apren['",variable.pr,"'] <- datos.aprendizaje.completos[,'",variable.pr,"']\n",
          "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
          "\t\t\t\ttidyr::spread(key = ",variable.pr,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
          "nombres <- colnames(datos.dummies.apren)\n",
-         "formula.nn <- as.formula(paste('",paste0(levels(datos.aprendizaje.completos[,variable.pr]), collapse = "+"),
+         "formula.nn <- as.formula(paste('",foemula.1,
          "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje.completos[,variable.pr])),"], collapse = '+')))\n",
          "modelo.nuevos <<- neuralnet(formula.nn, data = datos.dummies.apren, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
          "threshold = ",threshold,", stepmax = ",stepmax,")\n")

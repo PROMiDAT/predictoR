@@ -844,7 +844,7 @@ opciones.nn <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
                                                  min = 100, step = 100, value = 1000), width = 6)),
                     fluidRow(column(sliderInput(inputId = "cant.capas.nn", min = 2, max = 10,
                                                  label = labelInput("selectCapas"), value = 2), width = 12)),
-                    fluidRow(lapply(1:10, function(i) tags$span(numericInput(paste0("nn.cap.",i), NULL,
+                    fluidRow(id = "capasFila",lapply(1:10, function(i) tags$span(numericInput(paste0("nn.cap.",i), NULL,
                                                                     min = 1, step = 1, value = 10),
                                                                  class = "mini-numeric-select"))))
 

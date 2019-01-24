@@ -23,6 +23,7 @@ function promidat_model_firt(e, model, id){
   $("#segmentButton").on('click',function(e){
     promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true, xgb: true, nn: true};
   });
+
 });
 
 
