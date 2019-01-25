@@ -2205,7 +2205,6 @@ shinyServer(function(input, output, session) {
       capas <- c(input$nn.cap.1,input$nn.cap.2,input$nn.cap.3,input$nn.cap.4,
       input$nn.cap.5,input$nn.cap.6,input$nn.cap.7,input$nn.cap.8,input$nn.cap.9,input$nn.cap.10)
       capas <- capas[1:input$cant.capas.nn]
-      browser()
       if(input$cant.capas.nn * sum(capas) <= 1500 & ncol(modelo.nn$covariate) <= 20){
         output$plot.nn <- renderPlot(isolate(exe(input$fieldCodeNnPlot)))
         cod <- ifelse(input$fieldCodeNnPlot == "", nn.plot(), input$fieldCodeNnPlot)

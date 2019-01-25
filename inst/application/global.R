@@ -799,7 +799,7 @@ nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant
   stepmax <- ifelse(1000>stepmax, 1000, stepmax)
   threshold <- ifelse(0.01>threshold, 0.01, threshold)
   selector <- -which(colnames(datos.aprendizaje.completos) == variable.pr)
-  foemula.1 <- paste0(paste0("`",levels(datos.aprendizaje[,variable.predecir]),"`"), collapse = "+")
+  foemula.1 <- paste0(paste0("`",levels(datos.aprendizaje.completos[,variable.pr]),"`"), collapse = "+")
 
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje.completos[,",selector,"])))\n",
          "datos.dummies.apren['",variable.pr,"'] <- datos.aprendizaje.completos[,'",variable.pr,"']\n",
