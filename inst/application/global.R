@@ -823,7 +823,7 @@ nn.prediccion <- function() {
 }
 
 nn.prediccion.np <- function(){
-  selector <- -which(colnames(datos.prueba) == variable.predecir)
+  selector <- -which(colnames(datos.prueba.completos) == variable.predecir.pn)
 
   clases <- levels(datos.aprendizaje.completos[,variable.predecir.pn])
   num.class <- length(clases)
