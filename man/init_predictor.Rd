@@ -10,7 +10,7 @@ init_predictor()
 Nothing
 }
 \description{
-An interactive Shiny application for data prediction.
+An interactive 'Shiny' application for data prediction.
 }
 \details{
 Start predictoR
@@ -18,10 +18,8 @@ Start predictoR
 This starts the predictoR application on the user's local computer.
 }
 \examples{
-\dontrun{
  if(interactive()){
    init_predictor()
  }
-}
 }
 \keyword{predictoR}
