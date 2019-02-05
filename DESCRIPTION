@@ -6,7 +6,7 @@ Author: Oldemar Rodriguez R. with contributions from Diego Jimenez A. and Andres
 Maintainer: Oldemar Rodriguez <oldemar.rodriguez@ucr.ac.cr>
 Depends: R (>= 3.5)
 Imports: shiny, shinyAce, rattle, dummies, data.table, tidyr, neuralnet,shinydashboardPlus, shinydashboard, shinyWidgets, ROCR, rpart, zip, rgdal, raster, rpart.plot, nnet, xgboost, ada, colourpicker,flexdashboard, psych, shinyjs, knitr, forcats, dplyr, DT, randomForest, ggplot2, e1071, rstudioapi, xtable, corrplot, caret, dendextend, scatterplot3d, stringr, rmarkdown, kknn
-Description: Perform a supervised data analysis on a database through a 'shiny' graphical interface. It includes methods such as K-nearest Neighbors, Decision Trees, ADA Boosting, Extreme Gradient Boosting, Random Forest, Neural Networks, Deep Learning, Support Vector Machines and Bayesian Methods.
+Description: Perform a supervised data analysis on a database through a 'shiny' graphical interface. It includes methods such as K-Nearest Neighbors, Decision Trees, ADA Boosting, Extreme Gradient Boosting, Random Forest, Neural Networks, Deep Learning, Support Vector Machines and Bayesian Methods.
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
