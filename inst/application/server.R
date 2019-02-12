@@ -110,6 +110,7 @@ shinyServer(function(input, output, session) {
   # CONFIGURACIONES IICIALES -----------------------------------------------------------------------------------------------
 
   source("global.R", local = T)
+  source("utils.R", local = T)
   load("www/translation.bin")
   options(shiny.maxRequestSize = 200 * 1024^2,
           width = 200,
@@ -2282,7 +2283,6 @@ shinyServer(function(input, output, session) {
   ejecutar.nn.pred <- function() {
     tryCatch({ # Se corren los codigo
       isolate(exe(cod.nn.pred))
-      scores[["Redes Neuronales"]] <<- prediccion.nn
 
       # Cambia la tabla con la prediccion de nn
       output$nnPrediTable <- DT::renderDataTable(obj.predic(max.col(prediccion.nn)),server = FALSE)
@@ -2294,6 +2294,8 @@ shinyServer(function(input, output, session) {
 
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
+
+      scores[["Redes Neuronales"]] <<- prediccion.nn
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.nn(2)

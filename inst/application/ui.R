@@ -1,36 +1,36 @@
-library(DT)
-library(ada)
-library(kknn)
-library(ROCR)
-library(nnet)
-library(shiny)
-library(e1071)
-library(rpart)
-library(psych)
-library(caret)
-library(knitr)
-library(raster)
+library(DT)#
+library(ada)#
+library(kknn)#
+# library(nnet)
+library(tidyverse)
+library(shiny)#
+library(e1071)#
+library(rpart)#
+library(rpart.plot)
+library(ROCR)#
+# library(caret)
+library(knitr)#
+# library(raster)
 library(rattle)
 library(xtable)
-library(dummies)
-library(xgboost)
-library(shinyjs)
-library(ggplot2)
-library(stringr)
-library(forcats)
-library(shinyAce)
-library(corrplot)
-library(neuralnet)
-library(rpart.plot)
-library(dendextend)
-library(randomForest)
-library(colourpicker)
-library(shinyWidgets)
-library(scatterplot3d)
-library(flexdashboard)
-library(shinydashboard)
-library(shinydashboardPlus)
-library(dplyr)
+# library(dummies)
+library(xgboost)#
+library(shinyjs) #
+library(ggplot2) ##
+library(stringr) ##
+library(forcats) ##
+library(shinyAce)#
+library(corrplot)#
+library(neuralnet)#
+# library(dendextend)
+library(randomForest)#
+library(colourpicker)#
+library(shinyWidgets)#
+library(scatterplot3d)#
+library(flexdashboard) #
+library(shinydashboard)#
+library(shinydashboardPlus)#
+library(dplyr)#
 
 # FUNCIONES --------------------------------------------------------------------------------------------------------------
 
@@ -1149,7 +1149,7 @@ pagina.info <- tabItem(tabName = "acercaDe",
                        infoBoxPROMiDAT(labelInput("copyright"), "PROMiDAT S.A.", icono = icon("copyright")),
                        infoBoxPROMiDAT(labelInput("info"), tags$a( href="https://www.promidat.com/", style = "color:white;",
                                                                    target = "_blank", "https://www.promidat.com"), icono = icon("info")),
-                       infoBoxPROMiDAT(labelInput("version"), "1.0.1", icono = icon("file-code-o")))
+                       infoBoxPROMiDAT(labelInput("version"), "1.0.2", icono = icon("file-code-o")))
 
 # PAGINA COMPLETA ---------------------------------------------------------------------------------------------------------
 

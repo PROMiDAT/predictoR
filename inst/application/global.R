@@ -140,8 +140,13 @@ exe <- function(...){
   eval(parse(text = paste0(...)))
 }
 
-as.string.c <- function(vect){
-  return(paste0("c('",paste0(vect, collapse = "','"),"')"))
+as.string.c <- function(vect, .numeric = FALSE){
+  if(.numeric){
+    return(paste0("c(",paste0(vect, collapse = ","),")"))
+  }
+  else{
+    return(paste0("c('",paste0(vect, collapse = "','"),"')"))
+  }
 }
 
 # createLog <- function(titulo = "", code = ""){
@@ -779,7 +784,7 @@ bayes.MC <- function(){
 nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   threshold <- ifelse(threshold == 0, 0.01, threshold)
   stepmax <- ifelse(stepmax < 100, 100, stepmax)
-  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
+  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
   selector <- -which(colnames(datos.aprendizaje) == variable.predecir)
   foemula.1 <- paste0(paste0("`",levels(datos.aprendizaje[,variable.predecir]),"`"), collapse = "+")
 
@@ -795,7 +800,7 @@ nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
 }
 
 nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
-  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]))
+  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
   stepmax <- ifelse(1000>stepmax, 1000, stepmax)
   threshold <- ifelse(0.01>threshold, 0.01, threshold)
   selector <- -which(colnames(datos.aprendizaje.completos) == variable.pr)
@@ -1029,7 +1034,7 @@ xgb.varImp <- function(booster = "gbtree"){
 #Hace el grafico de una curba de roc
 plotROCInd <- function(prediccion,real,adicionar=FALSE,color="red") {
   pred <- ROCR::prediction(prediccion,real)
-  perf <- performance(pred,"tpr","fpr")
+  perf <- ROCR::performance(pred,"tpr","fpr")
   plot(perf, col=color, add=adicionar, main="Curva ROC")
   segments(0,0,1,1, col='black')
   grid()
@@ -1058,7 +1063,7 @@ plotROC <- function(sel) {
     SCORES[[i]] <- as.matrix(SCORES[[i]])
   }
 
-  if(!is.null(SCORES["Redes Neuronales"])){
+  if(!is.null(SCORES[["Redes Neuronales"]])){
     colnames(SCORES[["Redes Neuronales"]]) <- levels(clase)
   }
 
@@ -1170,7 +1175,7 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "library(caret)\nlibrary(kknn)\nlibrary(e1071)\nlibrary(rpart)\n",
     "library(rpart.plot)\nlibrary(randomForest)\nlibrary(ada)\nlibrary(xgboost)\n",
     "library(nnet)\nlibrary(dplyr)\nlibrary(forcats)\nlibrary(psych)\n",
-    "library(ROCR)\nlibrary(xtable)\nlibrary(raster)\n",
+    "library(xtable)\nlibrary(raster)\n",
     "```\n\n", "```{r}\n", extract.code("var.numericas"), "\n\n",
     extract.code("var.categoricas"), "\n\n", extract.code("datos.disyuntivos"),
     "\n\n", extract.code("distribucion.numerico"), "\n\n",
