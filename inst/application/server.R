@@ -86,25 +86,28 @@ shinyServer(function(input, output, session) {
                          options = list(dom = "frtip", pageLength = 10)))
   }
 
-  # Mostar o ocultar los indices
-  # indices.g <- function(id = "knn", mc = NA) {
-  #   if (!is.null(mc)) {
-  #     shinyjs::show(paste0(id, "PrecGlob"))
-  #     shinyjs::show(paste0(id, "ErrorGlob"))
-  #   } else {
-  #     shinyjs::hide(paste0(id, "PrecGlob"))
-  #     shinyjs::hide(paste0(id, "ErrorGlob"))
-  #   }
-  # }
-
   # Grafica un error de datos faltantes
-  error.variables <- function(idioma = "es", num = T){
+  error.variables <- function(num = T) {
     if(num){
-      img <- raster::stack(paste0("www/", idioma, "_errorNum.png"))
-    }else{
-      img <- raster::stack(paste0("www/", idioma, "_errorCat.png"))
+      error.plot(tr("errornum"))
+    } else {
+      error.plot(tr("errorcat"))
     }
-    raster::plotRGB(img)
+  }
+
+  error.plot <- function(msg) {
+    res <- ggplot(data.frame(x = c(2, 2.5, 3), y = c(2 ,3 ,2))) +
+      geom_polygon(mapping=aes(x=x, y=y), col="gold", fill="gold", alpha=0.3) +
+      annotate("rect", xmin = 2.47, xmax = 2.53, ymin = 2.4, ymax = 2.8) +
+      annotate("rect", xmin = 2.47, xmax = 2.53, ymin = 2.25, ymax = 2.35) +
+      annotate("text", x = 2.5, y = 2.1, label = paste0("bold('", msg, "')"),
+               size = 8, parse = T) +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        axis.title = element_blank(), axis.ticks = element_blank(),
+        axis.text = element_blank()
+      )
+    return(res)
   }
 
   # CONFIGURACIONES IICIALES -----------------------------------------------------------------------------------------------
@@ -509,7 +512,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e){
         if(ncol(var.numericas(datos)) <= 0){
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         } else {
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -572,7 +575,7 @@ shinyServer(function(input, output, session) {
         return(isolate(exe(cod.disp)))
       }, error = function(e) {
         if(ncol(var.numericas(datos)) <= 1){
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         } else {
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -643,7 +646,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.numericas(datos)) == 0){
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }else{
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -686,7 +689,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.categoricas(datos)) == 0){
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }else{
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
@@ -718,7 +721,7 @@ shinyServer(function(input, output, session) {
         return(res)
       }, error = function(e) {
         if (ncol(var.numericas(datos)) == 0){
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }else{
           showNotification(paste0("ERROR EN Correlacion: ", e),
                            duration = 10,
@@ -775,7 +778,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }
         return(res)
       }, error = function(e) {
@@ -810,7 +813,7 @@ shinyServer(function(input, output, session) {
           insert.report("poder.num",paste0("## Poder Predictivo Variables Numéricas \n```{r}\n", cod.poder.num, "\n```"))
           return(res)
         }else{
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }
       }, error = function(e) {
         showNotification(paste0("Error en Poder Predictivo: ", e),
@@ -845,7 +848,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.den.",input$sel.density.poder),
                         paste0("## Densidad Según Variable Discriminante\n```{r}\n", cod.poder.den, "\n```"))
         }else{
-          error.variables(isolate(input$idioma), T)
+          error.variables(T)
         }
         return(res)
       }, error = function(e) {
@@ -1266,7 +1269,7 @@ shinyServer(function(input, output, session) {
         exe(codigo)
       }else{
         if(!(ncol(var.numericas(datos)) >= 2)){
-          error.variables(isolate(input$idioma), num = T)
+          error.variables(T)
         }
         return(NULL)
       }},error = function(e){

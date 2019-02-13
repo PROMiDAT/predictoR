@@ -1182,7 +1182,7 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "library(kknn)\nlibrary(e1071)\nlibrary(rpart)\n",
     "library(rpart.plot)\nlibrary(randomForest)\nlibrary(ada)\nlibrary(xgboost)\n",
     "library(dplyr)\nlibrary(forcats)\n",
-    "library(xtable)\nlibrary(raster)\n",
+    "library(xtable)\n",
     "```\n\n", "```{r}\n", extract.code("var.numericas"), "\n\n",
     extract.code("var.categoricas"), "\n\n", extract.code("datos.disyuntivos"),
     "\n\n", extract.code("distribucion.numerico"), "\n\n",
