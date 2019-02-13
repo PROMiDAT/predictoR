@@ -1,5 +1,8 @@
 var promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true , xgb: true, nn: true};
 
+nya_btn = true;
+nya_btn_fun = (e) => nya_btn = nya_btn?($("#distribucion_numerica").click(),false):true;
+
 function promidat_model_firt(e, model, id){
   if(promidat_flat_models[model]){
     promidat_flat_models[model] = false;
@@ -20,6 +23,7 @@ function promidat_model_firt(e, model, id){
   $("a[href^='#shiny-tab-bayes']").on('click', (e) => promidat_model_firt(e,"bayes","runBayes"));
   $("a[href^='#shiny-tab-xgb']").on('click', (e) => promidat_model_firt(e,"xgb","runXgb"));
   $("a[href^='#shiny-tab-nn']").on('click', (e) => promidat_model_firt(e,"nn","runNn"));
+  $($($($("#tabDyA").next().children()[2]).children()[4]).children()[2]).on('click', nya_btn_fun)
   $("#segmentButton").on('click',function(e){
     promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true, xgb: true, nn: true};
   });

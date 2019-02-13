@@ -323,7 +323,9 @@ selector.variables.distribucion <- tags$div(class = "multiple-select-var",
                                             conditionalPanel(condition = "input.tabDyA == 'categoricas'",
                                                              selectInput(inputId = "sel.distribucion.cat",label = NULL,choices =  "")))
 
-resultados.distribucion.numericas <- tabPanel(title = labelInput("numericas"), value = "numericas", plotOutput('plot.num', height = "70vh"))
+resultados.distribucion.numericas <- tabPanel(title = labelInput("numericas"), value = "numericas",
+                                              plotOutput('plot.num', height = "70vh"),
+                                              actionButton(inputId="distribucion_numerica",label = "",style="display:none;"))
 
 resultados.distribucion.categoricas <- tabPanel(title = labelInput("categoricas"), value = "categoricas",plotOutput('plot.cat', height = "70vh"))
 

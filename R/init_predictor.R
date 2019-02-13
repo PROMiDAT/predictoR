@@ -9,6 +9,9 @@
 #'    init_predictor()
 #'  }
 init_predictor <- function(){
+  if(package_version(unclass(packageDescription("shiny"))$Version) < package_version("1.2.0") ){
+    installed.packages("shiny")
+  }
   rm(envir = .GlobalEnv, list = ls(envir = .GlobalEnv))
   Sys.setenv("LANGUAGE" = "ES")
   if(toupper(.Platform$OS.type) != "WINDOWS"){
