@@ -229,3 +229,5 @@ stepmax;Pasos máximos para el entrenamiento:;Maximum steps for the training:
 nnWar;El modelo no converge con los parámetros actuales, intente modificarlos;The model does not converge with the current parameters, try to modify them
 redPlot;Red Neuronal;Neural Network
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
+errornum;Se necesitan variables numéricas  para esta parte.;You need numerical variables for this part.
+errorcat;Se necesitan variables categóricas  para esta parte.;You need categorical variables for this part.
