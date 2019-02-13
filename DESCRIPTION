@@ -26,6 +26,7 @@ Imports:
     scatterplot3d (>= 0.3-41),
     corrplot (>= 0.84),
     ROCR (>= 1.0-7)
+Suggests: shiny
 Description: Perform a supervised data analysis on a database through a 'shiny' graphical interface. It includes methods such as K-Nearest Neighbors, Decision Trees, ADA Boosting, Extreme Gradient Boosting, Random Forest, Neural Networks, Deep Learning, Support Vector Machines and Bayesian Methods.
 License: GPL (>=2)
 Encoding: UTF-8
