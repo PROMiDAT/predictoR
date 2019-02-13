@@ -1,19 +1,15 @@
 library(DT)#
 library(ada)#
 library(kknn)#
-# library(nnet)
 library(tidyverse)
 library(shiny)#
 library(e1071)#
 library(rpart)#
 library(rpart.plot)
 library(ROCR)#
-# library(caret)
 library(knitr)#
-# library(raster)
 library(rattle)
 library(xtable)
-# library(dummies)
 library(xgboost)#
 library(shinyjs) #
 library(ggplot2) ##
@@ -22,7 +18,6 @@ library(forcats) ##
 library(shinyAce)#
 library(corrplot)#
 library(neuralnet)#
-# library(dendextend)
 library(randomForest)#
 library(colourpicker)#
 library(shinyWidgets)#
@@ -1149,7 +1144,7 @@ pagina.info <- tabItem(tabName = "acercaDe",
                        infoBoxPROMiDAT(labelInput("copyright"), "PROMiDAT S.A.", icono = icon("copyright")),
                        infoBoxPROMiDAT(labelInput("info"), tags$a( href="https://www.promidat.com/", style = "color:white;",
                                                                    target = "_blank", "https://www.promidat.com"), icono = icon("info")),
-                       infoBoxPROMiDAT(labelInput("version"), "1.0.2", icono = icon("file-code-o")))
+                       infoBoxPROMiDAT(labelInput("version"), "1.0.3", icono = icon("file-code-o")))
 
 # PAGINA COMPLETA ---------------------------------------------------------------------------------------------------------
 
