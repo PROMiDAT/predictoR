@@ -350,15 +350,13 @@ dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.c
   new.attr <- list()
   for (nm in names(data)) {
     old.attr <- attr(df, "dummies")
-    if (nm %in% names || (is.null(names) && (dummy.classes ==
-                                             "ALL" || class(data[, nm]) %in% dummy.classes))) {
+    if (nm %in% names || (is.null(names) && (dummy.classes == "ALL" || class(data[, nm]) %in% dummy.classes))) {
       dummies <- dummy(nm, data, ...)
       if (ncol(dummies) == 1 & omit.constants) {
         dummies <- matrix(nrow = nrow(data), ncol = 0)
       }
       if (ncol(dummies) > 0)
-        new.attr[[nm]] <- (ncol(df) + 1):(ncol(df) +
-                                            ncol(dummies))
+        new.attr[[nm]] <- (ncol(df) + 1):(ncol(df) + ncol(dummies))
     }
     else {
       if (!all)
@@ -374,7 +372,6 @@ dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.c
 # rgdal(1.3-6)*,
 # raster(2.8-19)*,
 # nnet(7.3-12)*,
-# psych (1.8.12)*,
 # rstudioapi (0.9.0)*
 # caret (6.0-81)
 # dendextend (1.9.0)*
