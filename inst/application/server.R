@@ -778,7 +778,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
-          error.variables(T)
+          res <- error.variables(T)
         }
         return(res)
       }, error = function(e) {
@@ -813,7 +813,7 @@ shinyServer(function(input, output, session) {
           insert.report("poder.num",paste0("## Poder Predictivo Variables Numéricas \n```{r}\n", cod.poder.num, "\n```"))
           return(res)
         }else{
-          error.variables(T)
+          res <- error.variables(T)
         }
       }, error = function(e) {
         showNotification(paste0("Error en Poder Predictivo: ", e),
@@ -848,7 +848,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.den.",input$sel.density.poder),
                         paste0("## Densidad Según Variable Discriminante\n```{r}\n", cod.poder.den, "\n```"))
         }else{
-          error.variables(T)
+          res <- error.variables(T)
         }
         return(res)
       }, error = function(e) {
@@ -1270,8 +1270,9 @@ shinyServer(function(input, output, session) {
       }else{
         if(!(ncol(var.numericas(datos)) >= 2)){
           error.variables(T)
+        }else{
+          return(NULL)
         }
-        return(NULL)
       }},error = function(e){
         return(NULL)
     })
