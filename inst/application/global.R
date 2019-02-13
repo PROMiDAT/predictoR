@@ -791,7 +791,7 @@ nn.modelo <- function(threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje[,",selector,"])))\n",
          "datos.dummies.apren['",variable.predecir,"'] <- datos.aprendizaje[,'",variable.predecir,"']\n",
          "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
-         "\t\t\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
+         "\t\t\t\t\t\ttidyr::spread(key = ",variable.predecir,", value='.valor.nuevo', fill = FALSE) %>% dplyr::select(-i)\n",
          "nombres <- colnames(datos.dummies.apren)\n",
          "formula.nn <- as.formula(paste('",foemula.1,
          "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje[,variable.predecir])),"], collapse = '+')))\n",
@@ -809,7 +809,7 @@ nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant
   paste0("datos.dummies.apren <- as.data.frame(scale(dummy.data.frame(datos.aprendizaje.completos[,",selector,"])))\n",
          "datos.dummies.apren['",variable.pr,"'] <- datos.aprendizaje.completos[,'",variable.pr,"']\n",
          "datos.dummies.apren <- datos.dummies.apren %>% dplyr::mutate(.valor.nuevo = TRUE,i = row_number()) %>%\n",
-         "\t\t\t\ttidyr::spread(key = ",variable.pr,", value='.valor.nuevo', fill = FALSE) %>% select(-i)\n",
+         "\t\t\t\ttidyr::spread(key = ",variable.pr,", value='.valor.nuevo', fill = FALSE) %>% dplyr::select(-i)\n",
          "nombres <- colnames(datos.dummies.apren)\n",
          "formula.nn <- as.formula(paste('",foemula.1,
          "~', paste0(nombres[!nombres %in% ",as.string.c(levels(datos.aprendizaje.completos[,variable.pr])),"], collapse = '+')))\n",
@@ -1117,6 +1117,22 @@ ordenar.reporte <- function(lista){
              combinar.nombres(c("modelo.knn","pred.knn","mc.knn","ind.knn"),
                               c("optimal", "rectangular", "triangular","epanechnikov",
                                 "biweight","triweight", "cos","inv","gaussian")),
+             "modelo.dt.gini","modelo.dt.graf.gini","pred.dt.gini",
+             "mc.dt.gini","ind.dt.gini","modelo.dt.rules.gini",
+             "modelo.dt.information","modelo.dt.graf.information","pred.dt.information",
+             "mc.dt.information","ind.dt.information","modelo.dt.rules.information",
+             "modelo.rf","modelo.rf.error.","modelo.rf.graf",
+             "pred.rf","mc.rf","ind.rf",
+             nombres[grepl("modelo.rf.rules.", nombres)],
+             "modelo.b.discrete","modelo.b.error.discrete","modelo.b.imp.discrete",
+             "pred.b.discrete","mc.b.discrete","ind.b.discrete",
+             nombres[grepl("modelo.b.rules.discrete.", nombres)],
+             "modelo.b.real","modelo.b.error.real","modelo.b.imp.real","pred.b.real",
+             "mc.b.real","ind.b.real",
+             nombres[grepl("modelo.b.rules.real.", nombres)],
+             "modelo.b.gentle","modelo.b.error.gentle","modelo.b.imp.gentle",
+             "pred.b.gentle","mc.b.gentle","ind.b.gentle",
+             nombres[grepl("modelo.b.rules.gentle.", nombres)],
              "modelo.svm.linear",
              nombres[grepl("svm.plot.linear", nombres)],
              "pred.svm.linear","mc.svm.linear","ind.svm.linear",
@@ -1129,15 +1145,6 @@ ordenar.reporte <- function(lista){
              "modelo.svm.sigmoid",
              nombres[grepl("svm.plot.sigmoid", nombres)],
              "pred.svm.sigmoid","mc.svm.sigmoid","ind.svm.sigmoid",
-             "modelo.dt.gini","modelo.dt.graf.gini","pred.dt.gini",
-             "mc.dt.gini","ind.dt.gini","modelo.dt.rules.gini",
-             "modelo.dt.information","modelo.dt.graf.information","pred.dt.information",
-             "mc.dt.information","ind.dt.information","modelo.dt.rules.information",
-             "modelo.rf","modelo.rf.error.","modelo.rf.graf",
-             "pred.rf","mc.rf","ind.rf",
-             nombres[grepl("modelo.rf.rules.", nombres)],
-             combinar.nombres(c("modelo.b","modelo.b.error","modelo.b.imp","pred.b","mc.b","ind.b"),
-                              c("discrete", "real", "gentle")),
              "modelo.bayes", "pred.bayes", "mc.bayes", "ind.bayes",
              "modelo.nn", "modelo.nn.graf", "pred.nn", "mc.nn", "ind.nn",
              combinar.nombres(c("modelo.xgb", "modelo.xgb.graf", "pred.xgb", "mc.xgb", "ind.xgb"),
@@ -1351,9 +1358,7 @@ env.report <<- new.env()
 env.report$codigo.reporte <- list()
 
 
-
-info.sys <- .Platform$OS.type
-if(toupper(info.sys) != "WINDOWS"){
+if(toupper(.Platform$OS.type) != "WINDOWS"){
   enc <<- "utf8"
 }else{
   enc <<- "UTF-8"

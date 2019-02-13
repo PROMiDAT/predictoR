@@ -1,31 +1,31 @@
-library(DT)#
-library(ada)#
-library(kknn)#
+library(DT)
+library(ada)
+library(kknn)
 library(tidyverse)
-library(shiny)#
-library(e1071)#
-library(rpart)#
+library(shiny)
+library(e1071)
+library(rpart)
 library(rpart.plot)
-library(ROCR)#
-library(knitr)#
+library(ROCR)
+library(knitr)
 library(rattle)
 library(xtable)
-library(xgboost)#
-library(shinyjs) #
-library(ggplot2) ##
-library(stringr) ##
-library(forcats) ##
-library(shinyAce)#
-library(corrplot)#
-library(neuralnet)#
-library(randomForest)#
-library(colourpicker)#
-library(shinyWidgets)#
-library(scatterplot3d)#
-library(flexdashboard) #
-library(shinydashboard)#
-library(shinydashboardPlus)#
-library(dplyr)#
+library(xgboost)
+library(shinyjs)
+library(ggplot2)
+library(stringr)
+library(forcats)
+library(shinyAce)
+library(corrplot)
+library(neuralnet)
+library(randomForest)
+library(colourpicker)
+library(shinyWidgets)
+library(scatterplot3d)
+library(flexdashboard)
+library(shinydashboard)
+library(shinydashboardPlus)
+library(dplyr)
 
 # FUNCIONES --------------------------------------------------------------------------------------------------------------
 
@@ -92,53 +92,7 @@ tabsOptions <- function(botones = list(icon("gear"), icon("terminal")), widths =
   res <- paste0(res, tags$div(class = "btn-options", style = "position:relative;",width = "100%", HTML(codeButtons)))
   return(tags$div(HTML(res)))
 }
-#
-# updateSelects <- function(datos) {
-#   vars <- list("numericas" = colnames(var.numericas(datos)),
-#                "categoricas" = colnames(var.categoricas(datos)),
-#                "todas" = colnames(datos))
-#   selects <- list(
-#     list(id = "sel.normal", choices = "numericas", tipo = "Selectize"),
-#     list(id = "select.var", choices = "numericas", tipo = "Selectize"),
-#     list(id = "sel.distribucion.num", choices = "numericas", tipo = "Select"),
-#     list(id = "sel.distribucion.cat", choices = "categoricas", tipo = "Select"),
-#     list(id = "sel.resumen", choices = "todas", tipo = "Select"),
-#     list(id = "selVert", choices = "numericas+", tipo = "Select"),
-#     list(id = "sel.Kvert", choices = "numericas+", tipo = "Select"),
-#     list(id = "sel.Kbar", choices = "categoricas", tipo = "Select"),
-#     list(id = "selBar", choices = "categoricas", tipo = "Select"))
-#   lapply(selects, function(sel) {
-#     if(sel$tipo == "Selectize"){
-#       updateSelectizeInput(session, sel$id, choices = vars[[sel$choices]])
-#     } else {
-#       updateSelectInput(session, sel$id, choices = vars[[sel$choices]])
-#     }
-#   })
-#   updateinitSelects("selVert", colnames(var.numericas(datos)))
-#   updateinitSelects("sel.Kvert", colnames(var.numericas(datos)))
-# }
-#
-# updateinitSelects <- function(id, choices) {
-#   vars <- c()
-#   vars[tr("todos")] <- "todos"
-#   vars <- c(vars, choices)
-#   updateSelectInput(session, id, choices = vars)
-# }
-#
-# updateMenu <- function(datos = NULL, init = F){
-#   element <- "#sidebarItemExpanded li"
-#   menu.values <- c(
-#     "[class^=treeview]",  " a[data-value=acp]", " a[data-value=agrupacion]",
-#     " a[data-value=kmedias]", " a[data-value=reporte]")
-#
-#   lapply(menu.values, function(i){
-#     if(init || (is.null(datos) || ncol(datos) < 1)){
-#       addClass(class = "disabled", selector = paste0(element, i))
-#     } else {
-#       removeClass(class = "disabled", selector = paste0(element, i))
-#     }
-#   })
-# }
+
 
 # MENU --------------------------------------------------------------------------------------------------------------------
 

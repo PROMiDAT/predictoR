@@ -1232,7 +1232,6 @@ shinyServer(function(input, output, session) {
         MC <- exe("MC.svm.",input$kernel.svm)
         indices.svm <- indices.generales(MC)
         eval(parse(text =paste0("indices.svm.",input$kernel.svm, "<<- indices.svm")))
-        #indices.g("svm", MC)
 
         insert.report(paste0("ind.svm.",input$kernel.svm),
                       paste0("## Índices Generales del modelo SVM  - ",input$kernel.svm," \n```{r}\n",
@@ -1364,7 +1363,7 @@ shinyServer(function(input, output, session) {
     output$rulesDt <- renderPrint(rattle::asRules(exe("modelo.dt.",input$split.dt)))
     updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",input$split.dt,")"))
     insert.report(paste0("modelo.dt.rules.",input$split.dt),
-                  paste0("\n```{r}\nrattle::asRules(modelo.dt.",input$split.dt,")\n```"))
+                  paste0("\n# Reglas del Árbol\n```{r}\nrattle::asRules(modelo.dt.",input$split.dt,")\n```"))
   }
 
   # Limpia los datos segun el proceso donde se genera el error
@@ -1471,7 +1470,6 @@ shinyServer(function(input, output, session) {
       tryCatch({ # Se corren los codigo
         isolate(exe(cod.dt.ind))
         indices.dt <<- indices.generales(exe("MC.dt.",input$split.dt))
-        #indices.g("dt", exe("MC.dt.",input$split.dt))
 
         insert.report(paste0("ind.dt.",input$split.dt), paste0("## Índices Generales \n```{r}\n", cod.dt.ind, "\nindices.generales(MC.dt.",input$split.dt,")\n```"))
 
@@ -1861,7 +1859,7 @@ shinyServer(function(input, output, session) {
           stop(tr("NoDRule"))
       }
     )})
-    insert.report(paste0("modelo.b.rules.", n), paste0("\n## Reglas del árbol #",n," \n```{r}\n",
+    insert.report(paste0("modelo.b.rules.",input$tipo.boosting,".", n), paste0("\n## Reglas del árbol #",n," \n```{r}\n",
                                                        rules.boosting(type = input$tipo.boosting, input$rules.b.n),"\n```"))
   }
 

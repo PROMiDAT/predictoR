@@ -345,7 +345,7 @@ dummy <- function (x, data = NULL, sep = "", drop = TRUE, fun = as.integer, verb
   return(mm)
 }
 
-dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.classes = getOption("dummy.classes"), all = TRUE, ...) {
+dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.classes = c("factor" ,"character"), all = TRUE, ...) {
   df <- data.frame(row.names = row.names(data))
   new.attr <- list()
   for (nm in names(data)) {
@@ -368,11 +368,3 @@ dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.c
   attr(df, "dummies") <- new.attr
   return(df)
 }
-
-# rgdal(1.3-6)*,
-# raster(2.8-19)*,
-# nnet(7.3-12)*,
-# rstudioapi (0.9.0)*
-# caret (6.0-81)
-# dendextend (1.9.0)*
-# rmarkdown (1.11)
