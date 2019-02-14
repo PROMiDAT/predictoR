@@ -1,6 +1,22 @@
 
 # FUNCIONES GLOBALES --------------------------------------------------------------------------------------------------------
 
+#Crear la matriz de confucíon
+crear.matriz.conf <- function(real, prediccion, num.clases = 2){
+  MC <- table(real,prediccion)
+  if (dim(MC)[2] < num.clases) {
+    for (i in 1:(num.clases-dim(MC)[2])) {
+      MC <- cbind(MC, 0)
+    }
+  }
+  return(MC)
+}
+
+#Numero de categorias de la variable a predecir
+num.categorias.pred <- function(){
+  return(length(levels(datos.aprendizaje[,variable.predecir])))
+}
+
 #Colores de ggplot2
 gg_color_hue <- function(n) {
   hues <- seq(15, 375, length = n + 1)
@@ -519,7 +535,7 @@ kkn.prediccion.pn <- function() {
 knn.MC <- function(variable.p, kernel = "optimal"){
   return(paste0("real <- datos.prueba$",variable.p,"\n",
                 "prediccion <- prediccion.knn.",kernel,"\n",
-                "MC.knn.",kernel," <<- table(real, prediccion)"))
+                "MC.knn.",kernel," <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")"))
 }
 
 # Pagina de SVM -------------------------------------------------------------------------------------------------------------
@@ -546,7 +562,7 @@ svm.prediccion.np <- function() {
 svm.MC <- function(variable.p, kernel = "linear"){
   return(paste0("real <- datos.prueba$",variable.p,"\n",
                 "prediccion <- prediccion.svm.",kernel,"\n",
-                "MC.svm.",kernel," <<- table(real,prediccion)"))
+                "MC.svm.",kernel," <<- crear.matriz.conf(real,prediccion,",num.categorias.pred(),")"))
 }
 
 #Codigo del grafico de svm
@@ -596,7 +612,7 @@ dt.prediccion.np <- function() {
 dt.MC <- function(variable.p){
   return(paste0("real <- datos.prueba$",variable.p,"\n",
                 "prediccion <- prediccion.dt.",input$split.dt,"\n",
-                "MC.dt.",input$split.dt," <<- table(real, prediccion)"))
+                "MC.dt.",input$split.dt," <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")"))
 }
 
 #Codigo del grafico de dt
@@ -637,7 +653,7 @@ rf.prediccion.np <- function() {
 rf.MC <- function(variable.p){
   return(paste0("real <- datos.prueba$",variable.p,"\n",
                 "prediccion <- prediccion.rf\n",
-                "MC.rf <<- table(real, prediccion)"))
+                "MC.rf <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")\n"))
 }
 
 #Codigo del grafico de importancia de variables
@@ -686,7 +702,7 @@ boosting.prediccion.np <- function() {
 boosting.MC <- function(variable.p, type = "discrete"){
   return(paste0("real <- datos.prueba$",variable.p,"\n",
                 "prediccion <- prediccion.boosting.",type,"\n",
-                "MC.boosting.",type," <<- table(real, prediccion)"))
+                "MC.boosting.",type," <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")\n"))
 }
 
 #Codigo del grafico de boosting
@@ -775,7 +791,7 @@ bayes.prediccion.np <- function() {
 bayes.MC <- function(){
   return(paste0("real <- datos.prueba$",variable.predecir,"\n",
                 "prediccion <- prediccion.bayes\n",
-                "MC.bayes <<- table(real, prediccion.bayes)"))
+                "MC.bayes <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")\n"))
 }
 
 # Pagina de NN ------------------------------------------------------------------------------------------------------------
@@ -844,9 +860,9 @@ nn.prediccion.np <- function(){
 
 #Codigo de la matriz de confucion de xgb
 nn.MC <- function(){
-  paste0("predicion <- factor(max.col(prediccion.nn), levels = 1:length(levels(datos.prueba[,'",variable.predecir,"'])))\n",
+  paste0("prediccion <- factor(max.col(prediccion.nn), levels = 1:length(levels(datos.prueba[,'",variable.predecir,"'])))\n",
          "real <- as.numeric(datos.prueba[,'",variable.predecir,"'])\n",
-         "MC.nn <<- table(real,predicion)\n",
+         "MC.nn <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")\n",
          "rownames(MC.nn) <<- ",as.string.c(levels(datos.prueba[, variable.predecir])),"\n",
          "colnames(MC.nn) <<- ",as.string.c(levels(datos.prueba[, variable.predecir])))
 }
@@ -963,7 +979,7 @@ xgb.MC <- function(booster = "gbtree"){
   paste0(pred,
          "real <- valor.var.xgb.",booster,"\n",
          "prediccion <- prediccion.xgb.",booster,"\n",
-         "MC.xgb.",booster," <<- table(real,prediccion)\n",
+         "MC.xgb.",booster," <<- crear.matriz.conf(real, prediccion,",num.categorias.pred(),")\n",
          "rownames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])),"\n",
          "colnames(MC.xgb.",booster,") <<- ",as.string.c(levels(datos.prueba[, variable.predecir])))
 }
@@ -1173,7 +1189,7 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "date: ", Sys.Date(), "\n", "output:\n  word_document:\n",
     "    df_print: paged\n---\n\n",
     "```{r setup, include=FALSE}\n",
-    "knitr::opts_chunk$set(echo = FALSE,  fig.height = 10, fig.width = 15)\n",
+    "knitr::opts_chunk$set(echo = FALSE,  fig.height = 10, fig.width = 15, error = T)\n",
     "```\n\n",
     "```{r message=FALSE, warning=FALSE}\n",
     "library(promises)\nlibrary(ggplot2)\n",
@@ -1188,6 +1204,7 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "\n\n", extract.code("prettySeq"), "\n\n",
     "\n\n", extract.code("createDataPartition"), "\n\n",
     "\n\n", extract.code("dummy"), "\n\n",
+    "\n\n", extract.code("max.col"), "\n\n",
     "\n\n", extract.code("dummy.data.frame"), "\n\n",
     extract.code("distribucion.categorico"), "\n\n```",
     codigo.usuario)

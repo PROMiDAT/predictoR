@@ -2319,7 +2319,8 @@ shinyServer(function(input, output, session) {
 
       insert.report("pred.nn",
                     paste0("## Predicción del Modelo Redes Neuronales\n```{r}\n", cod.nn.pred,
-                           "\nscores[['Redes Neuronales']] <<- prediccion.nn\n```"))
+                           "\nscores[['Redes Neuronales']] <<- prediccion.nn\n",
+                           "prediccion.nn <<- max.col(prediccion.nn)\n```"))
 
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
