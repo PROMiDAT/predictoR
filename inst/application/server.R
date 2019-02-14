@@ -207,11 +207,12 @@ shinyServer(function(input, output, session) {
     }
 
     isolate(exe(code.res))
+    code.res <- paste0(code.res, "\n")
     if (length(var.noactivas) > 0) {
       isolate(exe(code.desactivar(var.noactivas)))
+      code.res <- paste0(code.res, code.desactivar(var.noactivas))
     }
 
-    code.res <- paste0(code.res, "\n", code.desactivar(var.noactivas))
     new.secction.report()
     insert.report("transformar.datos",paste0("# Transformando Datos\n```{r}\n",code.res,"\nstr(datos)\n```"))
     return(code.res)
@@ -230,7 +231,7 @@ shinyServer(function(input, output, session) {
   # Crea las correlaciones
   ejecutar.modelo.cor <- function() {
     tryCatch({
-      isolate(exe(text = modelo.cor()))
+      exe(text = modelo.cor())
       output$txtcor <- renderPrint(print(correlacion))
     }, error = function(e) {
       return(datos <- NULL)
@@ -678,7 +679,7 @@ shinyServer(function(input, output, session) {
 
   # Crea la tabla de atipicos
   observeEvent(c(input$distribucion_numerica), {
-    output$mostrarAtipicos <- DT::renderDataTable({tabla.atipicos()})
+    output$mostrar.atipicos <- DT::renderDataTable({tabla.atipicos()})
   })
 
   # Hace el grafico de Distribucion categorico
@@ -721,10 +722,10 @@ shinyServer(function(input, output, session) {
         cod.cor <<- updatePlot$cor
         res <- isolate(exe(cod.cor))
         updateAceEditor(session, "fieldCodeCor", value = cod.cor)
-        insert.report("correlacion", paste0("## Correlación \n```{r}\n", cod.cor, "\n```"))
+        insert.report("correlacion", paste0("## Correlación \n```{r}\n",modelo.cor(),"\n", cod.cor, "\n```"))
         return(res)
       }, error = function(e) {
-        if (ncol(var.numericas(datos)) == 0){
+        if (ncol(var.numericas(datos)) <= 1){
           error.variables(T)
         }else{
           showNotification(paste0("ERROR EN Correlacion: ", e),
@@ -1001,8 +1002,7 @@ shinyServer(function(input, output, session) {
       output$knnPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.knn.",kernel)),server = FALSE)
       insert.report(paste0("pred.knn.",kernel),
                     paste0("## Predicción del Modelo KNN - ",kernel,"\n```{r}\n", cod.knn.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.knn.",kernel,")))\n",
-                           "scores[['",paste0("KNN - ",kernel),"']] <<- predict(modelo.knn.",kernel,",datos.prueba, type = 'prob')\n```"))
+                           "\nscores[['",paste0("KNN - ",kernel),"']] <<- predict(modelo.knn.",kernel,",datos.prueba, type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.knn.",kernel))
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -1197,8 +1197,7 @@ shinyServer(function(input, output, session) {
       output$svmPrediTable <- DT::renderDataTable(exe("obj.predic(prediccion.svm.",kernel,")"),server = FALSE)
       insert.report(paste0("pred.svm.",kernel),
                     paste0("## Predicción del Modelo SVM - ",kernel,"\n```{r}\n", cod.svm.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.svm.",kernel,")))\n",
-                           "modelo.svm.roc <- svm(as.formula(paste0(variable.predecir, '~.')),data = datos.aprendizaje,scale = T,kernel = '",
+                           "\nmodelo.svm.roc <- svm(as.formula(paste0(variable.predecir, '~.')),data = datos.aprendizaje,scale = T,kernel = '",
                            kernel,"',probability = T)\n",
                            "scores[['SVM -",kernel,"']] <<- predict(modelo.svm.roc,datos.prueba, probability = T)\n```"))
 
@@ -1453,8 +1452,7 @@ shinyServer(function(input, output, session) {
 
       insert.report(paste0("pred.dt.", tipo),
                     paste0("## Predicción del Modelo Árboles de Decisión\n```{r}\n", cod.dt.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.dt.",tipo,")))\n",
-                           "scores[['Árboles de Decisión - ",tipo,"']] <<- predict(modelo.dt.",tipo,", datos.prueba, type = 'prob')\n```"))
+                           "\nscores[['Árboles de Decisión - ",tipo,"']] <<- predict(modelo.dt.",tipo,", datos.prueba, type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",tipo))
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -1682,8 +1680,7 @@ shinyServer(function(input, output, session) {
 
       insert.report("pred.rf",
                     paste0("## Predicción del Modelo Bosques Aleatorios\n```{r}\n", cod.rf.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.rf)))\n",
-                           "scores[['Bosques Aleatorios']] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
+                           "\nscores[['Bosques Aleatorios']] <<- predict(modelo.rf, datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -1891,6 +1888,7 @@ shinyServer(function(input, output, session) {
           stop(tr("NoDRule"))
       }
     )})
+    tipo <- isolate(input$tipo.boosting)
     insert.report(paste0("modelo.b.rules.",input$tipo.boosting,".", n), paste0("\n## Reglas del árbol #",n," \n```{r}\n",
                                                        rules.boosting(type = tipo, input$rules.b.n),"\n```"))
   }
@@ -1927,8 +1925,7 @@ shinyServer(function(input, output, session) {
       output$boostingPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.boosting.",tipo)),server = FALSE)
       insert.report(paste0("pred.b.",tipo),
                     paste0("## Predicción del Modelo ADA-BOOSTING - ",tipo,"\n```{r}\n",
-                    cod.b.pred,"\nhead(dt.to.data.frame.predict(obj.predic(prediccion.boosting.",tipo,")))\n",
-                    "scores[['ADA-BOOSTING - ",tipo,"']] <<- predict(modelo.boosting.",tipo,
+                    "\nscores[['ADA-BOOSTING - ",tipo,"']] <<- predict(modelo.boosting.",tipo,
                     ", datos.prueba[, -which(colnames(datos.prueba) == variable.predecir)], type = 'prob')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting.",tipo))
@@ -2096,8 +2093,7 @@ shinyServer(function(input, output, session) {
       output$bayesPrediTable <- DT::renderDataTable(obj.predic(prediccion.bayes), server = FALSE)
       insert.report("pred.bayes",
                     paste0("## Predicción del Modelo BAYES\n```{r}\n", cod.bayes.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(prediccion.bayes)))\n",
-                           "scores[['BAYES']] <<- predict(modelo.bayes, datos.prueba, type = 'raw')\n```"))
+                           "\nscores[['BAYES']] <<- predict(modelo.bayes, datos.prueba, type = 'raw')\n```"))
 
       nombres.modelos <<- c(nombres.modelos, "prediccion.bayes")
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -2297,7 +2293,7 @@ shinyServer(function(input, output, session) {
       output$txtnn <- renderPrint(print(modelo.nn))
       insert.report("modelo.nn",
                     paste0("## Generación del modelo Redes Neuronales\n```{r}\n", cod.nn.modelo,
-                           "\nmodelo.nn\n```"))
+                           "\nsummary(modelo.nn)\n```"))
       plotear.red()
       nombres.modelos <<- c(nombres.modelos,"modelo.nn")
       NN_EXECUTION <<- TRUE
@@ -2323,8 +2319,7 @@ shinyServer(function(input, output, session) {
 
       insert.report("pred.nn",
                     paste0("## Predicción del Modelo Redes Neuronales\n```{r}\n", cod.nn.pred,
-                           "\nhead(obj.predic(max.col(prediccion.nn)))\n",
-                           "scores[['Redes Neuronales']] <<- prediccion.nn\n```"))
+                           "\nscores[['Redes Neuronales']] <<- prediccion.nn\n```"))
 
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
       updatePlot$roc <- !updatePlot$roc #graficar otra vez la curva roc
@@ -2519,8 +2514,7 @@ shinyServer(function(input, output, session) {
       output$xgbPrediTable <- DT::renderDataTable(obj.predic(exe(pred)),server = FALSE)
       insert.report(paste0("pred.xgb.",tipo),
                     paste0("## Predicción del Modelo XGB - ",tipo,"\n```{r}\n", cod.xgb.pred,
-                           "\nhead(dt.to.data.frame.predict(obj.predic(",pred,")))\n",
-                           "scores[['",paste0("XGB - ",tipo),"']] <<- prediccion.xgb.",tipo,"\n```"))
+                           "\nscores[['",paste0("XGB - ",tipo),"']] <<- prediccion.xgb.",tipo,"\n```"))
 
       nombres.modelos <<- c(nombres.modelos,
                             paste0("prediccion.xgb.",tipo),
@@ -2879,23 +2873,29 @@ shinyServer(function(input, output, session) {
   }
 
   predecir.pn <-function(){
-    codigo <- switch(modelo.seleccionado.pn,
-                     knn =  kkn.prediccion.pn(),
-                     dt  = dt.prediccion.np(),
-                     rf  = rf.prediccion.np(),
-                     ada = boosting.prediccion.np(),
-                     svm = svm.prediccion.np(),
-                     bayes = bayes.prediccion.np(),
-                     xgb = xgb.prediccion.np(),
-                     nn = nn.prediccion.np())
-    tryCatch({
-      exe(codigo)
-      actualizar.pred.pn(codigo)
-    },
-    error =  function(e){
-      showNotification(paste0("Error :", e), duration = 10, type = "error")
-    })
+    if(!is.null(datos.prueba.completos) && !is.null(modelo.nuevos)){
+      codigo <- switch(modelo.seleccionado.pn,
+                       knn =  kkn.prediccion.pn(),
+                       dt  = dt.prediccion.np(),
+                       rf  = rf.prediccion.np(),
+                       ada = boosting.prediccion.np(),
+                       svm = svm.prediccion.np(),
+                       bayes = bayes.prediccion.np(),
+                       xgb = xgb.prediccion.np(),
+                       nn = nn.prediccion.np())
+      tryCatch({
+        exe(codigo)
+        actualizar.pred.pn(codigo)
+      },
+      error =  function(e){
+        showNotification(paste0("Error :", e), duration = 10, type = "error")
+      })
+    }
   }
+
+  observeEvent(c(input$predecirPromidat), {
+    predecir.pn()
+  })
 
   observeEvent(input$transButtonPredN, {
     # transforma los datos
@@ -2912,6 +2912,8 @@ shinyServer(function(input, output, session) {
     actualizar.texto.modelo.pn("")
     actualizar.tabla.pn()
   })
+
+
 
   observeEvent(input$PredNuevosBttnModelo,{
     codigo <- switch(input$selectModelsPred,
@@ -2996,7 +2998,6 @@ shinyServer(function(input, output, session) {
       exe(code.trans.pn)
       unificar.factores()
       actualizar.tabla.pn("contentsPred3")
-      predecir.pn()
     },
     error = function(e) {
       showNotification(paste0("Error: ", e), duration = 10, type = "error")
@@ -3046,16 +3047,23 @@ shinyServer(function(input, output, session) {
 
   observeEvent(input$principal, {
     if(input$principal == "reporte"){
-      updateAceEditor(session, "fieldCodeReport", value = def.reporte(titulo = input$textTitulo, nombre = input$textNombre, input))
+      cod.report <<- def.reporte(titulo = input$textTitulo, nombre = input$textNombre, input)
+      updateAceEditor(session, "fieldCodeReport", value = cod.report)
     }
   })
 
   observeEvent(input$textTitulo, {
-    updateAceEditor(session, "fieldCodeReport", value = str_replace(input$fieldCodeReport, "title: '.*'", paste0("title: '", input$textTitulo, "'")))
+    cod.report <<- str_replace(cod.report, "title: '.*'", paste0("title: '", input$textTitulo, "'"))
+    updateAceEditor(session, "fieldCodeReport", value = cod.report )
+  })
+
+  observeEvent(input$fieldCodeReport, {
+    isolate(cod.report <<- input$fieldCodeReport)
   })
 
   observeEvent(input$textNombre, {
-    updateAceEditor(session, "fieldCodeReport", value = str_replace(input$fieldCodeReport, "author: '.*'", paste0("author: '", input$textNombre, "'")))
+    cod.report <<- str_replace(input$fieldCodeReport, "author: '.*'", paste0("author: '", input$textNombre, "'"))
+    updateAceEditor(session, "fieldCodeReport", value = cod.report)
   })
 
   output$descargar <- downloadHandler(
@@ -3070,10 +3078,9 @@ shinyServer(function(input, output, session) {
       namermd <- paste(input$textTitulo,'-', input$textNombre, '.rmd', sep='')
       e <- options()$encoding
       options(encoding = enc) #Variable global
-      write.table(input$fieldCodeReport,namermd,row.names=F,col.names=F,quote=F)
+      write.table(cod.report,namermd,row.names=F,col.names=F,quote=F)
       options(encoding = e)
 
-      #writeLines(input$fieldCodeReport, namermd)
       files <- c(namermd, files)
 
       src <- normalizePath(namermd)

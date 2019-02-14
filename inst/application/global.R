@@ -1185,7 +1185,10 @@ def.reporte <- function(titulo = "Sin Titulo", nombre = "PROMiDAT", entradas) {
     "library(xtable)\n",
     "```\n\n", "```{r}\n", extract.code("var.numericas"), "\n\n",
     extract.code("var.categoricas"), "\n\n", extract.code("datos.disyuntivos"),
-    "\n\n", extract.code("distribucion.numerico"), "\n\n",
+    "\n\n", extract.code("prettySeq"), "\n\n",
+    "\n\n", extract.code("createDataPartition"), "\n\n",
+    "\n\n", extract.code("dummy"), "\n\n",
+    "\n\n", extract.code("dummy.data.frame"), "\n\n",
     extract.code("distribucion.categorico"), "\n\n```",
     codigo.usuario)
 }
@@ -1356,7 +1359,7 @@ predic.nuevos <<- NULL
 
 env.report <<- new.env()
 env.report$codigo.reporte <- list()
-
+cod.report <<- ""
 
 if(toupper(.Platform$OS.type) != "WINDOWS"){
   enc <<- "utf8"
