@@ -3100,7 +3100,7 @@ shinyServer(function(input, output, session) {
       file.rename(out, paste(input$textTitulo,'-', input$textNombre, '.docx', sep=''))
       files <- c(paste(input$textTitulo,'-', input$textNombre, '.docx', sep=''), files)
 
-      zip::zip(file, files)
+      utils::zip(file, files)
     }
   )
 
