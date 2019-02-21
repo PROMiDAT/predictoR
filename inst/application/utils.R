@@ -369,7 +369,6 @@ dummy.data.frame <- function (data, names = NULL, omit.constants = TRUE, dummy.c
   return(df)
 }
 
-
 #Funciones tomadas del paquete scatterplot3d
 
 scatterplot3d <- function (x, y = NULL, z = NULL, color = par("col"), pch = par("pch"),

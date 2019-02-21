@@ -113,7 +113,8 @@ menu.aprendizaje.supervisado <- menuItem(labelInput("aprendizaje"), tabName = "p
                                          menuSubItem(labelInput("svml"),tabName = "svm",icon = icon("line-chart")),
                                          menuSubItem("Bayes",tabName = "bayes",icon = icon("dice")),
                                          menuSubItem(labelInput("nn"),tabName = "nn",icon = icon("brain")),
-                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("project-diagram")))
+                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("project-diagram")),
+                                         menuSubItem(labelInput("rl"),tabName = "rl",icon = icon("project-diagram")))
 
 menu.reporte <- menuItem(labelInput("reporte"), tabName = "reporte", icon = icon("save-file",lib = "glyphicon"))
 
@@ -900,6 +901,67 @@ pagina.xgb <- tabItem(tabName = "xgb",
                              panel.indices.generales.xgb,
                              tabs.xgb))
 
+# PAGINA DE REDES REGRESION LOGISTICA -------------------------------------------------------------------------------------
+
+opciones.rl <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
+                             column(width = 2,br(),actionButton("runRl", label = labelInput("ejecutar"), icon = icon("play")))),
+                    hr(),
+                    fluidRow(column(numericInput("threshold.rl",labelInput("threshold"),
+                                                 min = 0, step = 0.01, value = 0.01), width = 6),
+                             column(numericInput("stepmax.rl",labelInput("stepmax"),
+                                                 min = 100, step = 100, value = 1000), width = 6)),
+                    fluidRow(column(sliderInput(inputId = "cant.capas.rl", min = 2, max = 10,
+                                                label = labelInput("selectCapas"), value = 2), width = 12)),
+                    fluidRow(id = "capasFila",lapply(1:10, function(i) tags$span(numericInput(paste0("rl.cap.",i), NULL,
+                                                                                              min = 1, step = 1, value = 10),
+                                                                                 class = "mini-numeric-select"))))
+
+codigo.rl <- list(h4(labelInput("codigo")), hr(),
+                  conditionalPanel("input.BoxRl == 'tabRlModelo'",
+                                   aceEditor("fieldCodeRl", mode = "r", theme = "monokai", value = "", height = "22vh", readOnly = F)),
+                  conditionalPanel("input.BoxRl == 'tabRlPlot'",
+                                   aceEditor("fieldCodeRlPlot", mode = "r", theme = "monokai", value = "", height = "9vh", readOnly = F)),
+                  conditionalPanel("input.BoxRl == 'tabRlPred'",
+                                   aceEditor("fieldCodeRlPred", mode = "r", theme = "monokai",
+                                             value = "", height = "10vh", readOnly = F, autoComplete = "enabled")),
+                  conditionalPanel("input.BoxRl == 'tabRlMC'",
+                                   aceEditor("fieldCodeRlMC", mode = "r", theme = "monokai",
+                                             value = "", height = "13vh", readOnly = F, autoComplete = "enabled")),
+                  conditionalPanel("input.BoxRl == 'tabRlIndex'",
+                                   aceEditor("fieldCodeRlIG", mode = "r", theme = "monokai",
+                                             value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
+
+tabs.rl <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(75,100), heights = c(95, 95),
+                       tabs.content = list(opciones.rl, codigo.rl))
+
+plot.rl <- tabPanel(title = labelInput("redPlot"), value = "tabRlPlot",
+                    plotOutput('plot.rl', height = "55vh"))
+
+panel.generar.rl <- tabPanel(title = labelInput("generatem"), value = "tabRlModelo",
+                             verbatimTextOutput("txtrl"))
+
+panel.prediccion.rl <- tabPanel(title = labelInput("predm"), value = "tabRlPred",
+                                DT::dataTableOutput("rlPrediTable"))
+
+panel.matriz.confucion.rl <- tabPanel(title = labelInput("mc"), value = "tabRlMC",
+                                      plotOutput('plot.rl.mc', height = "45vh"),
+                                      verbatimTextOutput("txtrlMC"))
+
+panel.indices.generales.rl <- tabPanel(title = labelInput("indices"), value = "tabRlIndex",
+                                       fluidRow(column(width = 6, gaugeOutput("rlPrecGlob", width = "100%")),
+                                                column(width = 6, gaugeOutput("rlErrorGlob", width = "100%"))),
+                                       fluidRow(column(width = 12, shiny::tableOutput("rlIndPrecTable"))),
+                                       fluidRow(column(width = 12, shiny::tableOutput("rlIndErrTable"))))
+
+pagina.rl  <- tabItem(tabName = "rl",
+                      tabBox(id = "BoxRl", width = NULL, height ="80%",
+                             panel.generar.rl,
+                             plot.rl,
+                             panel.prediccion.rl,
+                             panel.matriz.confucion.rl,
+                             panel.indices.generales.rl,
+                             tabs.rl))
+
 # PAGINA DE COMPARACION DE MODELOS ---------------------------------------------------------------------------------------
 
 selector.modelos <- checkboxGroupButtons("select.models", labelInput("selectMod"), c(" ---- " = "NoDisponible"),
@@ -1100,7 +1162,7 @@ pagina.info <- tabItem(tabName = "acercaDe",
                        infoBoxPROMiDAT(labelInput("copyright"), "PROMiDAT S.A.", icono = icon("copyright")),
                        infoBoxPROMiDAT(labelInput("info"), tags$a( href="https://www.promidat.com/", style = "color:white;",
                                                                    target = "_blank", "https://www.promidat.com"), icono = icon("info")),
-                       infoBoxPROMiDAT(labelInput("version"), "1.0.4", icono = icon("file-code-o")))
+                       infoBoxPROMiDAT(labelInput("version"), "1.0.5", icono = icon("file-code-o")))
 
 # PAGINA COMPLETA ---------------------------------------------------------------------------------------------------------
 
@@ -1129,6 +1191,7 @@ shinyUI(
                          pagina.bayes,
                          pagina.nn,
                          pagina.xgb,
+                         pagina.rl,
                          pagina.comparacion,
                          pagina.predicciones.nuevas,
                          pagina.generar.reporte,
