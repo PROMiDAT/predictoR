@@ -884,24 +884,18 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo knn
   observeEvent(input$runKnn, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.knn.modelo <<- input$fieldCodeKnn
-      cod.knn.pred <<- input$fieldCodeKnnPred
-      cod.knn.mc <<- input$fieldCodeKnnMC
-      cod.knn.ind <<- input$fieldCodeKnnIG
-
       knn.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$switch.scale.knn, input$kmax.knn, input$kernel.knn), {
     if (validar.datos(print = FALSE) & knn.stop.excu) {
       default.codigo.knn()
-      #knn.full()
     }else{
       knn.stop.excu <<- TRUE
     }
-  })
+  },priority = 5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.knn <- function(k.def = FALSE) {
@@ -1080,21 +1074,16 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo svm
   observeEvent(input$runSvm, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.svm.modelo <<- input$fieldCodeSvm
-      cod.svm.pred   <<- input$fieldCodeSvmPred
-      cod.svm.mc     <<- input$fieldCodeSvmMC
-      cod.svm.ind    <<- input$fieldCodeSvmIG
       svm.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$switch.scale.svm, input$kernel.svm), {
     if (validar.datos(print = FALSE)){
       default.codigo.svm()
-      # svm.full()
     }
-  })
+  }, priority =  5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.svm <- function() {
@@ -1315,21 +1304,16 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo dt
   observeEvent(input$runDt, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.dt.modelo <<- input$fieldCodeDt
-      cod.dt.pred <<- input$fieldCodeDtPred
-      cod.dt.mc <<- input$fieldCodeDtMC
-      cod.dt.ind <<- input$fieldCodeDtIG
       dt.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$minsplit.dt, input$maxdepth.dt, input$split.dt), {
     if (validar.datos(print = FALSE)){
       default.codigo.dt()
-      # dt.full()
     }
-  })
+  }, priority =  5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.dt <- function() {
@@ -1519,23 +1503,18 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo rf
   observeEvent(input$runRf, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.rf.modelo <<- input$fieldCodeRf
-      cod.rf.pred <<- input$fieldCodeRfPred
-      cod.rf.mc <<- input$fieldCodeRfMC
-      cod.rf.ind <<- input$fieldCodeRfIG
       rf.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$ntree.rf,input$mtry.rf), {
     if (validar.datos(print = FALSE) & rf.stop.excu) {
       deafult.codigo.rf()
-      # rf.full()
     }else{
       rf.stop.excu <<- TRUE
     }
-  })
+  }, priority =  5)
 
   observeEvent(input$rules.rf.n,{
     if(validar.datos(print = FALSE)){
@@ -1750,10 +1729,6 @@ shinyServer(function(input, output, session) {
   observeEvent(input$runBoosting, {
     if (length(levels(datos[, variable.predecir])) == 2) {
       if (validar.datos()){ # Si se tiene los datos entonces :
-        cod.b.modelo <<- input$fieldCodeBoosting
-        cod.b.pred <<- input$fieldCodeBoostingPred
-        cod.b.mc <<- input$fieldCodeBoostingMC
-        cod.b.ind <<- input$fieldCodeBoostingIG
         boosting.full()
       }
     }else{
@@ -1762,13 +1737,13 @@ shinyServer(function(input, output, session) {
         footer = modalButton("Cerrar"), easyClose = T
       ))
     }
-  })
+  }, priority =  -5)
 
   observeEvent(input$rules.b.n,{
     if(validar.datos(print = FALSE)){
       mostrar.reglas.boosting(input$rules.b.n)
     }
-  })
+  }, priority =  5)
 
   # Si las opciones cambian o actualizar el codigo
   observeEvent(c(input$iter.boosting, input$nu.boosting, input$tipo.boosting, input$minsplit.boosting, input$maxdepth.boosting), {
@@ -2003,13 +1978,9 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo bayes
   observeEvent(input$runBayes, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.bayes.modelo <<- input$fieldCodeBayes
-      cod.bayes.pred <<- input$fieldCodeBayesPred
-      cod.bayes.mc <<- input$fieldCodeBayesMC
-      cod.bayes.ind <<- input$fieldCodeBayesIG
       bayes.full()
     }
-  })
+  }, priority =  -5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.bayes <- function() {
@@ -2179,13 +2150,9 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo nn
   observeEvent(input$runNn, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.nn.modelo <<- input$fieldCodeNn
-      cod.nn.pred <<- input$fieldCodeNnPred
-      cod.nn.mc <<- input$fieldCodeNnMC
-      cod.nn.ind <<- input$fieldCodeNnIG
       nn.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$cant.capas.nn,input$threshold.nn,input$stepmax.nn,input$nn.cap.1,input$nn.cap.2,input$nn.cap.3,input$nn.cap.4,
@@ -2194,7 +2161,7 @@ shinyServer(function(input, output, session) {
       default.codigo.nn()
       # nn.full()
     }
-  })
+  }, priority =  5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.nn <- function(){
@@ -2388,21 +2355,16 @@ shinyServer(function(input, output, session) {
   # Cuando se genera el modelo xgb
   observeEvent(input$runXgb, {
     if (validar.datos()) { # Si se tiene los datos entonces :
-      cod.xgb.modelo <<- input$fieldCodeXgb
-      cod.xgb.pred <<- input$fieldCodeXgbPred
-      cod.xgb.mc <<- input$fieldCodeXgbMC
-      cod.xgb.ind <<- input$fieldCodeXgbIG
       xgb.full()
     }
-  })
+  }, priority =  -5)
 
   # Si las opciones cambian
   observeEvent(c(input$boosterXgb, input$maxdepthXgb, input$nroundsXgb), {
     if (validar.datos(print = FALSE)) {
       default.codigo.xgb()
-      # xgb.full()
     }
-  })
+  }, priority =  5)
 
   # Acualiza el codigo a la version por defecto
   default.codigo.xgb <- function() {
