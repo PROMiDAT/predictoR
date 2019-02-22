@@ -113,8 +113,9 @@ menu.aprendizaje.supervisado <- menuItem(labelInput("aprendizaje"), tabName = "p
                                          menuSubItem(labelInput("svml"),tabName = "svm",icon = icon("line-chart")),
                                          menuSubItem("Bayes",tabName = "bayes",icon = icon("dice")),
                                          menuSubItem(labelInput("nn"),tabName = "nn",icon = icon("brain")),
-                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("project-diagram")),
-                                         menuSubItem(labelInput("rl"),tabName = "rl",icon = icon("project-diagram")))
+                                         menuSubItem(labelInput("xgb"),tabName = "xgb",icon = icon("project-diagram"))
+                                         # ,menuSubItem(labelInput("rl"),tabName = "rl",icon = icon("project-diagram"))
+                                         )
 
 menu.reporte <- menuItem(labelInput("reporte"), tabName = "reporte", icon = icon("save-file",lib = "glyphicon"))
 
