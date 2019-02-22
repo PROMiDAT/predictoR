@@ -439,9 +439,12 @@ correlaciones <- function(metodo = 'circle', tipo = "lower"){
 dist.x.predecir <- function(data, variable, variable.predecir) {
   data. <- data %>%
     dplyr::group_by_(variable, variable.predecir) %>%
-    dplyr::summarise(count = n()) %>%
-    dplyr::group_by_(variable) %>%
-    dplyr::mutate(prop = round(count/sum(count),4))
+    dplyr::summarise(count = n())
+
+  if(variable != variable.predecir){
+    data. <-   data. %>% dplyr::group_by_(variable)
+  }
+  data. <- data. %>% dplyr::mutate(prop = round(count/sum(count),4))
   return(data.)
 }
 
