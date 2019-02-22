@@ -901,20 +901,7 @@ pagina.xgb <- tabItem(tabName = "xgb",
                              panel.indices.generales.xgb,
                              tabs.xgb))
 
-# PAGINA DE REDES REGRESION LOGISTICA -------------------------------------------------------------------------------------
-
-opciones.rl <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
-                             column(width = 2,br(),actionButton("runRl", label = labelInput("ejecutar"), icon = icon("play")))),
-                    hr(),
-                    fluidRow(column(numericInput("threshold.rl",labelInput("threshold"),
-                                                 min = 0, step = 0.01, value = 0.01), width = 6),
-                             column(numericInput("stepmax.rl",labelInput("stepmax"),
-                                                 min = 100, step = 100, value = 1000), width = 6)),
-                    fluidRow(column(sliderInput(inputId = "cant.capas.rl", min = 2, max = 10,
-                                                label = labelInput("selectCapas"), value = 2), width = 12)),
-                    fluidRow(id = "capasFila",lapply(1:10, function(i) tags$span(numericInput(paste0("rl.cap.",i), NULL,
-                                                                                              min = 1, step = 1, value = 10),
-                                                                                 class = "mini-numeric-select"))))
+# PAGINA DE REDES REGRESION LINEAR -------------------------------------------------------------------------------------
 
 codigo.rl <- list(h4(labelInput("codigo")), hr(),
                   conditionalPanel("input.BoxRl == 'tabRlModelo'",
@@ -931,8 +918,8 @@ codigo.rl <- list(h4(labelInput("codigo")), hr(),
                                    aceEditor("fieldCodeRlIG", mode = "r", theme = "monokai",
                                              value = "", height = "28vh", readOnly = F, autoComplete = "enabled")))
 
-tabs.rl <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(75,100), heights = c(95, 95),
-                       tabs.content = list(opciones.rl, codigo.rl))
+tabs.rl <- tabsOptions(botones = list(icon("code")), widths = c(75,100), heights = c(95, 95),
+                       tabs.content = list(codigo.rl))
 
 plot.rl <- tabPanel(title = labelInput("redPlot"), value = "tabRlPlot",
                     plotOutput('plot.rl', height = "55vh"))
@@ -1191,7 +1178,7 @@ shinyUI(
                          pagina.bayes,
                          pagina.nn,
                          pagina.xgb,
-                         pagina.rl,
+                         #pagina.rl,
                          pagina.comparacion,
                          pagina.predicciones.nuevas,
                          pagina.generar.reporte,

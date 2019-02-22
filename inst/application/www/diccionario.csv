@@ -231,4 +231,4 @@ redPlot;Red Neuronal;Neural Network
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
 errornum;Se necesitan variables numéricas  para esta parte.;You need numerical variables for this part.
 errorcat;Se necesitan variables categóricas  para esta parte.;You need categorical variables for this part.
-rl;Regresión Logística;Logistic Regression
+rl;Regresión Linear;Linear Regression
