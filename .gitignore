@@ -5,3 +5,7 @@
 .DS_Store
 .DS_Store
 .DS_Store
+*.json
+*.png
+inst/application/tests/DatosIris.R
+inst/application/tests/iris.csv
