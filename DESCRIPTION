@@ -6,7 +6,7 @@ Author: Oldemar Rodriguez R. with contributions from Diego Jimenez A. and Andres
 Maintainer: Oldemar Rodriguez <oldemar.rodriguez@ucr.ac.cr>
 Depends: R (>= 3.5)
 Imports:
-    shiny (>= 1.2.0)
+    shiny (>= 1.2.0),
     shinyAce (>= 0.3.3),
     shinydashboardPlus (>= 0.6.0),
     shinyWidgets (>= 0.4.4),
