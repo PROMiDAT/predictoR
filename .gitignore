@@ -9,3 +9,5 @@
 *.png
 inst/application/tests/DatosIris.R
 inst/application/tests/iris.csv
+inst/application/tests/DatosTitanic.R
+inst/application/tests/titanicLimpio.csv
