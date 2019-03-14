@@ -3591,6 +3591,8 @@ shinyServer(function(input, output, session) {
     ejecutar.rf.mc()
     ejecutar.rf.ind()
     ejecutar.rl.mc()
+
+    actualizar.selector.comparativa()
   })
 
   # TERMINA LA SESION -------------------------------------------------------------------------------------------------------

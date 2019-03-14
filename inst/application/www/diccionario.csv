@@ -231,8 +231,8 @@ redPlot;Red Neuronal;Neural Network
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
 errornum;Se necesitan variables numéricas  para esta parte.;You need numerical variables for this part.
 errorcat;Se necesitan variables categóricas  para esta parte.;You need categorical variables for this part.
-rl;Regresión Linear;Linear Regression
-rlr;Regresión Penalizada;Penalized Regression
+rl;Regresión Logística;Logistic Regression
+rlr;Regresión Logística Penalizada;Penalized Logistic Regression
 posibLanda;Posibles lambda;Possible lambda
 coeff;Coeficientes;Coefficients
 gcoeff;Coeficientes y lambda;Coefficients and lambda
