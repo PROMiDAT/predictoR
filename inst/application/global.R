@@ -725,7 +725,7 @@ boosting.plot.import <- function(type = "discrete"){
 }
 
 rules.boosting <- function(type = "discrete", i){
-  return(paste0("asRules(modelo.boosting.",type,"$model$trees[[",i,"]])"))
+  return(paste0("rules(modelo.boosting.",type,"$model$trees[[",i,"]])"))
 }
 
 varP <- function (x, plot.it = TRUE, type = c("none", "scores"), max.var.show = 30, ...){
@@ -774,6 +774,59 @@ varP <- function (x, plot.it = TRUE, type = c("none", "scores"), max.var.show = 
     attr(t1, "names") <- nm[vars]
     return(t1)
   }
+}
+
+rules <- function (model, compact = FALSE, ...){
+  if (!inherits(model, "rpart"))
+    stop(rattle:::Rtxt("Not a legitimate rpart tree"))
+  rtree <- length(attr(model, "ylevels")) == 0
+  target <- as.character(attr(model$terms, "variables")[2])
+  frm <- model$frame
+  names <- row.names(frm)
+  ylevels <- attr(model, "ylevels")
+  ds.size <- model$frame[1, ]$n
+  if (rtree)
+    ordered <- rev(sort(frm$n, index = TRUE)$ix)
+  else ordered <- rev(sort(frm$yval2[, 5], index = TRUE)$ix)
+  for (i in ordered) {
+    if (frm[i, 1] == "<leaf>") {
+      if (rtree)
+        yval <- frm[i, ]$yval
+      else {
+        yval <- as.numeric(ylevels[frm[i, ]$yval])
+        yval <- ifelse(yval == -1, 1, 2)
+        yval <- levels(datos.aprendizaje[,variable.predecir])[yval]
+      }
+      cover <- frm[i, ]$n
+      pcover <- round(100 * cover/ds.size)
+      if (!rtree)
+        prob <- frm[i, ]$yval2[, 5]
+      cat("\n")
+      pth <- rpart::path.rpart(model, nodes = as.numeric(names[i]),
+                               print.it = FALSE)
+      pth <- unlist(pth)[-1]
+      if (!length(pth))
+        pth <- "True"
+      if (compact) {
+        cat(sprintf("R%03s ", names[i]))
+        if (rtree)
+          cat(sprintf("[%2.0f%%,%0.2f]", pcover, prob))
+        else cat(sprintf("[%2.0f%%,%0.2f]", pcover, prob))
+        cat(sprintf(" %s", pth), sep = "")
+      }
+      else {
+        cat(sprintf(rattle:::Rtxt("Rule number: %s "), names[i]))
+        if (rtree){
+          cat(sprintf("[%s=%s cover=%d (%.0f%%)]\n", target, yval, cover, pcover))
+        }else{
+          cat(sprintf("[%s=%s cover=%d (%.0f%%) prob=%0.2f]\n", target, yval, cover, pcover, prob))
+        }
+        cat(sprintf("  %s\n", pth), sep = "")
+      }
+    }
+  }
+  cat("\n")
+  invisible(ordered)
 }
 
 # Pagina de BAYES ---------------------------------------------------------------------------------------------------------
