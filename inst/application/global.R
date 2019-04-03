@@ -435,7 +435,7 @@ modelo.cor <- function(data = "datos"){
 
 #Codigo de la generacion de correlaciones
 correlaciones <- function(metodo = 'circle', tipo = "lower"){
-  return(paste0("corrplot(correlacion, method='", metodo,"', shade.col=NA, tl.col='black',
+  return(paste0("corrplot::corrplot(correlacion, method='", metodo,"', shade.col=NA, tl.col='black',
                 tl.srt=20, addCoef.col='black', order='AOE', type = '", tipo, "')"))
 }
 
