@@ -798,13 +798,13 @@ opciones.nn <- list(fluidRow(column(width = 9,h4(labelInput("opciones"))),
                               column(width = 2,execute.btn("runNn"))),
                     hr(),
                     fluidRow(column(numericInput("threshold.nn",labelInput("threshold"),
-                                                 min = 0, step = 0.01, value = 0.01), width = 6),
+                                                 min = 0, step = 0.01, value = 0.05), width = 6),
                              column(numericInput("stepmax.nn",labelInput("stepmax"),
-                                                 min = 100, step = 100, value = 1000), width = 6)),
-                    fluidRow(column(sliderInput(inputId = "cant.capas.nn", min = 2, max = 10,
+                                                 min = 100, step = 100, value = 5000), width = 6)),
+                    fluidRow(column(sliderInput(inputId = "cant.capas.nn", min = 1, max = 10,
                                                  label = labelInput("selectCapas"), value = 2), width = 12)),
                     fluidRow(id = "capasFila",lapply(1:10, function(i) tags$span(numericInput(paste0("nn.cap.",i), NULL,
-                                                                    min = 1, step = 1, value = 10),
+                                                                    min = 1, step = 1, value = 2),
                                                                  class = "mini-numeric-select"))))
 
 codigo.nn <- list(h4(labelInput("codigo")), hr(),
@@ -1131,13 +1131,13 @@ opciones.xgb.pred <- fluidRow(column(numericInput("maxdepthXgb.pred", labelInput
                                                  choices = c("gbtree", "gblinear", "dart")),width = 4))
 
 opciones.nn.pred <-list(fluidRow(column(numericInput("threshold.nn.pred",labelInput("threshold"),
-                                                     min = 0, step = 0.01, value = 0.01), width = 4),
+                                                     min = 0, step = 0.01, value = 0.05), width = 4),
                                  column(numericInput("stepmax.nn.pred",labelInput("stepmax"),
-                                                     min = 100, step = 100, value = 1000), width = 4),
-                                 column(sliderInput(inputId = "cant.capas.nn.pred", min = 2, max = 10,
+                                                     min = 100, step = 100, value = 5000), width = 4),
+                                 column(sliderInput(inputId = "cant.capas.nn.pred", min = 1, max = 10,
                                                     label = labelInput("selectCapas"), value = 10), width = 4)),
                         fluidRow(lapply(1:10, function(i) tags$span(numericInput(paste0("nn.cap.pred.",i), NULL,
-                                                                                 min = 1, step = 1, value = 10),
+                                                                                 min = 1, step = 1, value = 2),
                                                                     class = "mini-numeric-select"))))
 
 
