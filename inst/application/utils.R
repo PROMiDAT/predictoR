@@ -333,7 +333,7 @@ dummy <- function (x, data = NULL, sep = "", drop = TRUE, fun = as.integer, verb
     return(matrix(rep(1, length(x)), ncol = 1, dimnames = list(rownames(x),
                                                                c(paste(name, sep, x[[1]], sep = "")))))
   }
-  mm <- model.matrix(~x - 1, model.frame(~x - 1), contrasts = FALSE)
+  mm <- model.matrix(~x - 1, model.frame(~x - 1))
   colnames.mm <- colnames(mm)
   if (verbose)
     cat(" ", name, ":", ncol(mm), "dummy varibles created\n")
