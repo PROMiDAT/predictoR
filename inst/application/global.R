@@ -463,7 +463,7 @@ label.size <- ifelse(label.size < 3, 3, label.size)
 data. <- dist.x.predecir(datos, '",variable,"', '",var.predecir,"')
 ggplot(data., aes(fct_reorder(data.[['",variable,"']], count, .desc = T), prop, fill = data.[['",var.predecir,"']])) +
 geom_bar(stat = 'identity') +
-geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop), color = 'gray90',
+geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop), color = 'black',
 position = position_stack(vjust = .5), size = label.size) +
 theme_minimal() +
 theme(text = element_text(size=15)) +
@@ -483,7 +483,7 @@ label.size <- ifelse(label.size < 3, 3, label.size)
 data. <- dist.x.predecir(datos, '",var.predecir,"','",var.predecir,"')
 ggplot(data., aes(x='', y=prop, fill= data.[['",var.predecir,"']]))+
 geom_bar(width = 1, stat = 'identity')+
-geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop ), color = 'gray90',
+geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop ), color = 'black',
 position = position_stack(vjust = .5), size = label.size)+
 theme_minimal() +
 theme(text = element_text(size=15)) +
@@ -585,7 +585,9 @@ svm.plot <- function(variables, resto, kernel = "linear"){
   }
   l <- paste0("list(",paste0(l,collapse = ","),")")
   s <- paste0("modelo.svm.temp <- svm(",variable.predecir,"~",variables[1],"+",variables[2],", data = datos.aprendizaje, kernel = '",kernel,"')")
-  return(paste0(s,"\nplot(modelo.svm.temp, datos, ",variables[1],"~",variables[2],", slice = ",l,")"))
+  color <- length(unique(datos.aprendizaje[,variable.predecir]))
+  color <- as.string.c(gg_color_hue(color))
+  return(paste0(s,"\nplot(modelo.svm.temp, datos, ",variables[1],"~",variables[2],", slice = ",l,", col = ",color,")"))
 }
 
 

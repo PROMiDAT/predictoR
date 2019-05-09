@@ -1590,9 +1590,11 @@ shinyServer(function(input, output, session) {
 
   # Acualiza el codigo a la version por defecto
   deafult.codigo.rf <- function(rf.def = FALSE){
-    if(!is.null(datos.aprendizaje) & rf.def){
-      mtry.value <- ifelse(rf.def, round(sqrt(ncol(datos.aprendizaje))), input$mtry.rf)
-      updateNumericInput(session,"mtry.rf",value = mtry.value)
+    if((!is.null(datos.aprendizaje) & rf.def) | is.na(input$mtry.rf)){
+      mtry.value <- ifelse(rf.def || is.na(input$mtry.rf), round(sqrt(ncol(datos.aprendizaje))), input$mtry.rf)
+      if(!is.na(input$mtry.rf)){
+        updateNumericInput(session,"mtry.rf",value = mtry.value)
+      }
     }else{
       mtry.value <- input$mtry.rf
     }
@@ -2807,7 +2809,7 @@ shinyServer(function(input, output, session) {
 
   get_landa_rlr <- function(){
     landa <- NULL
-    if (input$permitir.landa) {
+    if (!is.na(input$landa) && input$permitir.landa) {
       if (input$landa > 0) {
         landa <- input$landa
       }

@@ -488,6 +488,9 @@ input[type="checkbox"]:hover:before {
   color: #CBB051;
 }
 
+.sidebar-menu li ul li a{
+    font-size: 12px;
+}
 
 
 
