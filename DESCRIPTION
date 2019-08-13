@@ -26,7 +26,8 @@ Imports:
     glmnet (>= 2.0-16),
     corrplot (>= 0.84),
     ROCR (>= 1.0-7),
-    zip (>= 1.0.0)
+    zip (>= 1.0.0),
+    plyr (>= 1.8.4)
 Description: Perform a supervised data analysis on a database through a 'shiny' graphical interface. It includes methods such as K-Nearest Neighbors, Decision Trees, ADA Boosting, Extreme Gradient Boosting, Random Forest, Neural Networks, Deep Learning, Support Vector Machines and Bayesian Methods.
 License: GPL (>=2)
 Encoding: UTF-8
