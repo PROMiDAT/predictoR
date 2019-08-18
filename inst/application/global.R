@@ -252,7 +252,8 @@ particion.code <- function(data = "datos", p = "0.5", variable = NULL, semilla =
   variable.predecir <<- variable
   semilla <- ifelse(is.numeric(semilla), semilla, 5)
   codigo <- ifelse(perm.semilla, paste0("set.seed(",semilla,")"), "rm(.Random.seed, envir = globalenv())")
-  codigo <- paste0(codigo,"\nvariable.predecir <<- '",variable,"'\nparticion <- createDataPartition(datos$",variable,", p = ",p/100,", list = FALSE)\n
+  codigo <- paste0(codigo,"\nvariable.predecir <<- '",variable,
+  "'\nparticion <- sample(1:nrow(datos),size = nrow(datos)*",p/100,", replace = FALSE)\n
 datos.prueba <<- datos[-particion,]\ndatos.aprendizaje <<- datos[particion,]")
   codigo <- ifelse(perm.semilla, paste0(codigo, "\nset.seed(",semilla,")"),codigo)
   return(codigo)
