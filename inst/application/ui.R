@@ -1063,7 +1063,7 @@ muestra.datos.pred2 <- box(title = labelInput("data"), status = "primary", width
 muestra.datos.pred3 <- box(title = labelInput("data"), status = "primary", width = 12, solidHeader = TRUE, collapsible = TRUE,
                            DT::DTOutput('contentsPred3'), type = 7, color = "#CBB051")
 
-panel.cargar.datos.pred <- tabPanel(title = labelInput("cargarDatos"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
+panel.cargar.datos.pred <- tabPanel(value = "cargarDatosPN", title = labelInput("cargarDatos"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
                                fluidRow(column(width = 5,
                                checkboxInput('headerNPred', labelInput("header"), TRUE),
                                checkboxInput('rownameNPred', labelInput("Rownames"), TRUE),
@@ -1074,17 +1074,22 @@ panel.cargar.datos.pred <- tabPanel(title = labelInput("cargarDatos"), width = 1
                                fileInput('file2', label = labelInput("cargarchivo"), placeholder = "", buttonLabel =  labelInput("subir"), width = "100%",
                                          accept = c('text/csv', '.csv')),
                                actionButton("loadButtonNPred", labelInput("cargar"), width = "100%")),
-                               column(width = 7, muestra.datos.pred)))
+                               column(width = 7, muestra.datos.pred),
+                               column(width = 12, br(), hr(),
+                                      actionButton("nextCargarDatosPN", labelInput("siguiente"), width = "100%", icon = icon("arrow-right")))))
 
 
-panel.tansformar.datos <- tabPanel(title = labelInput("transDatos"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
+panel.tansformar.datos <- tabPanel(value = "transDatosPN",title = labelInput("transDatos"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
                                    fluidRow(column(width = 5,
                                                    DT::dataTableOutput('transDataPredN'),
                                                    br(),br(),
                                                    actionButton("transButtonPredN", labelInput("aplicar"), width = "100%")),
-                                   column(width = 7, muestra.datos.pred2)))
+                                   column(width = 7, muestra.datos.pred2),
+                                   br(), hr(),
+                                   actionButton("backTransDatosPN",labelInput("anterior"), width = "49%", icon = icon("arrow-left")),
+                                   actionButton("nextTransDatosPN", labelInput("siguiente"), width = "50%", icon = icon("arrow-right"))))
 
-panel.cargar.datos.pred2 <- tabPanel(title = labelInput("cargarNuev"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
+panel.cargar.datos.pred2 <- tabPanel(value = "cargarDatos2PN", title = labelInput("cargarNuev"), width = 12, solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
                                     fluidRow(column(width = 5,
                                                     checkboxInput('headerNPred2', labelInput("header"), TRUE),
                                                     checkboxInput('rownameNPred2',  labelInput("Rownames"), TRUE),
@@ -1095,7 +1100,10 @@ panel.cargar.datos.pred2 <- tabPanel(title = labelInput("cargarNuev"), width = 1
                                                     fileInput('file3', label = labelInput("cargarchivo"), placeholder = "", buttonLabel = labelInput("subir"), width = "100%",
                                                               accept = c('text/csv', '.csv')),
                                                     actionButton("loadButtonNPred2", labelInput("cargar"), width = "100%")),
-                                             column(width = 7, muestra.datos.pred3)))
+                                             column(width = 7, muestra.datos.pred3),
+                                             column(width = 12, br(), hr(),
+                                                    actionButton("backCargarDatos2PN", labelInput("anterior"), width = "48%", icon = icon("arrow-left")),
+                                                    actionButton("nextCargarDatos2PN", labelInput("siguiente"), width = "48%", icon = icon("arrow-right")))))
 
 
 opciones.knn.pred <- fluidRow(column(width = 4, br() , switchInput(inputId = "switch.scale.knn.pred", onStatus = "success", offStatus = "danger", value = T,
@@ -1123,7 +1131,7 @@ opciones.boosting.pred <- list(fluidRow(column(width = 3, numericInput("iter.boo
                                    column(width = 3, selectInput(inputId = "tipo.boosting.pred", label = labelInput("selectAlg"),selected = 1, width = "100%",
                                                                  choices =  c("discrete", "real", "gentle")))))
 
-opciones.bayes.pred <- tags$span()#vacio
+opciones.bayes.pred <- tags$span() # vacio
 
 opciones.xgb.pred <- fluidRow(column(numericInput("maxdepthXgb.pred", labelInput("maxdepth"), min = 1,step = 1, value = 6), width = 4),
                               column(numericInput("nroundsXgb.pred", labelInput("selnrounds"), min = 0,step = 1, value = 50), width = 4),
@@ -1141,7 +1149,7 @@ opciones.nn.pred <-list(fluidRow(column(numericInput("threshold.nn.pred",labelIn
                                                                     class = "mini-numeric-select"))))
 
 
-opciones.rl.pred <- tags$span()#vacio
+opciones.rl.pred <- tags$span() # vacio
 
 opciones.rlr.pred <- list(fluidRow(column(selectInput(inputId = "alpha.rlr.pred", label = labelInput("selectAlg"),selected = 1,
                                                      choices = list("Ridge" = 0, "Lasso" = 1)),width = 6),
@@ -1167,7 +1175,7 @@ opciones.modelo <- list(selectInput(inputId = "sel.predic.var.nuevos", label = l
                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"),
                                                            no = icon("remove", lib = "glyphicon")), width = "100%"))
 
-panel.crear.modelo.pred <- tabPanel(title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
+panel.crear.modelo.pred <- tabPanel(value = "crearModelo", title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE,
                                     opciones.modelo,
                                     conditionalPanel(condition =  "input.selectModelsPred == 'knn'",
                                                      opciones.knn.pred),
@@ -1190,20 +1198,26 @@ panel.crear.modelo.pred <- tabPanel(title = labelInput("seleParModel"),solidHead
                                     conditionalPanel(condition =  "input.selectModelsPred == 'rlr'",
                                                      opciones.rlr.pred),
                                     verbatimTextOutput("txtPredNuevos"),
-                                    actionButton("PredNuevosBttnModelo", labelInput("generarM"), width  = "100%" ))
+                                    actionButton("PredNuevosBttnModelo", labelInput("generarM"), width  = "100%" ),
+                                    br(), hr(),
+                                    actionButton("backModeloPN",labelInput("anterior"), width = "49%", icon = icon("arrow-left")),
+                                    actionButton("nextModeloPN", labelInput("siguiente"), width = "50%", icon = icon("arrow-right")))
 
 tabs.modelos  <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(40),
-                       tabs.content = list(list(aceEditor("fieldPredNuevos", mode = "r", theme = "monokai", value = "", height = "20vh", readOnly = T))))
+                             tabs.content = list(list(aceEditor("fieldPredNuevos", mode = "r", theme = "monokai", value = "", height = "20vh", readOnly = T))))
 
 tabs.modelos2  <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(40),
                              tabs.content = list(aceEditor("fieldCodePredPN", mode = "r", theme = "monokai",
                                                            value = "", height = "20vh", readOnly = T, autoComplete = "enabled")))
 
-panel.prediccion.pred <- tabPanel(title = labelInput("predicnuevos"), value = "predicModelo",
+panel.prediccion.pred <- tabPanel(value = "predicModelo", title = labelInput("predicnuevos"),
                                  DT::dataTableOutput("PrediTablePN"),
                                  hr(),
                                  downloadButton("downloaDatosPred", labelInput("descargar"), style = "width:100%;"),
-                                 actionButton("predecirPromidat", "preditc"))
+                                 actionButton("predecirPromidat", "preditc"),
+                                 br(), hr(),
+                                 actionButton("backPredictPN", labelInput("anterior"), width = "49%", icon = icon("arrow-left")),
+                                 actionButton("nextPredictPN", labelInput("np"), width = "50%", icon = icon("arrow-right")))
 
 pagina.predicciones.nuevas <- tabItem(tabName = "predNuevos",
                                       tabBox(id = "BoxModelo", width = NULL, height ="80%",

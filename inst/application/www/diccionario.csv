@@ -155,7 +155,7 @@ copyright;TODOS LOS DERECHOS RESERVADOS A;ALL RIGHTS RESERVED TO
 info;MÁS INFORMACIÓN;MORE INFORMATION
 version;VERSIÓN DEL SISTEMA;SYSTEM VERSION
 siguiente;Siguiente;Next
-anterior;Anterior;Previous
+anterior;Anterior;Back
 primero;Primero;First
 ultimo;Ultimo;Last
 nodata;No hay datos disponibles;No data available in table
@@ -242,3 +242,4 @@ aROC;Área de ROC;ROC Area
 limitModel;Este modelo solo se puede aplicar a variables binarias;This model can only be applied to binary variables
 ErrorModelo;Aún no genera el modelo;The model has not yet been generated
 ErrorDatosPN;Aún no carga los datos a predecir;It still doesn't load the data to predict
+np;Nueva Predicción;New Prediction

@@ -43,6 +43,16 @@ shinyServer(function(input, output, session) {
     }
   }
 
+  close.tab.panel.np <- function(tabname = NA, valor = T){
+    select <- paste0("a[data-value='",tabname,"']")
+    if(valor){
+      shinyjs::hide(selector = select)
+    } else {
+      shinyjs::show(selector = select)
+      shinyjs::runjs(paste0("$(\"",select,"\").click()"))
+    }
+  }
+
   # Validacion comun para todos los modelos
   validar.datos <- function(print = TRUE) {
     # Validaciones
@@ -155,10 +165,10 @@ shinyServer(function(input, output, session) {
                                 "cargarDatos","transDatos","seleParModel","generarM","variables","tipo",
                                 "activa","nn","xgb","selbooster","selnrounds","selectCapas","threshold",
                                 "stepmax","redPlot","rl","rlr","posibLanda","coeff","gcoeff","automatico",
-                                "landa")))
+                                "landa","anterior", "siguiente","np")))
   }
 
-  # CONFIGURACIONES INICIALES -----------------------------------------------------------------------------------------------
+  # CONFIGURACIONES IICIALES -----------------------------------------------------------------------------------------------
 
   source("global.R", local = T)
   source("utils.R", local = T)
@@ -188,6 +198,13 @@ shinyServer(function(input, output, session) {
   updateAceEditor(session, "fieldModelCor", value = modelo.cor())
   updateAceEditor(session, "fieldFuncNum", extract.code("distribucion.numerico"))
   updateAceEditor(session, "fieldFuncCat", extract.code("distribucion.categorico"))
+
+  # cierra los paneles de prediccion de individuos nuevos
+  close.tab.panel.np("cargarDatosPN", F)
+  close.tab.panel.np("transDatosPN", T)
+  close.tab.panel.np("cargarDatos2PN", T)
+  close.tab.panel.np("crearModelo", T)
+  close.tab.panel.np("predicModelo", T)
 
   # VALORES REACTIVOS -------------------------------------------------------------------------------------------------------
 
@@ -3346,7 +3363,6 @@ shinyServer(function(input, output, session) {
     }
   }
 
-
   observeEvent(input$predecirPromidat, {
     predecir.pn()
   })
@@ -3473,6 +3489,72 @@ shinyServer(function(input, output, session) {
     } else {
       shinyjs::disable("landa.pred")
     }
+  })
+
+  # Botones de next
+
+  next_panel <- function(validate = NA, error = "", nextP = ""){
+
+    paneles <- c("cargarDatosPN", "transDatosPN", "cargarDatos2PN", "crearModelo", "predicModelo")
+
+    tryCatch({
+      if(!is.na(validate)){
+        if(!(exists(validate) && !is.null(get(validate)))){
+          stop(tr(error), call. = FALSE)
+        }
+      }
+
+      for(panel in paneles){
+        close.tab.panel.np(panel, panel != nextP)
+      }
+
+    },error =  function(e){
+      showNotification(as.character(e), duration = 10, type = "error")
+    })
+  }
+
+  observeEvent(input$nextCargarDatosPN,{
+    next_panel("datos.aprendizaje.completos", "tieneCData", "transDatosPN")
+  })
+
+  observeEvent(input$nextTransDatosPN,{
+    next_panel(nextP = "crearModelo")
+  })
+
+  observeEvent(input$nextModeloPN,{
+    next_panel("modelo.nuevos", "ErrorModelo", "cargarDatos2PN")
+  })
+
+  observeEvent(input$nextCargarDatos2PN,{
+    next_panel("datos.prueba.completos", "ErrorDatosPN", "predicModelo")
+  })
+
+  observeEvent(input$nextPredictPN,{
+    modelo.nuevos <<- NULL
+    predic.nuevos <<- NULL
+    datos.aprendizaje.completos <<- NULL
+    datos.prueba.completos <<- NULL
+    datos.originales.completos <<- NULL
+    actualizar.pred.pn("")
+    actualizar.texto.modelo.pn("")
+    actualizar.tabla.pn(c("contentsPred", "contentsPred2", "contentsPred3"))
+    next_panel(nextP = "cargarDatosPN")
+  })
+
+  observeEvent(input$backTransDatosPN,{
+    next_panel(nextP = "cargarDatosPN")
+  })
+
+  observeEvent(input$backModeloPN,{
+    next_panel(nextP = "transDatosPN")
+  })
+
+  observeEvent(input$backCargarDatos2PN,{
+    next_panel(nextP = "crearModelo")
+  })
+
+  observeEvent(input$backPredictPN,{
+    next_panel(nextP = "cargarDatos2PN")
   })
 
   # PAGINA DE REPORTE -------------------------------------------------------------------------------------------------------
