@@ -493,8 +493,12 @@ input[type="checkbox"]:hover:before {
 }
 
 
-#nextCargarDatosPN, #nextTransDatosPN, #nextCargarDatos2PN, #nextPredictPN, #nextModeloPN{
+#nextCargarDatosPN, #nextTransDatosPN, #nextCargarDatos2PN, #nextModeloPN{
    background-color: #9eb5e8;
+}
+
+#nextPredictPN{
+  background-color: #dc7878 !important;
 }
 
 #nextCargarDatosPN > i, #nextTransDatosPN > i, #nextCargarDatos2PN > i, #nextPredictPN > i, #nextModeloPN > i{

@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
                                 "cargarDatos","transDatos","seleParModel","generarM","variables","tipo",
                                 "activa","nn","xgb","selbooster","selnrounds","selectCapas","threshold",
                                 "stepmax","redPlot","rl","rlr","posibLanda","coeff","gcoeff","automatico",
-                                "landa","anterior", "siguiente","np")))
+                                "landa","anterior", "siguiente","reiniciar")))
   }
 
   # CONFIGURACIONES IICIALES -----------------------------------------------------------------------------------------------
@@ -3530,6 +3530,21 @@ shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$nextPredictPN,{
+    pregunta <- modalDialog(
+      span(tr("redo1")),
+      br(),
+      br(),
+      span(tr("redo2")),
+      title = tr("advertencia"),
+      footer = tagList(
+        modalButton(tr("cancelar")),
+        actionButton("okRedo", tr("aceptar"))
+      )
+    )
+    showModal(pregunta)
+  })
+
+  observeEvent(input$okRedo,{
     modelo.nuevos <<- NULL
     predic.nuevos <<- NULL
     datos.aprendizaje.completos <<- NULL
@@ -3538,6 +3553,7 @@ shinyServer(function(input, output, session) {
     actualizar.pred.pn("")
     actualizar.texto.modelo.pn("")
     actualizar.tabla.pn(c("contentsPred", "contentsPred2", "contentsPred3"))
+    removeModal()
     next_panel(nextP = "cargarDatosPN")
   })
 

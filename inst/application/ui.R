@@ -1217,7 +1217,7 @@ panel.prediccion.pred <- tabPanel(value = "predicModelo", title = labelInput("pr
                                  actionButton("predecirPromidat", "preditc"),
                                  br(), hr(),
                                  actionButton("backPredictPN", labelInput("anterior"), width = "49%", icon = icon("arrow-left")),
-                                 actionButton("nextPredictPN", labelInput("np"), width = "50%", icon = icon("arrow-right")))
+                                 actionButton("nextPredictPN", labelInput("reiniciar"), width = "50%", icon = icon("redo")))
 
 pagina.predicciones.nuevas <- tabItem(tabName = "predNuevos",
                                       tabBox(id = "BoxModelo", width = NULL, height ="80%",
