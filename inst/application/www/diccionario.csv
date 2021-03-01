@@ -190,7 +190,6 @@ contribucion;Contribuciones (%);Contributions (%)
 positivo;Positivo;Positive
 negativo;Negativo;Negative
 sinasimetria;Sin Asimetría;Without Asymmetry
-fisher;Cálculo de Fisher;Fisher's calculation
 asimetria;Asimetría;Asymmetry
 msjclusters;Los clústeres fueron correctamente agregados.;The clusters were added correctly.
 reptransformar;Transformación de Datos;Data Transformation
@@ -243,4 +242,5 @@ landa;Mejor Lambda:;Better Lambda:
 aROC;Área de ROC;ROC Area
 limitModel;Este modelo solo se puede aplicar a variables binarias;This model can only be applied to binary variables
 ErrorModelo;Aún no genera el modelo;The model has not yet been generated
-ErrorDatosPN;Aún no carga los datos a predecir;It still doesn't load the data to predict
+ErrorDatosPN;Aún no carga los datos a predecir;"It still doesn't load the data to predict"
+fisher;Cálculo de Fisher;"Fisher's calculation"
