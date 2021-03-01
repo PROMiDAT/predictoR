@@ -625,20 +625,20 @@ shinyServer(function(input, output, session) {
   observeEvent(c(input$loadButton, input$transButton), {
     output$plot.disp <- renderPlot({
       tryCatch({
-        cod.disp <<- updatePlot$disp
-        updateAceEditor(session, "fieldCodeDisp", value = cod.disp)
-        if(!is.null(cod.disp) && cod.disp != "") {
-          insert.report(paste0("dispersion.", paste(input$select.var, collapse = ".")),
-                        paste0("## Dispersión \n```{r}\n", cod.disp, "\n```"))
-        }
-        return(isolate(exe(cod.disp)))
-      }, error = function(e) {
         if(ncol(var.numericas(datos)) <= 1){
           error.variables(T)
         } else {
+          cod.disp <<- updatePlot$disp
+          updateAceEditor(session, "fieldCodeDisp", value = cod.disp)
+          if(!is.null(cod.disp) && cod.disp != "") {
+            insert.report(paste0("dispersion.", paste(input$select.var, collapse = ".")),
+                          paste0("## Dispersión \n```{r}\n", cod.disp, "\n```"))
+          }
+          return(isolate(exe(cod.disp)))
+        }
+      }, error = function(e) {
           showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
           return(NULL)
-        }
       })
     })
   })
@@ -841,7 +841,7 @@ shinyServer(function(input, output, session) {
           insert.report(paste0("poder.cat.",input$sel.distribucion.poder),
                         paste0("## Distribución Según Variable Discriminante \n```{r}\n", cod.poder.cat, "\n```"))
         }else{
-          res <- error.variables(T)
+          res <- error.variables(F)
         }
         return(res)
       }, error = function(e) {
