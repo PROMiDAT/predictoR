@@ -151,16 +151,18 @@ shinyServer(function(input, output, session) {
                                 "cargarDatos","transDatos","seleParModel","generarM","variables","tipo",
                                 "activa","nn","xgb","selbooster","selnrounds","selectCapas","threshold",
                                 "stepmax","redPlot","rl","rlr","posibLanda","coeff","gcoeff","automatico",
-                                "landa")))
+                                "landa","eliminar", "imputar")))
   }
 
   # CONFIGURACIONES INICIALES -----------------------------------------------------------------------------------------------
+
+
 
   source("global.R", local = T)
   source("utils.R", local = T)
   load("www/translation.bin")
 
-  # actualizar.idioma()
+  #actualizar.idioma()
 
   options(shiny.maxRequestSize = 200 * 1024^2,
           width = 200,
@@ -219,6 +221,7 @@ shinyServer(function(input, output, session) {
     if (any(is.na(datos))) {
       tryCatch({
         codigo.na <- paste0(code.NA(deleteNA = input$deleteNA), "\n", "datos <<- datos.originales")
+       # codigo.na <- paste0(code.NA(deleteNA = input$deleteNA), "\n", "datos <<- datos.originales")
         isolate(exe(codigo.na))
         insert.report("na.delete",paste0("\n# Imputación de Datos\n```{r}\n",codigo.na,"\nhead(datos)\nstr(datos)\n```"))
       }, error = function(e) {
@@ -3445,6 +3448,7 @@ shinyServer(function(input, output, session) {
       codigo.na <- ""
       codigo.na <- paste0(code.NA(deleteNA = input$deleteNAnPred2,
                                   d.o = paste0("datos.prueba.completos")))
+
       datos.prueba.completos[,variable.predecir.pn] <<- NULL
       isolate(exe( codigo.na))
       datos.prueba.completos[,variable.predecir.pn] <<- NA

@@ -11,6 +11,8 @@ aprendizaje;Aprendizaje Supervisado;Supervised Learning
 comparacion;Comparación de Modelos;Model Comparison
 predicnuevos;Predicción Individuos Nuevos;Predict New Cases
 pred;Predicción;Prediction
+eliminar;Eliminar;Delete
+imputar;Imputar;Impute
 acerto;Acertó;Matched
 fallo;Falló;Failed
 knnl;K Vecinos Más Cercanos;K Nearest Neighbors
@@ -24,15 +26,15 @@ reporte;Generar Reporte;Generate Report
 acercade;Acerca De;About
 cargar;Cargar;Load
 trans;Transformar;Transform
-header;Encabezado;Header
-Rownames;Incluir nombre de filas;Rownames
-separador;Separador;Separator
+header;Nombre de Variables;Variables names
+Rownames;Nombre de Individuos;Row names
+separador;Separador de Datos;Data Separator
 coma;Coma;Comma
 puntocoma;Punto y coma;Semicolon
 tab;Espacio;Tab
-separadordec;Separador Decimal;Decimal Separator
+separadordec;Separador de Decimales;Decimal Separator
 punto;Punto;Point
-eliminana;Eliminar NA;Remove NA
+eliminana;Acción para Datos Ausentes (NAs);Action for Missing Data (NAs)
 si;SI;YES
 no;NO;NO
 prec;Precisión;Precision
@@ -73,8 +75,8 @@ habilitada;Habilitada;Enabled
 deshabilitada;Deshabilitada;Disabled
 seleccionarPredecir;Seleccionar la variable a predecir:;Select the variable to be predicted:
 propA;Partición de Aprendizaje:;Training partition:
-propP;Partición de Prueba;Test partition:
-VarsPred;Variables Predictoras:;Variables Predictoras:;Predictor Variables:
+propP;Partición de Prueba:;Test partition:
+VarsPred;Variables Predictoras:;Predictor Variables:
 generar;Generar;Generate
 generarM;Generar Modelo;Generate Model
 tipo;Tipo;Type
