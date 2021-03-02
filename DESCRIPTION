@@ -1,8 +1,8 @@
 Title: Predictive Data Analysis System
 Package: predictoR
 Type: Package
-Version: 1.1.5
-Author: Oldemar Rodriguez R. with contributions from Diego Jimenez A. and Andres Navarro D.
+Version: 1.1.6
+Author: Oldemar Rodriguez R. with contributions from Diego Jimenez A., Andres Navarro D. and Joseline Quirós M.
 Maintainer: Oldemar Rodriguez <oldemar.rodriguez@ucr.ac.cr>
 Depends: R (>= 3.5)
 Imports:
