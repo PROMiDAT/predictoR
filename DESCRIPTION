@@ -32,5 +32,5 @@ Description: Perform a supervised data analysis on a database through a 'shiny' 
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-URL: http://www.promidat.com
+URL: https://www.promidat.com
 RoxygenNote: 7.1.1
