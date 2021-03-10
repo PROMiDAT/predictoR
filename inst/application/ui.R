@@ -1296,14 +1296,14 @@ pagina.info <- tabItem(tabName = "acercaDe",
                        infoBoxPROMiDAT(labelInput("copyright"), "PROMiDAT S.A.", icono = icon("copyright")),
                        infoBoxPROMiDAT(labelInput("info"), tags$a( href="https://www.promidat.com/", style = "color:white;",
                                                                    target = "_blank", "https://www.promidat.com"), icono = icon("info")),
-                       infoBoxPROMiDAT(labelInput("version"), "1.1.6", icono = icon("file-code-o")))
+                       infoBoxPROMiDAT(labelInput("version"), "1.1.8", icono = icon("file-code-o")))
 
 # PAGINA COMPLETA ---------------------------------------------------------------------------------------------------------
 
 shinyUI(
-  dashboardPagePlus(
+  dashboardPage(
   title="PROMiDAT - PredictoR",
-  dashboardHeaderPlus(
+  dashboardHeader(
     title = tags$a(href="http://promidat.com", target = "_blank",
                    img(src="Logo2.png", height=55, width="100%",
                        id="imgPromidat"))),
