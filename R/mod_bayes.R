@@ -218,10 +218,10 @@ mod_bayes_server <- function(input, output, session, updateData){
   }
   
   limpiar <- function(){
-    limpia.bayes(1)
-    limpia.bayes(2)
-    limpia.bayes(3)
-    limpia.bayes(4)
+        limpia.bayes(1)
+        limpia.bayes(2)
+        limpia.bayes(3)
+        limpia.bayes(4)
   }
 }
     

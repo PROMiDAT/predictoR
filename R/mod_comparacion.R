@@ -54,19 +54,18 @@ mod_comparacion_server <- function(input, output, session, updateData){
   })
 
 observeEvent(updateData$selector.comparativa, {
-  nombres <- updateData$selector.comparativa
-  shinyWidgets::updateCheckboxGroupButtons(session,"select.models",choices = sort(nombres),selected = sort(nombres),
-                                           status = "primary",checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                                               no = icon("remove", lib = "glyphicon")))
-
+    nombres <- updateData$selector.comparativa
+    shinyWidgets::updateCheckboxGroupButtons(session,"select.models",choices = sort(nombres),selected = sort(nombres),
+                                             status = "primary",checkIcon = list(yes = icon("ok", lib = "glyphicon"),
+                                                                                 no = icon("remove", lib = "glyphicon")))
 })
 
 observeEvent(updateData$roc, {
-  ejecutar.roc()
+    ejecutar.roc()
 })
 
 observeEvent(input$runComp, {
-  ejecutar.roc()
+    ejecutar.roc()
 })
 
 ejecutar.roc <- function(){
