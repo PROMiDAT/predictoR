@@ -1,4 +1,4 @@
-# -------------------  BOOSTING
+# -------------------      BOOSTING
 
 cod.b.modelo <<-  NULL
 cod.b.pred <<-  NULL
