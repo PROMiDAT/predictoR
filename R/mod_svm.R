@@ -133,7 +133,7 @@ mod_svm_server <- function(input, output, session, updateData){
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.svm.",kernel))
       
-      updatePlot$roc <- !updatePlot$roc 
+      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { 
       limpia.svm(2)
@@ -166,6 +166,7 @@ mod_svm_server <- function(input, output, session, updateData){
   ejecutar.svm.ind <- function(){
     idioma <- updateData$idioma
     kernel <- isolate(input$kernel.svm)
+    
     if(exists(paste0("MC.svm.",kernel))){
       tryCatch({ 
         isolate(exe(cod.svm.ind))
@@ -180,12 +181,12 @@ mod_svm_server <- function(input, output, session, updateData){
         output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma)), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
         
-        output$svmIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")), spacing = "xs",
+        output$svmIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.svm.",kernel))
         IndicesM[[paste0("svml-",kernel)]] <<- indices.svm
-        updateData$selector.comparativa <- actualizar.selector.comparativa()
+        updateData$selector.comparativa    <- actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.svm(4)
@@ -226,6 +227,7 @@ mod_svm_server <- function(input, output, session, updateData){
     tryCatch({
       datos <- updateData$datos
       codigo <- updatePlot$svm.graf
+      
       if(!is.null(codigo) & codigo != ""){
         exe(codigo)
       }else{
@@ -238,10 +240,12 @@ mod_svm_server <- function(input, output, session, updateData){
         return(NULL)
       })
   })
+  
   # Cuando cambia el codigo del grafico de clasificacion svm
   observeEvent(c(input$runSvm),{
     variable.predecir <- updateData$variable.predecir
     datos <- updateData$datos
+    
     if (length(input$select_var_svm_plot) == 2){
       v <- colnames(datos)
       v <- v[v != variable.predecir]
@@ -271,7 +275,7 @@ mod_svm_server <- function(input, output, session, updateData){
         output$svmPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.svm.",input$kernel.svm,"<<- NULL")
-        output$txtSvmMC <- renderPrint(invisible(""))
+        output$txtSvmMC    <- renderPrint(invisible(""))
         output$plot_svm_mc <- renderPlot(NULL)
       }, {
         IndicesM[[paste0("svml-",input$kernel.svm)]] <<- NULL
@@ -286,17 +290,14 @@ mod_svm_server <- function(input, output, session, updateData){
   
   # Limpia los datos al momento de ejecutar run
   limpia.svm.run <- function(){
-        output$txtSvm <- renderPrint(invisible(""))
-  
-        output$svmPrediTable <- DT::renderDataTable(NULL)
-     
-        output$txtSvmMC <- renderPrint(invisible(""))
-        output$plot_svm_mc <- renderPlot(NULL)
- 
-        output$svmIndPrecTable <- shiny::renderTable(NULL)
-        output$svmIndErrTable  <- shiny::renderTable(NULL)
-        output$svmPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$svmErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$txtSvm           <- renderPrint(invisible(""))
+        output$svmPrediTable    <- DT::renderDataTable(NULL)
+        output$txtSvmMC         <- renderPrint(invisible(""))
+        output$plot_svm_mc      <- renderPlot(NULL)
+        output$svmIndPrecTable  <- shiny::renderTable(NULL)
+        output$svmIndErrTable   <- shiny::renderTable(NULL)
+        output$svmPrecGlob      <- flexdashboard::renderGauge(NULL)
+        output$svmErrorGlob     <- flexdashboard::renderGauge(NULL)
 }
   
   limpiar <- function(){

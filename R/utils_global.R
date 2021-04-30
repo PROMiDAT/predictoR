@@ -1,18 +1,18 @@
 # VARIABLES GLOBALES --------------------------------------------------------------------------------------------------------
 
 # -------------------  Datos
-datos <<- NULL
-datos.originales <<- NULL
-datos.prueba <<- NULL
+datos             <<- NULL
+datos.originales  <<- NULL
+datos.prueba      <<- NULL
 datos.aprendizaje <<- NULL
 variable.predecir <<- NULL
 
-nombres.modelos <<- c()
 # -------------------  Modelos
 
+nombres.modelos   <<- c()
 IndicesM <<- list()
-areas <<- list()
-scores <<- list()
+areas    <<- list()
+scores   <<- list()
 
 
 updatePlot <- reactiveValues(roc = FALSE, svm.graf = NULL)
@@ -35,14 +35,14 @@ obj.predic <- function(predic.var = NULL, idioma){
   if(is.numeric(predic.var$prediction)) {
     predic.var <- factor(predic.var, labels = levels(real))
   }
-  real <- as.character(real)
-  predi <- as.character(predic.var$prediction)
+  real   <- as.character(real)
+  predi  <- as.character(predic.var$prediction)
   acerto <- paste0("<span style='color:green'><b>",tr("acerto",idioma),"</b></span>")
   fallo  <- paste0("<span style='color:red'><b>",tr("fallo",idioma),"</b></span>")
-  df <- cbind(real, predi, ifelse(real == predi,
+  df     <- cbind(real, predi, ifelse(real == predi,
                                   rep(acerto, length(real)),
                                   rep(fallo, length(real)) ))
-  colns <- c(tr("reald", idioma), tr("pred", idioma), " ")
+  colns  <- c(tr("reald", idioma), tr("pred", idioma), " ")
   colnames(df) <- colns
   sketch <- htmltools::withTags(table(tableHeader(colns)))
   return(DT::datatable(df,
@@ -138,16 +138,16 @@ indices.generales <- function(MC) {
 
 #Crea la tabla de errores que se grafica en los indices de todos los modelos
 indices.error.table <- function(indices, nombre = ""){
-  err <- rbind(indices[[4]])
-  colnames(err) <- paste0(c("Error."), colnames(err))
+  err            <- rbind(indices[[4]])
+  colnames(err)  <- paste0(c("Error."), colnames(err))
   row.names(err) <- nombre
   return(err)
 }
 
 #Crea la tabla de precisiones que se grafica en los indices de todos los modelos
 indices.prec.table <- function(indices, nombre = "", idioma){
-  prec <- rbind(indices[[3]])
-  colnames(prec) <- paste0(tr("prec", idioma),".",colnames(prec))
+  prec            <- rbind(indices[[3]])
+  colnames(prec)  <- paste0(tr("prec", idioma),".",colnames(prec))
   row.names(prec) <- nombre
   return(prec)
 }
@@ -192,6 +192,76 @@ as.string.c <- function(vect, .numeric = FALSE){
   else{
     return(paste0("c('",paste0(vect, collapse = "','"),"')"))
   }
+}
+
+#Funciones tomadas del paquete dummies
+
+dummy.data.frame<-function (data, names = NULL, omit.constants = TRUE, dummy.classes = getOption("dummy.classes"), 
+                            all = TRUE, ...) 
+{
+  df <- data.frame(row.names = row.names(data))
+  new.attr <- list()
+  for (nm in names(data)) {
+    
+    old.attr <- attr(df, "dummies")
+    if (isTRUE(nm %in% names || (is.null(names) && (dummy.classes == 
+                                                    "ALL" || class(data[, nm]) %in% dummy.classes)))) {
+      dummies <- dummy(nm, data, ...)
+      if (ncol(dummies) == 1 & omit.constants) {
+        dummies <- matrix(nrow = nrow(data), ncol = 0)
+      }
+      if (ncol(dummies) > 0) 
+        new.attr[[nm]] <- (ncol(df) + 1):(ncol(df) + 
+                                            ncol(dummies))
+    }
+    else {
+      if (!all) 
+        (next)()
+      dummies <- data[, nm, drop = FALSE]
+    }
+    df <- cbind(df, dummies)
+    print(df)
+  }
+  attr(df, "dummies") <- new.attr
+  return(df)
+}
+
+dummy <- function (x, data = NULL, sep = "", drop = TRUE, fun = as.integer, 
+                   verbose = FALSE) 
+{
+  if (is.null(data)) {
+    name <- as.character(sys.call(1))[2]
+    name <- sub("^(.*\\$)", "", name)
+    name <- sub("\\[.*\\]$", "", name)
+  }
+  else {
+    if (length(x) > 1) 
+      stop("More than one variable provided to produce dummy variable.")
+    name <- x
+    x <- data[, name]
+  }
+  if (drop == FALSE && class(x) == "factor") {
+    x <- factor(x, levels = levels(x), exclude = NULL)
+  }
+  else {
+    x <- factor(x, exclude = NULL)
+  }
+  if (length(levels(x)) < 2) {
+    if (verbose) 
+      warning(name, " has only 1 level. Producing dummy variable anyway.")
+    return(matrix(rep(1, length(x)), ncol = 1, dimnames = list(rownames(x), 
+                                                               c(paste(name, sep, x[[1]], sep = "")))))
+  }
+  mm <- model.matrix(~x - 1, model.frame(~x - 1), contrasts = FALSE)
+  colnames.mm <- colnames(mm)
+  if (verbose) 
+    cat(" ", name, ":", ncol(mm), "dummy varibles created\n")
+  mm <- matrix(fun(mm), nrow = nrow(mm), ncol = ncol(mm), dimnames = list(NULL, 
+                                                                          colnames.mm))
+  colnames(mm) <- sub("^x", paste(name, sep, sep = ""), colnames(mm))
+  if (!is.null(row.names(data))) 
+    rownames(mm) <- rownames(data)
+  return(mm)
 }
 
 #Funciones tomadas del paquete rpart
@@ -249,11 +319,11 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
            y, col = hist.col)
     }
     else {
-      h <- hist(x, breaks = breaks, plot = FALSE)
+      h      <- hist(x, breaks = breaks, plot = FALSE)
       breaks <- h$breaks
       nB <- length(breaks)
-      y <- h$counts
-      y <- y/max(y)
+      y  <- h$counts
+      y  <- y/max(y)
       rect(breaks[-nB], 0, breaks[-1], y, col = hist.col)
     }
     if (density) {
@@ -319,10 +389,10 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
     ok <- is.finite(x) & is.finite(y)
     if (any(ok)) {
       if (smooth & ci) {
-        lml <- loess(y ~ x, degree = 1, family = "symmetric")
+        lml   <- loess(y ~ x, degree = 1, family = "symmetric")
         tempx <- data.frame(x = seq(min(x, na.rm = TRUE),
                                     max(x, na.rm = TRUE), length.out = 47))
-        pred <- predict(lml, newdata = tempx, se = TRUE)
+        pred  <- predict(lml, newdata = tempx, se = TRUE)
         if (ci) {
           upperci <- pred$fit + confid * pred$se.fit
           lowerci <- pred$fit - confid * pred$se.fit
@@ -369,7 +439,7 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
       if (ci) {
         tempx <- data.frame(x = seq(min(x, na.rm = TRUE),
                                     max(x, na.rm = TRUE), length.out = 47))
-        pred <- predict.lm(lml, newdata = tempx, se.fit = TRUE)
+        pred    <- predict.lm(lml, newdata = tempx, se.fit = TRUE)
         upperci <- pred$fit + confid * pred$se.fit
         lowerci <- pred$fit - confid * pred$se.fit
         polygon(c(tempx$x, rev(tempx$x)), c(lowerci,
@@ -390,7 +460,7 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
   }
   "draw.ellipse" <- function(x = 0, y = 0, xs = 1, ys = 1,
                              r = 0, col.smooth, add = TRUE, segments = 51, ...) {
-    angles <- (0:segments) * 2 * pi/segments
+    angles      <- (0:segments) * 2 * pi/segments
     unit.circle <- cbind(cos(angles), sin(angles))
     if (!is.na(r)) {
       if (abs(r) > 0)
@@ -479,9 +549,6 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
     }
   }
 }
-
-
-
 
 #Colores de ggplot2
 gg_color_hue <- function(n) {

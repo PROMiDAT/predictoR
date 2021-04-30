@@ -1,9 +1,9 @@
 # -------------------  LR
 
 cod.rl.modelo <<-  NULL
-cod.rl.pred <<-  NULL
-cod.rl.mc <<- NULL
-cod.rl.ind <<- NULL
+cod.rl.pred   <<-  NULL
+cod.rl.mc     <<- NULL
+cod.rl.ind    <<- NULL
 
 # Pagina de RL --------------------------------------------------------------------------------------------------------------
 
@@ -15,13 +15,11 @@ rl.modelo <- function(variable.predecir = NULL){
 
 rl.modelo.np <- function(variable.pr = ""){
   return(paste0("modelo.nuevos <<- traineR::train.glm(",variable.pr,"~., data = datos.aprendizaje.completos)"))
-  #return(paste0("modelo.nuevos <<- train.glm(",variable.predecir.pn,"~., data = datos.aprendizaje.completos, family = binomial)"))
 }
 
 #Codigo de la prediccion de rl
 rl.prediccion <- function() {
   return(paste0("prediccion.rl <<- predict(modelo.rl, datos.prueba, type = 'class')"))
-  
 }
 
 rl.prediccion.np <- function() {

@@ -69,22 +69,22 @@ colnames.empty <- function(res){
 
 #Obtiene los nombres de columnas o regresa un string vacio
 borrar.modelos <- function(updateData){
-  updateData$datos.prueba <- NULL
-  updateData$datos.aprendizaje <- NULL
-  updateData$variable.predecir <- NULL
+  updateData$datos.prueba         <- NULL
+  updateData$datos.aprendizaje    <- NULL
+  updateData$variable.predecir    <- NULL
   updateData$selector.comparativa <- NULL
 }
 
 # Borra los datos de los modelos
 borrar.datos.modelos <- function(flag.datos = TRUE) {
   if (flag.datos) {
-    datos.prueba <<- NULL
+    datos.prueba      <<- NULL
     datos.aprendizaje <<- NULL
     variable.predecir <<- NULL
   }
   
-  areas <<- list()
-  scores <<- list()
+  areas    <<- list()
+  scores   <<- list()
   IndicesM <<- list()
   
   nombres.modelos <<- c()

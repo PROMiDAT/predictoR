@@ -1,11 +1,11 @@
 # -------------------  Prediccion Nuevos
-datos.originales.completos <<- NULL
+datos.originales.completos  <<- NULL
 datos.aprendizaje.completos <<- NULL
-datos.prueba.completos <<- NULL
-variable.predecir.np <<- NULL
+datos.prueba.completos      <<- NULL
+variable.predecir.np        <<- NULL
 
 modelo.seleccionado.pn <<- NULL
-contadorPN <<- 0
+contadorPN    <<- 0
 code.trans.pn <<- ""
 
 modelo.nuevos <<- NULL
@@ -14,11 +14,11 @@ predic.nuevos <<- NULL
 
 borrar.datos <- function (newCases, prueba = FALSE){
   if(!prueba){
-  newCases$originales <- NULL
+  newCases$originales        <- NULL
   newCases$datos.aprendizaje <- NULL
   newCases$variable.predecir <- NULL
   }
-  newCases$datos <- NULL
+  newCases$datos        <- NULL
   newCases$datos.prueba <- NULL
 }
 

@@ -10,13 +10,15 @@
 mod_penalized_l_r_ui <- function(id){
   ns <- NS(id)
   opciones.rlr <- list(options.run(ns("runRlr")), tags$hr(style = "margin-top: 0px;"),
-                       fluidRow(col_6(selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
+                       fluidRow(col_6(
+                                      selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
                                                    choices = list("Ridge" = 0, "Lasso" = 1))),
-                                col_6(br(), switchInput(inputId = ns("switch.scale.rlr"), onStatus = "success", offStatus = "danger", value = T,
-                                                         label = labelInput("escal"), onLabel = labelInput("si"), offLabel = labelInput("no"), labelWidth = "100%"))),
-                       fluidRow(col_6(id = ns("colManualLanda"),numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
-                                col_6(switchInput(inputId = ns("permitir.landa"), onStatus = "success", offStatus = "danger", value = F, width = "100%",
-                                                              label = "", onLabel = "Manual", offLabel = labelInput("automatico"), labelWidth = "100%"))))
+                                col_6(
+                                      radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
+                       fluidRow(col_6(id = ns("colManualLanda"),br(),
+                                      numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
+                                col_6(
+                                      radioSwitch(ns("permitir.landa"), "", c("manual", "automatico")))))
   
   codigo.rlr  <- list(conditionalPanel("input.BoxRlr == 'tabRlrModelo'",
                                        codigo.monokai(ns("fieldCodeRlr"), height = "10vh")),
@@ -38,19 +40,24 @@ mod_penalized_l_r_ui <- function(id){
     tabBoxPrmdt(
       id = "BoxRlr", opciones = opc_rlr,
       tabPanel(title = labelInput("generatem"),value = "tabRlrModelo",
-               verbatimTextOutput(ns("txtRlr"))),
+               withLoader(verbatimTextOutput(ns("txtRlr")), 
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("posibLanda"),value = "tabRlrPosibLanda",
-               plotOutput(ns('plot.rlr.posiblanda'), height = "55vh")),
+               withLoader(plotOutput(ns('plot_rlr_posiblanda'), height = "55vh"), 
+               type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("gcoeff"),value = "tabRlrLanda",
-               plotOutput(ns('plot.rlr.landa'), height = "55vh")),
+               withLoader(plotOutput(ns('plot_rlr_landa'), height = "55vh"), 
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabRlrPred",
-               DT::dataTableOutput(ns("rlrPrediTable"))),
+               withLoader(DT::dataTableOutput(ns("rlrPrediTable")), 
+               type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("mc"), value = "tabRlrMC",
-               plotOutput(ns('plot.rlr.mc'), height = "45vh"),
+               withLoader(plotOutput(ns('plot_rlr_mc'), height = "45vh"), 
+                          type = "html", loader = "loader4"),
                verbatimTextOutput(ns("txtrlrMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabRlrIndex",
@@ -67,11 +74,11 @@ mod_penalized_l_r_ui <- function(id){
 #' @noRd 
 mod_penalized_l_r_server <- function(input, output, session, updateData){
   ns <- session$ns
-  
-  # observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-  #   limpiar()
-  #   default.codigo.rlr()
-  # })
+
+  observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    limpiar()
+    #default.codigo.rlr()
+  })
   # # 
   # # observeEvent(updateData$idioma, {
   # #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
@@ -86,7 +93,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   #     rlr.full()
   #   }
   # }, priority =  -5)
-  # 
+
 
   # Habilitada o deshabilitada la semilla
   observeEvent(input$permitir.landa, {
@@ -119,7 +126,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   
   # Genera el modelo
   ejecutar.rlr <- function() {
-    tryCatch({ # Se corren los codigo
+    tryCatch({ 
       isolate(tipo <- rlr.type())
       isolate(exe(cod.rlr.modelo))
       
@@ -137,12 +144,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   
   # Genera la prediccion
   ejecutar.rlr.pred <- function() {
-    tryCatch({ # Se corren los codigo
+    tryCatch({  
       exe(cod.rlr.pred)
       idioma <- updateData$idioma
-      landa <- get_landa_rlr()
-      tipo <- rlr.type()
-      landa <- ifelse(is.null(landa),paste0("cv.glm.",tipo,"$lambda.min"), landa)
+      landa  <- get_landa_rlr()
+      tipo   <- rlr.type()
+      landa  <- ifelse(is.null(landa),paste0("cv.glm.",tipo,"$lambda.min"), landa)
       
       pred   <- predict(exe("modelo.rlr.",tipo), datos.prueba, type = "prob")
       scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,2]
@@ -160,16 +167,16 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   
   # Genera la matriz de confusion
   ejecutar.rlr.mc <- function() {
-    tipo <- rlr.type()
+    tipo   <- rlr.type()
     idioma <- updateData$idioma
     
     if(exists(paste0("prediccion.rlr.",tipo))){
-      tryCatch({ # Se corren los codigo
+      tryCatch({  
         exe(cod.rlr.mc)
         output$txtrlrMC <- renderPrint(print(exe("MC.rlr.",tipo)))
         
         exe(plot.MC.code(idioma = idioma))
-        output$plot.rlr.mc <- renderPlot(exe("plot.MC(MC.rlr.",tipo,")"))
+        output$plot_rlr_mc <- renderPlot(exe("plot.MC(MC.rlr.",tipo,")"))
         
         nombres.modelos <<- c(nombres.modelos, paste0("MC.rlr.",tipo))
       },
@@ -183,9 +190,9 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   # Genera los indices
   ejecutar.rlr.ind <- function() {
     idioma <- updateData$idioma
-    tipo <- rlr.type()
-    if(exists(paste0("prediccion.rlr.",tipo))){
-      tryCatch({ # Se corren los codigo
+    tipo   <- rlr.type()
+    if(exists(paste0("MC.rlr.",tipo))){
+      tryCatch({  
         isolate(exe(cod.rlr.ind))
         indices.rlr <- exe("indices.generales(MC.rlr.",tipo,")")
         eval(parse(text = paste0("indices.rlr.",tipo, "<<- indices.rlr")))
@@ -196,7 +203,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         # Cambia la tabla con la indices de rl
         output$rlrIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rlr,"RLR", idioma = idioma)), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
-        output$rlrIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rlr,"RLR")), spacing = "xs",
+        output$rlrIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.rlr,"RLR")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.rlr.",tipo))
@@ -209,13 +216,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       })
     }
   }
+  
   # Acualiza el codigo a la version por defecto
   default.codigo.rlr <- function(){
     landa <- get_landa_rlr()
     tipo  <- rlr.type()
-    # Se acualiza el codigo del modelo
+    # Se actualiza el codigo del modelo
     codigo <- rlr.modelo(variable.pr = variable.predecir,
-                         tipo,
+                         type        = tipo,
                          input$alpha.rlr,
                          input$switch.scale.rlr)
     
@@ -225,13 +233,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     # Se genera el codigo del posible landa
     codigo <- select.landa(variable.predecir,
                            input$alpha.rlr,
-                           input$switch.scale.rlr)
+                           input$switch.scale.rlr,
+                           tipo)
     
     updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
     cod.select.landa <<- codigo
     
     #Se genera el codigo de los coeficientes con el mejor landa
-    codigo <- plot.coeff.landa(landa)
+    codigo <- plot.coeff.landa(landa, tipo)
     updateAceEditor(session, "fieldCodeRlrLanda", value = codigo)
     
     # Se genera el codigo de la prediccion
@@ -251,25 +260,25 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   }
   
   plot.posib.landa.rlr <- function(){
-    tryCatch({ # Se corren los codigo
+    tryCatch({  
       isolate(exe(cod.select.landa))
       isolate(tipo <- rlr.type())
-      output$plot.rlr.posiblanda <- renderPlot(exe("plot(cv.glm.",tipo,")"))
+      output$plot_rlr_posiblanda <- renderPlot(exe("plot(cv.glm.",tipo,")"))
      },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
-      limpia.rlr(2)
+      limpia.rlr(1)
       showNotification(paste0("Error (R/L-01) : ", e), duration = 15, type = "error")
     })
   }
   
   plot.coeff <- function(){
-    tryCatch({ # Se corren los codigo
+    tryCatch({  
       isolate(tipo <- rlr.type())
       isolate(codigo <- input$fieldCodeRlrLanda)
-      output$plot.rlr.landa <- renderPlot(isolate(exe(codigo)))
+      output$plot_rlr_landa <- renderPlot(isolate(exe(codigo)))
     },
     error = function(e){ # Regresamos al estado inicial y mostramos un error
-      limpia.rlr(2)
+      limpia.rlr(1)
       showNotification(paste0("Error (R/L-01) : ", e), duration = 15, type = "error")
     })
   }
@@ -283,17 +292,17 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     tipo <- rlr.type()
     for(i in capa:4){
       switch(i, {
-        modelo.rlr <<- NULL
+        modelo.rlr    <<- NULL
         output$txtRlr <- renderPrint(invisible(""))
       }, {
-        prediccion.rlr <<- NULL
+        prediccion.rlr       <<- NULL
         output$rlrPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.rlr.",tipo," <<- NULL")
-        output$plot.rlr.mc <- renderPlot(NULL)
-        output$txtrlrMC <- renderPrint(invisible(NULL))
+        output$plot_rlr_mc <- renderPlot(NULL)
+        output$txtrlrMC    <- renderPrint(invisible(NULL))
       },{
-        indices.rlr <<- rep(0, 10)
+        indices.rlr            <<- rep(0, 10)
         output$rlrIndPrecTable <- shiny::renderTable(NULL)
         output$rlrIndErrTable  <- shiny::renderTable(NULL)
         output$rlrPrecGlob     <-  flexdashboard::renderGauge(NULL)

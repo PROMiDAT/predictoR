@@ -31,16 +31,16 @@ tabla.comparativa <- function(sel, nombres, idioma) {
     if(nombres[1] == "---X---") {
       return(data.frame())
     }
-    resp <- lapply(IndicesM, function(x)t(as.data.frame(unlist(x))))
-    resp <- as.data.frame(do.call(rbind, resp))
-    selector <- (ncol(resp)-num.categorias.pred() + 1):ncol(resp)
-    resp <- resp[,-selector,drop = FALSE]
-    resp <- cbind(resp, replace(unlist(areas[nombres]),is.null(unlist(areas[nombres])),NA))
+    resp      <- lapply(IndicesM, function(x)t(as.data.frame(unlist(x))))
+    resp      <- as.data.frame(do.call(rbind, resp))
+    selector  <- (ncol(resp)-num.categorias.pred() + 1):ncol(resp)
+    resp      <- resp[,-selector,drop = FALSE]
+    resp      <- cbind(resp, replace(unlist(areas[nombres]),is.null(unlist(areas[nombres])),NA))
     rownames(resp) <- nombres
     colnames(resp) <- c(tr('precG', idioma),tr("errG", idioma), levels(datos.aprendizaje[,variable.predecir]), tr('aROC', idioma))
-    resp[] <- lapply(resp, as.numeric)
-    resp <- round(resp, 4)
-    resp <- resp[nombres %in% sel,]
+    resp[]    <- lapply(resp, as.numeric)
+    resp      <- round(resp, 4)
+    resp      <- resp[nombres %in% sel,]
     return(resp)
     
   }, error = function(e){
@@ -70,8 +70,8 @@ calcular.areas <- function(sel) {
 
 #Calcula el area de la curva ROC
 areaROC <- function(prediccion,real) {
-  pred <- ROCR::prediction(prediccion,real)
-  auc <- ROCR::performance(pred,"auc")
+  pred  <- ROCR::prediction(prediccion,real)
+  auc   <- ROCR::performance(pred,"auc")
   return(attributes(auc)$y.values[[1]])
 }
 
@@ -87,15 +87,15 @@ plotROCInd <- function(prediccion,real,adicionar=FALSE,color="red") {
 #Hace el grafico de la curba de roc de los modelos
 plotROC <- function(sel) {
 
-  clase <- datos.prueba[,variable.predecir]
-  col <- gg_color_hue(length(scores))
+  clase   <- datos.prueba[,variable.predecir]
+  col     <- gg_color_hue(length(scores))
   nombres <- c()
   colores <- c()
   adicionar <- FALSE
-  index <- 1
+  index   <- 1
   
   nombres.tr <- unlist(lapply(names(scores), split_name))
-  SCORES <<- scores[nombres.tr %in% sel]
+  SCORES     <<- scores[nombres.tr %in% sel]
   nombres.tr <- nombres.tr[nombres.tr %in% sel]
   
   if(length(SCORES) == 0) {
@@ -111,9 +111,9 @@ plotROC <- function(sel) {
         }
     }
     adicionar <- TRUE
-    colores <- c(colores, col[index])
-    nombres <- c(nombres, nombres.tr[index])
-    index <- index + 1
+    colores   <- c(colores, col[index])
+    nombres   <- c(nombres, nombres.tr[index])
+    index     <- index + 1
   }
   legend(x=0.85, y=0.8, legend = nombres, bty = "n", pch=19 ,
          col = colores , text.col = "black", cex=0.7, pt.cex=0.7)

@@ -78,7 +78,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     
     tryCatch({
       data <- updateData$datos[, var]
-      cod <- code.dist.varpred(var)
+      cod  <- code.dist.varpred(var)
       updateAceEditor(session, "fieldCodeDistpred", value = cod)
       datos <- data.frame (
         label = levels(data), 
@@ -165,12 +165,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
-    #Incluir alguna de estas librerias en DESCRIPTION para grafico de categoricos
-    #library(forcats)
-    #library(ggplot2)
-    #library(dplyr)
-    #library(lubridate)
-    #library(scales)
+
     tryCatch({
       cod.poder.dist.cat <- code.plot.dist.cat(variable.cat,variable.pred,label=tr("denspodlab",idioma))
       updateAceEditor(session, "fieldCodeDistpredcat", value = cod.poder.dist.cat)

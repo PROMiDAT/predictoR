@@ -1,9 +1,9 @@
 # -------------------  LR
 
 cod.rlr.modelo <<-  NULL
-cod.rlr.pred <<-  NULL
-cod.rlr.mc <<- NULL
-cod.rlr.ind <<- NULL
+cod.rlr.pred   <<-  NULL
+cod.rlr.mc     <<- NULL
+cod.rlr.ind    <<- NULL
 cod.select.landa <<- NULL
 
 
@@ -23,15 +23,15 @@ rlr.modelo.np <- function(alpha = 0, escalar = TRUE, manual = FALSE, landa = 2){
                 "modelo.nuevos <<- glmnet(x, y,standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')"))
 }
 
-select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
+select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "ridge"){
   paste0("x <- model.matrix(",variable.pr,"~., datos.aprendizaje)[, -1]\n",
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",
-         "cv.glm.",rlr.type()," <<- cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')")
+         "cv.glm.",type," <<- cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')")
 }
 
-plot.coeff.landa <- function(landa = NULL){
-  landa <- ifelse(is.null(landa),paste0("cv.glm.",rlr.type(),"$lambda.min"), landa)
-  paste0("plot(modelo.rlr.",rlr.type(),", 'lambda', label = TRUE)\n",
+plot.coeff.landa <- function(landa = NULL, type = "ridge"){
+  landa <- ifelse(is.null(landa),paste0("cv.glm.",type,"$lambda.min"), landa)
+  paste0("plot(modelo.rlr.",type,", 'lambda', label = TRUE)\n",
          "abline(v = log(",landa,"), col = 'blue', lwd = 2, lty = 3)")
 }
 
@@ -52,4 +52,4 @@ rlr.prediccion.np <- function(alpha = 0, escalar = TRUE, manual = FALSE, landa =
 #Codigo de la matriz de confucion de rlr
 rlr.MC <- function(type = "ridge"){
   return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
-  }
+}

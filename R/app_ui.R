@@ -9,7 +9,6 @@
 #' @import ggplot2
 #' @import shinyAce
 #' @import echarts4r
-#' @import shinyglide
 #' @import htmltools
 #' @import shinycustomloader
 #' @import shinydashboardPlus
@@ -18,7 +17,6 @@
 #' @importFrom forcats fct_reorder
 #' @importFrom shinyWidgets switchInput checkboxGroupButtons radioGroupButtons
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
-# @importFrom ggdendro label
 #' @importFrom DT tableHeader formatStyle
 #' @importFrom utils read.table write.csv
 #' @importFrom stats cor cutree hclust median na.omit
@@ -92,6 +90,8 @@ app_ui <- function(request) {
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
+                   icon = icon("info")),
+          menuItem(labelInput("acercade"), tabName = "wizard",
                    icon = icon("info")),
           hr(),
           menu.idioma(),
@@ -186,7 +186,11 @@ app_ui <- function(request) {
           
           # Acerca De
           tabItem(tabName = "acercaDe", 
-                  mod_acercade_ui("acercade_ui_1"))
+                  mod_acercade_ui("acercade_ui_1")),       
+          
+          # Acerca De
+          tabItem(tabName = "wizard", 
+                  mod_wizard_ui("wizard_ui_1"))
         )
       )
     )

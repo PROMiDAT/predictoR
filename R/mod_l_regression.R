@@ -110,7 +110,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
  
   rl.full <- function() {
     if (length(levels(datos[, variable.predecir])) == 2) {
-      ejecutar.rl()
+       ejecutar.rl()
        ejecutar.rl.pred()
        ejecutar.rl.mc()
        ejecutar.rl.ind()
@@ -120,7 +120,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
   ejecutar.rl <- function() {
     tryCatch({
       exe(cod.rl.modelo)
-      output$txtrl <- renderPrint(exe("modelo.rl"))
+      output$txtrl    <- renderPrint(exe("modelo.rl"))
       nombres.modelos <<- c(nombres.modelos, "modelo.rl")
     },
     error = function(e) { 
@@ -140,7 +140,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
       output$rlPrediTable <- DT::renderDataTable(obj.predic(prediccion.rl, idioma = idioma), server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, "prediccion.rl")
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { 
       limpia.rl(2)
@@ -159,7 +159,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
         exe(plot.MC.code(idioma = idioma))
         output$plot_rl_mc <- renderPlot(plot.MC(MC.rl))
         
-        nombres.modelos <<- c(nombres.modelos, "MC.rl")
+        nombres.modelos   <<- c(nombres.modelos, "MC.rl")
       },
       error = function(e) { 
         limpia.rl(3)
@@ -182,9 +182,9 @@ mod_l_regression_server <- function(input, output, session, updateData){
         
         output$rlIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rl,"RL", idioma = idioma)), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-        output$rlIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rl,"RL")), spacing = "xs",
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
-        nombres.modelos <<- c(nombres.modelos, "indices.rl")
+        output$rlIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.rl,"RL")), spacing = "xs",
+                                                    bordered = T, width = "100%", align = "c", digits = 2)
+        nombres.modelos  <<- c(nombres.modelos, "indices.rl")
         IndicesM[["rl"]] <<- indices.rl
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         
@@ -200,18 +200,18 @@ mod_l_regression_server <- function(input, output, session, updateData){
   limpia.rl <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
-        modelo.rl <<- NULL
+        modelo.rl    <<- NULL
         output$txtrl <- renderPrint(invisible(""))
       }, {
-        prediccion.rl <<- NULL
+        prediccion.rl       <<- NULL
         output$rlPrediTable <- DT::renderDataTable(NULL)
       }, {
-        MC.rl<<- NULL
+        MC.rl             <<- NULL
         output$plot_rl_mc <- renderPlot(NULL)
-        output$txtrlMC <- renderPrint(invisible(NULL))
+        output$txtrlMC    <- renderPrint(invisible(NULL))
       }, {
-        indices.rl <<- NULL
-        IndicesM[["rl"]] <<- NULL
+        indices.rl            <<- NULL
+        IndicesM[["rl"]]      <<- NULL
         output$rlIndPrecTable <- shiny::renderTable(NULL)
         output$rlIndErrTable  <- shiny::renderTable(NULL)
         output$rlPrecGlob     <-  flexdashboard::renderGauge(NULL)
@@ -222,14 +222,14 @@ mod_l_regression_server <- function(input, output, session, updateData){
   }
   
   limpia.rl.run <- function() {
-        output$txtrl <- renderPrint(invisible(""))
-        output$rlPrediTable <- DT::renderDataTable(NULL)
-        output$plot_rl_mc <- renderPlot(NULL)
-        output$txtrlMC <- renderPrint(invisible(NULL))
+        output$txtrl          <- renderPrint(invisible(""))
+        output$rlPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_rl_mc     <- renderPlot(NULL)
+        output$txtrlMC        <- renderPrint(invisible(NULL))
         output$rlIndPrecTable <- shiny::renderTable(NULL)
         output$rlIndErrTable  <- shiny::renderTable(NULL)
-        output$rlPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$rlErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$rlPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$rlErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
   limpiar <- function(){

@@ -2,15 +2,15 @@
 # -------------------  KNN
 
 cod.knn.modelo <<-  NULL
-cod.knn.pred <<-  NULL
-cod.knn.mc <<- NULL
-cod.knn.ind <<- NULL
+cod.knn.pred   <<-  NULL
+cod.knn.mc     <<- NULL
+cod.knn.ind    <<- NULL
 
 
 ###############################Generar Codigo##############################################
 code.kkn.modelo <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
-  kmax <- ifelse(!is.numeric(kmax), round(sqrt(nrow(datos.aprendizaje))), kmax)
   library(traineR)
+  kmax <- ifelse(!is.numeric(kmax), round(sqrt(nrow(datos.aprendizaje))), kmax)
   return(paste0("modelo.knn.",kernel," <<- traineR::train.knn(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
 }
 
@@ -24,8 +24,7 @@ knn.MC <- function(kernel = "optimal"){
   return(paste0("MC.knn.",kernel," <<- confusion.matrix(datos.prueba, prediccion.knn.",kernel,")","\n"))
 }
 
-
-###############################Generar Codigo Ind.Nuevos ##############################################
+###############################Generar Codigo Ind.Nuevos ##################################
 
 kkn.modelo.np <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
   kmax <- ifelse(!is.numeric(kmax), round(sqrt(nrow(datos.aprendizaje.completos))), kmax)

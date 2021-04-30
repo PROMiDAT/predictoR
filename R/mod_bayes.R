@@ -127,7 +127,7 @@ mod_bayes_server <- function(input, output, session, updateData){
       output$bayesPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.bayes"),idioma = idioma), server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, "prediccion.bayes")
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { 
       limpia.bayes(2)
@@ -169,9 +169,9 @@ mod_bayes_server <- function(input, output, session, updateData){
         
         output$bayesIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.bayes,"BAYES", idioma = idioma)), spacing = "xs",
                                                        bordered = T, width = "100%", align = "c", digits = 2)
-        output$bayesIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.bayes,"BAYES")), spacing = "xs",
+        output$bayesIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.bayes,"BAYES")), spacing = "xs",
                                                       bordered = T, width = "100%", align = "c", digits = 2)
-        nombres.modelos <<- c(nombres.modelos, "indices.bayes")
+        nombres.modelos     <<- c(nombres.modelos, "indices.bayes")
         IndicesM[["Bayes"]] <<- indices.bayes
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         },
@@ -186,18 +186,18 @@ mod_bayes_server <- function(input, output, session, updateData){
   limpia.bayes <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
-        modelo.bayes <<- NULL
+        modelo.bayes    <<- NULL
         output$txtbayes <- renderPrint(invisible(""))
       }, {
-        prediccion.bayes <<- NULL
+        prediccion.bayes       <<- NULL
         output$bayesPrediTable <- DT::renderDataTable(NULL)
       }, {
-        MC.bayes<<- NULL
+        MC.bayes             <<- NULL
         output$plot_bayes_mc <- renderPlot(NULL)
-        output$txtbayesMC <- renderPrint(invisible(NULL))
+        output$txtbayesMC    <- renderPrint(invisible(NULL))
       }, {
-        indices.bayes <<- NULL
-        IndicesM[["Bayes"]] <<- indices.bayes
+        indices.bayes            <<- NULL
+        IndicesM[["Bayes"]]      <<- indices.bayes
         output$bayesIndPrecTable <- shiny::renderTable(NULL)
         output$bayesIndErrTable  <- shiny::renderTable(NULL)
         output$bayesPrecGlob     <-  flexdashboard::renderGauge(NULL)
@@ -207,14 +207,14 @@ mod_bayes_server <- function(input, output, session, updateData){
   }
   # Limpia los datos segun el proceso donde se genera el error
   limpia.bayes.run <- function() {
-        output$txtbayes <- renderPrint(invisible(""))
-        output$bayesPrediTable <- DT::renderDataTable(NULL)
-        output$plot_bayes_mc <- renderPlot(NULL)
-        output$txtbayesMC <- renderPrint(invisible(NULL))
+        output$txtbayes          <- renderPrint(invisible(""))
+        output$bayesPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_bayes_mc     <- renderPlot(NULL)
+        output$txtbayesMC        <- renderPrint(invisible(NULL))
         output$bayesIndPrecTable <- shiny::renderTable(NULL)
         output$bayesIndErrTable  <- shiny::renderTable(NULL)
-        output$bayesPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$bayesErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$bayesPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$bayesErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
   limpiar <- function(){

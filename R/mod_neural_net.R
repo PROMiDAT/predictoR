@@ -95,9 +95,9 @@ mod_neural_net_server <- function(input, output, session, updateData){
 
   observeEvent(input$runNn, {
     if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { 
-      limpia.nn.run()
-      default.codigo.nn()
-      nn.full()
+        limpia.nn.run()
+        default.codigo.nn()
+        nn.full()
     }
   }, priority =  -5)
 
@@ -135,9 +135,9 @@ mod_neural_net_server <- function(input, output, session, updateData){
   nn.full <- function() {
      ejecutar.nn()
      if(NN_EXECUTION){
-       ejecutar.nn.pred()
-       ejecutar.nn.mc()
-       ejecutar.nn.ind()
+        ejecutar.nn.pred()
+        ejecutar.nn.mc()
+        ejecutar.nn.ind()
      }
   }
   
@@ -165,17 +165,16 @@ mod_neural_net_server <- function(input, output, session, updateData){
   ejecutar.nn.pred <- function() {
     idioma <- updateData$idioma
     tryCatch({ 
-      exe(cod.nn.pred)
+      isolate(exe(cod.nn.pred))
       pred   <- predict(exe("modelo.nn"), datos.prueba, type = "prob")
       scores[["nn"]] <<- pred$prediction[,2]
-      
+
       output$nnPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.nn"),idioma = idioma),server = FALSE)
       
        
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
       
-
     },
     error = function(e) { 
       limpia.nn(2)
@@ -190,7 +189,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
       
       tryCatch({ 
         exe(cod.nn.mc)
-        output$txtnnMC <- renderPrint(print(exe("MC.nn")))
+        output$txtnnMC    <- renderPrint(print(exe("MC.nn")))
         exe(plot.MC.code(idioma = idioma))
         output$plot_nn_mc <- renderPlot(exe("plot.MC(MC.nn)"))
          
@@ -215,7 +214,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
         
         output$nnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.nn,"Redes Neuronales", idioma = idioma)), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-        output$nnIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.nn,"Redes Neuronales")), spacing = "xs",
+        output$nnIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.nn,"Redes Neuronales")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
         
         IndicesM[["nn"]] <<- indices.nn
@@ -231,8 +230,12 @@ mod_neural_net_server <- function(input, output, session, updateData){
   plotear.red <- function(){
     idioma <- updateData$idioma
     tryCatch({
-      capas <- c(input$nn.cap.1,input$nn.cap.2,input$nn.cap.3,input$nn.cap.4,
-                 input$nn.cap.5,input$nn.cap.6,input$nn.cap.7,input$nn.cap.8,input$nn.cap.9,input$nn.cap.10)
+      capas <- c(input$nn.cap.1, input$nn.cap.2,
+                 input$nn.cap.3, input$nn.cap.4,
+                 input$nn.cap.5, input$nn.cap.6,
+                 input$nn.cap.7, input$nn.cap.8,
+                 input$nn.cap.9, input$nn.cap.10)
+      
       capas <- capas[1:input$cant.capas.nn]
       if(input$cant.capas.nn * sum(capas) <= 1500 & ncol(modelo.nn$covariate) <= 20){
         output$plot_nn <- renderPlot(isolate(exe(input$fieldCodeNnPlot)))
@@ -250,19 +253,19 @@ mod_neural_net_server <- function(input, output, session, updateData){
   limpia.nn <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
-        modelo.nn <<- NULL
-        output$txtnn <- renderPrint(invisible(""))
+        modelo.nn      <<- NULL
+        output$txtnn   <- renderPrint(invisible(""))
         output$plot_nn <- renderPlot(NULL)
       }, {
-        prediccion.nn <<- NULL
+        prediccion.nn       <<- NULL
         output$nnPrediTable <- DT::renderDataTable(NULL)
       }, {
-        MC.nn <<- NULL
+        MC.nn             <<- NULL
         output$plot_nn_mc <- renderPlot(NULL)
-        output$txtNnMC <- renderPrint(invisible(NULL))
+        output$txtNnMC    <- renderPrint(invisible(NULL))
       }, {
-        indices.nn <<- rep(0, 10)
-        IndicesM[["nn"]] <<- NULL
+        indices.nn            <<- rep(0, 10)
+        IndicesM[["nn"]]      <<- NULL
         output$nnIndPrecTable <- shiny::renderTable(NULL)
         output$nnIndErrTable  <- shiny::renderTable(NULL)
         output$nnPrecGlob     <-  flexdashboard::renderGauge(NULL)
@@ -272,11 +275,11 @@ mod_neural_net_server <- function(input, output, session, updateData){
   }
   
   limpia.nn.run <- function() {
-        output$txtnn <- renderPrint(invisible(""))
-        output$plot_nn <- renderPlot(NULL)
-        output$nnPrediTable <- DT::renderDataTable(NULL)
-        output$plot_nn_mc <- renderPlot(NULL)
-        output$txtNnMC <- renderPrint(invisible(NULL))
+        output$txtnn          <- renderPrint(invisible(""))
+        output$plot_nn        <- renderPlot(NULL)
+        output$nnPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_nn_mc     <- renderPlot(NULL)
+        output$txtNnMC        <- renderPrint(invisible(NULL))
         output$nnIndPrecTable <- shiny::renderTable(NULL)
         output$nnIndErrTable  <- shiny::renderTable(NULL)
         output$nnPrecGlob     <-  flexdashboard::renderGauge(NULL)

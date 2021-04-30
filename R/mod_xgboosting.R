@@ -107,19 +107,17 @@ mod_xgboosting_server <- function(input, output, session, updateData){
   ejecutar.xgb.pred <- function(){
     tryCatch({ 
       exe(cod.xgb.pred)
-      tipo <- input$boosterXgb
+      tipo   <- input$boosterXgb
       idioma <- updateData$idioma
-      pred <- predict(exe("modelo.xgb.",tipo), datos.prueba, type = "prob")
+      pred   <- predict(exe("modelo.xgb.",tipo), datos.prueba, type = "prob")
       scores[[paste0("xgb-",tipo)]] <<-pred$prediction[,2] 
 
       # Cambia la tabla con la prediccion de xgb
       output$xgbPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.xgb.",tipo),idioma = idioma),server = FALSE)
 
-      nombres.modelos <<- c(nombres.modelos,
-                            paste0("prediccion.xgb.",tipo),
-                            paste0("valor.var.xgb.",tipo))
+      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.xgb.",tipo))
 
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { 
       limpia.xgb(2)
@@ -139,7 +137,7 @@ mod_xgboosting_server <- function(input, output, session, updateData){
         exe(plot.MC.code(idioma = idioma))
         output$plot_xgb_mc <- renderPlot(exe("plot.MC(MC.xgb.",tipo,")"))
         
-        nombres.modelos <<- c(nombres.modelos, paste0("MC.xgb.",tipo))
+        nombres.modelos    <<- c(nombres.modelos, paste0("MC.xgb.",tipo))
       },
       error = function(e){ # Regresamos al estado inicial y mostramos un error
         limpia.xgb(3)
@@ -150,7 +148,8 @@ mod_xgboosting_server <- function(input, output, session, updateData){
   # Genera los indices
   ejecutar.xgb.ind <- function(){
     idioma <- updateData$idioma
-    tipo <- isolate(input$boosterXgb)
+    tipo   <- isolate(input$boosterXgb)
+    
     if(exists(paste0("MC.xgb.",tipo))){
       tryCatch({ # Se corren los codigo
         isolate(exe(cod.xgb.ind))
@@ -164,7 +163,7 @@ mod_xgboosting_server <- function(input, output, session, updateData){
         output$xgbIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.xgb,"XGB", idioma = idioma)), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
         
-        output$xgbIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.xgb,"XGB")), spacing = "xs",
+        output$xgbIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.xgb,"XGB")), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.xgb.",tipo))
@@ -179,7 +178,7 @@ mod_xgboosting_server <- function(input, output, session, updateData){
   }
   
   default.codigo.xgb <- function() {
-    tipo <- input$boosterXgb
+    tipo   <- input$boosterXgb
 
     codigo <- xgb.modelo(updateData$variable.predecir,
                               booster = tipo,
@@ -207,10 +206,10 @@ mod_xgboosting_server <- function(input, output, session, updateData){
   # Grafico de importancia
   plotear.xgb.imp <- function() {
     tryCatch({
-      tipo <- input$boosterXgb
+      tipo   <- input$boosterXgb
       codigo <- input$fieldCodeXgbImp
       output$plot_xgb <- renderPlot(exe(codigo))
-      cod <- ifelse(codigo == "", xgb.varImp(booster = tipo), codigo)
+      cod    <- ifelse(codigo == "", xgb.varImp(booster = tipo), codigo)
     }, error = function(e) {
       output$plot_xgb <- renderPlot(NULL)
     })
@@ -227,7 +226,7 @@ mod_xgboosting_server <- function(input, output, session, updateData){
       }, {
         exe("MC.xgb.",input$boosterXgb," <<- NULL")
         output$plot_xgb_mc <- renderPlot(NULL)
-        output$txtxgbMC <- renderPrint(invisible(NULL))
+        output$txtxgbMC    <- renderPrint(invisible(NULL))
       }, {
         exe("indices.xgb.",input$boosterXgb," <<- NULL")
         IndicesM[[paste0("xgb-",input$boosterXgb)]] <<- NULL
@@ -240,10 +239,10 @@ mod_xgboosting_server <- function(input, output, session, updateData){
   }
   
   limpia.xgb.run <- function() {
-        output$txtxgb <- renderPrint(invisible(""))
-        output$xgbPrediTable <- DT::renderDataTable(NULL)
-        output$plot_xgb_mc <- renderPlot(NULL)
-        output$txtxgbMC <- renderPrint(invisible(NULL))
+        output$txtxgb          <- renderPrint(invisible(""))
+        output$xgbPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_xgb_mc     <- renderPlot(NULL)
+        output$txtxgbMC        <- renderPrint(invisible(NULL))
         output$xgbIndPrecTable <- shiny::renderTable(NULL)
         output$xgbIndErrTable  <- shiny::renderTable(NULL)
         output$xgbPrecGlob     <-  flexdashboard::renderGauge(NULL)

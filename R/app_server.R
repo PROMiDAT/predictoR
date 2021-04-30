@@ -83,13 +83,18 @@ app_server <- function( input, output, session ) {
 
   
   ###################################  Modules  ###############################
+  #Carga de Datos
   callModule(mod_carga_datos_server,    "carga_datos_ui_1",    updateData)
+  
+  #Estadisticas Basicas
   callModule(mod_r_numerico_server,     "r_numerico_ui_1",     updateData)
   callModule(mod_normal_server,         "normal_ui_1",         updateData)
   callModule(mod_dispersion_server,     "dispersion_ui_1",     updateData)
   callModule(mod_distribuciones_server, "distribuciones_ui_1", updateData)
   callModule(mod_correlacion_server,    "correlacion_ui_1",    updateData)
   callModule(mod_poder_pred_server,     "poder_pred_ui_1",     updateData)
+  
+  #Aprendizaje Supervisado
   callModule(mod_knn_server,            "knn_ui_1",            updateData)
   callModule(mod_svm_server,            "svm_ui_1",            updateData)
   callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData)
@@ -100,6 +105,12 @@ app_server <- function( input, output, session ) {
   callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData)
   callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData)
   callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData)
+  
+  #Comparacion de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData)
+  
+  #Prediccion de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases)
+  
+  callModule(mod_wizard_server, "wizard_ui_1", updateData)
 }

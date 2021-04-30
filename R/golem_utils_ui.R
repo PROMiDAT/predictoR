@@ -411,6 +411,7 @@ tabBoxPrmdt <- function (..., id = NULL, title = NULL, opciones = NULL) {
   content
 }
 
+
 tabsOptions <- function(
   botones = list(icon("gear"), icon("code")), widths = c(50, 100),
   heights = c(100, 50), tabs.content = list("", "")
@@ -432,6 +433,29 @@ tabsOptions <- function(
         tabs.content[[i]]), "\n")
     codeButtons <- paste0(
       codeButtons, "<button style='width:", 100/cant, "%' data-widget='", 
+      widgets[i], "'>", botones[[i]], "</button>\n")
+  }
+  res <- paste0(
+    res, tags$div(
+      class = "btn-options", style = "position:relative;", 
+      width = "100%", HTML(codeButtons))
+  )
+  return(tags$div(HTML(res)))
+}
+
+buttonsWizard <- function(
+  ids,
+  botones = list(icon("backward"), icon("forward")), widths = c(50, 100),
+  heights = c(100, 50), tabs.content = list("", "")
+) {
+  res <- ""
+  codeButtons <- ""
+  widgets <- c("left", "right")
+  for (i in 1:2) {
+    res <- paste0(
+      res, tags$div(), "\n")
+    codeButtons <- paste0(
+      codeButtons, "<button id = ",ids[[i]], " style='width:", 100/4, "%' data-widget='", 
       widgets[i], "'>", botones[[i]], "</button>\n")
   }
   res <- paste0(

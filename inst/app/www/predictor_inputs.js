@@ -78,7 +78,7 @@ Shiny.addCustomMessageHandler("updateLabel",
   }
 );
 
-var promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true , xgb: true, nn: true, rl : true, rlr: true};
+var promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true , xgb: true, nn: true, rl : true, rlr: true, wizard:true};
 
 nya_btn = true;
 function nya_btn_fun(e) {
@@ -90,29 +90,48 @@ function promidat_model_firt(e, model, id){
     promidat_flat_models[model] = false;
     $("#"+id).click();
   }
-  
+}
+
+function hide_element(id){
+    $("a[data-value='"+id+"']").hide();
+}
+function show_element(id){
+    $("a[data-value='"+id+"']").show();
 }
 
 window.addEventListener("load", function(event) {
-  $("a[href^='#shiny-tab-knn']").on('click', function(e) {promidat_model_firt(e,"knn","knn_ui_1-runKnn")});
-  $("a[href^='#shiny-tab-svm']").on('click', function(e) {promidat_model_firt(e,"svm","svm_ui_1-runSvm")});
-  $("a[href^='#shiny-tab-dt']").on('click',  function(e) {promidat_model_firt(e,"dt" ,"d_tree_ui_1-runDt")});
-  $("a[href^='#shiny-tab-rf']").on('click',  function(e) {promidat_model_firt(e,"rf", "r_forest_ui_1-runRf")});
-  $("a[href^='#shiny-tab-xgb']").on('click', function(e) {promidat_model_firt(e,"xgb","xgboosting_ui_1-runXgb")});
+  
+  //Genera los modelos si se presiona el tab
+  $("a[href^='#shiny-tab-knn']").on('click',      function(e) {promidat_model_firt(e,"knn","knn_ui_1-runKnn")});
+  $("a[href^='#shiny-tab-svm']").on('click',      function(e) {promidat_model_firt(e,"svm","svm_ui_1-runSvm")});
+  $("a[href^='#shiny-tab-dt']").on('click',       function(e) {promidat_model_firt(e,"dt" ,"d_tree_ui_1-runDt")});
+  $("a[href^='#shiny-tab-rf']").on('click',       function(e) {promidat_model_firt(e,"rf", "r_forest_ui_1-runRf")});
+  $("a[href^='#shiny-tab-xgb']").on('click',      function(e) {promidat_model_firt(e,"xgb","xgboosting_ui_1-runXgb")});
   $("a[href^='#shiny-tab-boosting']").on('click', function(e) {promidat_model_firt(e,"boosting","boosting_ui_1-runBoosting")});
-  $("a[href^='#shiny-tab-bayes']").on('click', function(e) {promidat_model_firt(e,"bayes","bayes_ui_1-runBayes")});
-  $("a[href^='#shiny-tab-nn']").on('click', function(e) {promidat_model_firt(e,"nn","neural_net_ui_1-runNn")});
-  $("a[href$='#shiny-tab-rl']").on('click', function(e) {promidat_model_firt(e,"rl","l_regression_ui_1-runRl")});
-  $("a[href^='#shiny-tab-rlr']").on('click', function(e) {promidat_model_firt(e,"rlr","penalized_l_r_ui_1-runRlr")});
+  $("a[href^='#shiny-tab-bayes']").on('click',    function(e) {promidat_model_firt(e,"bayes","bayes_ui_1-runBayes")});
+  $("a[href^='#shiny-tab-nn']").on('click',       function(e) {promidat_model_firt(e,"nn","neural_net_ui_1-runNn")});
+  $("a[href$='#shiny-tab-rl']").on('click',       function(e) {promidat_model_firt(e,"rl","l_regression_ui_1-runRl")});
+  $("a[href^='#shiny-tab-rlr']").on('click',      function(e) {promidat_model_firt(e,"rlr","penalized_l_r_ui_1-runRlr")});
+  $("a[href^='#shiny-tab-wizard']").on('click',   function(e) {promidat_model_firt(e,"rlr","wizard_ui_1-runBayes")});
 
-    //eliminar_tabs_extras()
+    //Botones de Wizard
   $("a[data-value='predicModelo']").on('click',function(e) {$("#ind_nuevos_ui_1-predecirPromidat").click()});
+  $("a[data-value='Trasformar']").on('click',  function(e) {$("#ind_nuevos_ui_1-transback2").click()});
+  //$("#ind_nuevos_ui_1-cargarnext").on('click', function(e) {$("a[data-value='Trasformar']").click();$("a[data-value='Cargar']").hide(); $("a[data-value='Trasformar']").show()});
+  $("#ind_nuevos_ui_1-cargarnext").on('click', function(e) {$("a[data-value='Trasformar']").click();});
+  $("#ind_nuevos_ui_1-transback").on('click',  function(e) {$("a[data-value='Cargar']").click();});
+  $("#ind_nuevos_ui_1-transnext").on('click',  function(e) {$("a[data-value='crearModelo']").click()});
+  $("#ind_nuevos_ui_1-modelback").on('click',  function(e) {$("a[data-value='Trasformar']").click()});
+  $("#ind_nuevos_ui_1-modelnext").on('click',  function(e) {$("a[data-value='CargarNuevos']").click()});
+  $("#ind_nuevos_ui_1-nuevosback").on('click', function(e) {$("a[data-value='crearModelo']").click()});
+  $("#ind_nuevos_ui_1-nuevosnext").on('click', function(e) {$("a[data-value='predicModelo']").click()});
+  $("#ind_nuevos_ui_1-predicback").on('click', function(e) {$("a[data-value='CargarNuevos']").click()});
 
   /* Los modelos se vuelven ejecutar al ser seleccionados una vez se haga una segmentacion diferente
   $($($($("#tabDyA").next().children()[2]).children()[4]).children()[2]).on('click', nya_btn_fun);*/
   
   $("#carga_datos_ui_1-segmentButton").on('click',function(e){
-    promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true, xgb: true, nn: true, rl : true, rlr: true};
+    promidat_flat_models = {knn: true, dt: true, rf: true, boosting: true, svm: true, bayes: true, xgb: true, nn: true, rl : true, rlr: true,wizard:true};
   });
 
 });

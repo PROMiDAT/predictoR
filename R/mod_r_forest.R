@@ -47,7 +47,7 @@ mod_r_forest_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabRfImp",
-               withLoader(plotOutput(ns('plot_rf'), height = "55vh"),
+               withLoader(echarts4rOutput(ns('plot_rf'), height = "55vh"),
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabRfPred",
@@ -128,12 +128,12 @@ mod_r_forest_server <- function(input, output, session, updateData){
     tryCatch({ 
       idioma <- updateData$idioma
       exe(cod.rf.pred)
-      pred <-  predict(exe("modelo.rf"), datos.prueba, type = "prob")
-      scores[["rfl"]] <<- pred$prediction[,2]
+      pred   <-  predict(exe("modelo.rf"), datos.prueba, type = "prob")
+      scores[["rfl"]]     <<- pred$prediction[,2]
       output$rfPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rf"),idioma = idioma), server = FALSE)
 
       nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rf(2)
@@ -147,12 +147,12 @@ mod_r_forest_server <- function(input, output, session, updateData){
     if(exists("prediccion.rf")){
       tryCatch({ 
         exe(cod.rf.mc)
-        output$txtRfMC <- renderPrint(print(exe("MC.rf")))
+        output$txtRfMC    <- renderPrint(print(exe("MC.rf")))
         
         exe(plot.MC.code(idioma = idioma))
         output$plot_rf_mc <- renderPlot(isolate(exe("plot.MC(MC.rf)")))
        
-        nombres.modelos <<- c(nombres.modelos, "MC.rf")
+        nombres.modelos   <<- c(nombres.modelos, "MC.rf")
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.rf(3)
@@ -174,10 +174,10 @@ mod_r_forest_server <- function(input, output, session, updateData){
         
         output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios", idioma = idioma)), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-        output$rfIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
+        output$rfIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
         
-        nombres.modelos <<- c(nombres.modelos, "indices.rf")
+        nombres.modelos   <<- c(nombres.modelos, "indices.rf")
         IndicesM[["rfl"]] <<- indices.rf
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         
@@ -232,17 +232,17 @@ mod_r_forest_server <- function(input, output, session, updateData){
   # Grafico de importancia
   plotear.rf.imp <- function() {
     tryCatch({
-      output$plot_rf <- renderPlot(isolate(exe(input$fieldCodeRfPlot)))
-      cod <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
+      output$plot_rf <- renderEcharts4r(isolate(exe(input$fieldCodeRfPlot)))
+      cod            <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
     }, error = function(e) {
-      output$plot_rf <- renderPlot(NULL)
+      output$plot_rf <- renderEcharts4r(NULL)
     })
   }
   
   plotear.rf.error <- function(){
     tryCatch({
       output$plot_error_rf <- renderPlot(isolate(exe(input$fieldCodeRfPlotError)))
-      cod <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
+      cod                  <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
     }, error = function(e){
       limpia.rf(1)
     })
@@ -267,18 +267,18 @@ mod_r_forest_server <- function(input, output, session, updateData){
   limpia.rf <- function(capa = NULL){
     for(i in capa:4){
       switch(i, {
-        modelo.rf <<- NULL
+        modelo.rf    <<- NULL
         output$txtRf <- renderPrint(invisible(""))
       }, {
-        prediccion.rf <<- NULL
+        prediccion.rf       <<- NULL
         output$rfPrediTable <- DT::renderDataTable(NULL)
       }, {
-        MC.rf <<- NULL
+        MC.rf             <<- NULL
         output$plot_rf_mc <- renderPlot(NULL)
-        output$txtRfMC <- renderPrint(invisible(NULL))
+        output$txtRfMC    <- renderPrint(invisible(NULL))
       }, {
-        indices.rf <<- rep(0, 10)
-        IndicesM[["rfl"]] <<- NULL
+        indices.rf            <<- rep(0, 10)
+        IndicesM[["rfl"]]     <<- NULL
         output$rfIndPrecTable <- shiny::renderTable(NULL)
         output$rfIndErrTable  <- shiny::renderTable(NULL)
         output$rfPrecGlob     <-  flexdashboard::renderGauge(NULL)
@@ -288,10 +288,10 @@ mod_r_forest_server <- function(input, output, session, updateData){
   }
   # Limpia los datos 
   limpia.rf.run <- function(capa = NULL){
-        output$txtRf <- renderPrint(invisible(""))
-        output$rfPrediTable <- DT::renderDataTable(NULL)
-        output$plot_rf_mc <- renderPlot(NULL)
-        output$txtRfMC <- renderPrint(invisible(NULL))
+        output$txtRf          <- renderPrint(invisible(""))
+        output$rfPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_rf_mc     <- renderPlot(NULL)
+        output$txtRfMC        <- renderPrint(invisible(NULL))
         output$rfIndPrecTable <- shiny::renderTable(NULL)
         output$rfIndErrTable  <- shiny::renderTable(NULL)
         output$rfPrecGlob     <-  flexdashboard::renderGauge(NULL)

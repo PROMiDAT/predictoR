@@ -265,12 +265,10 @@ mod_knn_server <- function(input, output, session, updateData){
   }
   # Limpia los datos segun el proceso donde se genera el error
   limpia.knn.run <- function() {
-        output$txtknn <- renderPrint(invisible(""))
-        output$knnPrediTable <- DT::renderDataTable(NULL)
-     
-        output$plot_knn_mc <- renderPlot(NULL)
-        output$txtknnMC <- renderPrint(invisible(NULL))
-   
+        output$txtknn          <- renderPrint(invisible(""))
+        output$knnPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_knn_mc     <- renderPlot(NULL)
+        output$txtknnMC        <- renderPrint(invisible(NULL))
         output$knnIndPrecTable <- shiny::renderTable(NULL)
         output$knnIndErrTable  <- shiny::renderTable(NULL)
         output$knnPrecGlob     <-  flexdashboard::renderGauge(NULL)

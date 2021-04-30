@@ -44,6 +44,7 @@ mod_comparacion_server <- function(input, output, session, updateData){
     datos        <- updateData$datos
     updateData$selector.comparativa <- actualizar.selector.comparativa()
     choices      <- as.character(unique(datos[, variable]))
+    
     updateSelectInput(session, "roc.sel", choices = choices, selected = choices[1])
     shinyWidgets::updateCheckboxGroupButtons(session, inputId = "select.models",
                                  choices = c(" ---- " = "NoDisponible"),
@@ -78,6 +79,7 @@ ejecutar.roc <- function(){
                     options = list(dom = "frtip", pageLength = 10, buttons = NULL))
     }
   },server = FALSE)
+  
   #Hace el grafico de la curva roc
   output$plot_roc <- renderPlot({
     idioma <- updateData$idioma

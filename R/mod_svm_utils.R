@@ -1,9 +1,9 @@
 # -------------------  SVM
 
 cod.svm.modelo <<-  NULL
-cod.svm.pred <<-  NULL
-cod.svm.mc <<- NULL
-cod.svm.ind <<- NULL
+cod.svm.pred   <<-  NULL
+cod.svm.mc     <<- NULL
+cod.svm.ind    <<- NULL
 # Pagina de SVM -------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo SVM

@@ -43,19 +43,24 @@ mod_boosting_ui <- function(id){
     tabBoxPrmdt(
       id = "BoxB", opciones = opc_b,
       tabPanel(title = labelInput("generatem"), value = "tabBModelo",
-               verbatimTextOutput(ns("txtBoosting"))),
+               withLoader(verbatimTextOutput(ns("txtBoosting")), 
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("evolerror"), value = "tabBError",
-               plotOutput(ns('plot.boosting'), height = "55vh")),
+               withLoader(plotOutput(ns('plot_boosting'), height = "55vh"), 
+               type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabBImp",
-               plotOutput(ns('plot.boosting.import'), height = "55vh")),
+               withLoader(echarts4rOutput(ns('plot_boosting_import'), height = "55vh"), 
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabBPred",
-               DT::dataTableOutput(ns("boostingPrediTable"))),
+               withLoader(DT::dataTableOutput(ns("boostingPrediTable")), 
+               type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("mc"), value = "tabBMC",
-               plotOutput(ns('plot.boosting.mc'), height = "45vh"),
+               withLoader(plotOutput(ns('plot_boosting_mc'), height = "45vh"), 
+                          type = "html", loader = "loader4"),
                verbatimTextOutput(ns("txtBoostingMC"))),
       
       tabPanel(title = labelInput("indices"),value = "tabBIndex",
@@ -87,29 +92,28 @@ mod_boosting_server <- function(input, output, session, updateData){
   # #     boosting.full(TRUE)
   # #   }
   # # })
-  # 
-  # # Cuando se genera el modelo boosting
-  # observeEvent(input$runBoosting, {
-  #   if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-  #     default.codigo.boosting()
-  #     boosting.full()
-  #   }
-  # }, priority =  -5)
-  # 
-  # observeEvent(input$rules.b.n,{
-  #   if(validar.datos(print = FALSE)){
-  #     mostrar.reglas.boosting(input$rules.b.n)
-  #   }
-  # }, priority =  5)
-  # 
-  
+
+  # Cuando se genera el modelo boosting
+  observeEvent(input$runBoosting, {
+    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
+      default.codigo.boosting()
+      boosting.full()
+    }
+  }, priority =  -5)
+
+  observeEvent(input$rules.b.n,{
+    if (!(is.null(updateData$variable.predecir) & is.null(updateData$datos.aprendizaje))) { # Si se tiene los datos entonces :
+      mostrar.reglas.boosting(input$rules.b.n)
+    }
+  }, priority =  5)
+
+
   # Ejecuta el modelo, prediccion, mc e indices de knn
   boosting.full <- function() {
       ejecutar.boosting()
       ejecutar.boosting.pred()
       ejecutar.boosting.mc()
       ejecutar.boosting.ind()
-    
   }
   
 
@@ -118,6 +122,7 @@ mod_boosting_server <- function(input, output, session, updateData){
     tryCatch({ # Se corren los codigo
       isolate(exe(cod.b.modelo))
       output$txtBoosting <- renderPrint(exe("print(modelo.boosting)"))
+      
       plotear.boosting()
       plotear.boosting.imp()
       mostrar.reglas.boosting(input$rules.b.n)
@@ -143,7 +148,7 @@ mod_boosting_server <- function(input, output, session, updateData){
       output$boostingPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.boosting"),idioma = idioma),server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting"))
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.boosting(2)
@@ -160,7 +165,7 @@ mod_boosting_server <- function(input, output, session, updateData){
         output$txtBoostingMC <- renderPrint(exe("print(MC.boosting)"))
         
         exe(plot.MC.code(idioma = idioma))
-        output$plot.boosting.mc <- renderPlot(exe("plot.MC(MC.boosting)"))
+        output$plot_boosting_mc <- renderPlot(exe("plot.MC(MC.boosting)"))
 
         
         nombres.modelos <<- c(nombres.modelos, paste0("MC.boosting"))
@@ -190,7 +195,7 @@ mod_boosting_server <- function(input, output, session, updateData){
         output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING", idioma = idioma)), spacing = "xs",
                                                           bordered = T, width = "100%", align = "c", digits = 2)
         
-        output$boostingIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")), spacing = "xs",
+        output$boostingIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.boosting,"ADA-BOOSTING")), spacing = "xs",
                                                          bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.boosting"))
@@ -208,9 +213,9 @@ mod_boosting_server <- function(input, output, session, updateData){
 
     # Se acualiza el codigo del modelo
     codigo <- boosting.modelo(variable.pr = updateData$variable.predecir,
-                              iter = input$iter.boosting,
-                              maxdepth = input$maxdepth.boosting,
-                              minsplit = input$minsplit.boosting)
+                              iter        = input$iter.boosting,
+                              maxdepth    = input$maxdepth.boosting,
+                              minsplit    = input$minsplit.boosting)
     
     updateAceEditor(session, "fieldCodeBoosting", value = codigo)
     cod.b.modelo <<- codigo
@@ -219,13 +224,13 @@ mod_boosting_server <- function(input, output, session, updateData){
     codigo <- boosting.prediccion()
     updateAceEditor(session, "fieldCodeBoostingPred", value = codigo)
     cod.b.pred <<- codigo
-    
-    # # Cambia el codigo del grafico del modelo
-    # updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
-    # 
-    # # Cambia el codigo del grafico de importancia
-    # updateAceEditor(session, "fieldCodeBoostingPlotImport", value = boosting.plot.import())
-    # 
+
+    # Cambia el codigo del grafico del modelo
+    updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
+
+    # Cambia el codigo del grafico de importancia
+    updateAceEditor(session, "fieldCodeBoostingPlotImport", value = boosting.plot.import())
+
     # Se genera el codigo de la matriz
     codigo <- boosting.MC()
     updateAceEditor(session, "fieldCodeBoostingMC", value = codigo)
@@ -236,22 +241,64 @@ mod_boosting_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
     cod.b.ind <<- codigo
   }
+  # Grafico de boosting
+  plotear.boosting <- function() {
+    tryCatch({
+      output$plot_boosting <- renderPlot(isolate(exe(input$fieldCodeBoostingPlot)))
+      cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
+     
+    }, error = function(e) {
+      limpia.boosting(1)
+    })
+  }
   
+  # Grafico de importancia
+  plotear.boosting.imp <- function() {
+    tryCatch({
+      output$plot_boosting_import <- renderEcharts4r(isolate(exe(input$fieldCodeBoostingPlotImport)))
+      cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
+    }, error = function(e) {
+      limpia.boosting(1)
+    })
+  }
+  
+  # Grafico de importancia
+  plotear.rf.imp <- function() {
+    tryCatch({
+      output$plot_rf <- renderEcharts4r(isolate(exe(input$fieldCodeRfPlot)))
+      cod            <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
+    }, error = function(e) {
+      output$plot_rf <- renderEcharts4r(NULL)
+    })
+  }
+  
+  
+  #Mostrar Reglas
+  mostrar.reglas.boosting <- function(n){
+    output$rulesB <- renderPrint({
+      tryCatch({
+        updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(input$rules.b.n))
+        exe(rules.boosting(input$rules.b.n))
+      },error = function(e) {
+        stop(tr("NoDRule", updateData$idioma))
+      }
+      )})
+  }
   # Limpia los datos segun el proceso donde se genera el error
   limpia.boosting <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
         exe("modelo.boosting <<- NULL")
-        output$txtBoosting <- renderPrint(invisible(""))
-        output$plot.boosting <- renderPlot(NULL)
-        output$plot.boosting.import <- renderPlot(NULL)
+        output$txtBoosting          <- renderPrint(invisible(""))
+        output$plot_boosting        <- renderPlot(NULL)
+        output$plot_rf <- renderEcharts4r(NULL)
       }, {
         exe("prediccion.boosting <<- NULL")
         output$boostingPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.boosting <<- NULL")
-        output$plot.boosting.mc <- renderPlot(NULL)
-        output$txtBoostingMC <- renderPrint(invisible(NULL))
+        output$plot_boosting_mc <- renderPlot(NULL)
+        output$txtBoostingMC    <- renderPrint(invisible(NULL))
       }, {
         exe("indices.boosting <<- NULL")
         IndicesM[[paste0("bl")]]    <<- NULL
@@ -264,16 +311,16 @@ mod_boosting_server <- function(input, output, session, updateData){
   }
   # Limpia los datos segun el proceso donde se genera el error
   limpia.boosting.run <- function() {
-        output$txtBoosting <- renderPrint(invisible(""))
-        output$plot.boosting <- renderPlot(NULL)
-        output$plot.boosting.import <- renderPlot(NULL)
-        output$boostingPrediTable <- DT::renderDataTable(NULL)
-        output$plot.boosting.mc <- renderPlot(NULL)
-        output$txtBoostingMC <- renderPrint(invisible(NULL))
+        output$txtBoosting          <- renderPrint(invisible(""))
+        output$plot_boosting        <- renderPlot(NULL)
+        output$plot_boosting_import <- renderPlot(NULL)
+        output$boostingPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_boosting_mc     <- renderPlot(NULL)
+        output$txtBoostingMC        <- renderPrint(invisible(NULL))
         output$boostingIndPrecTable <- shiny::renderTable(NULL)
         output$boostingIndErrTable  <- shiny::renderTable(NULL)
-        output$boostingPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$boostingErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$boostingPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$boostingErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
   

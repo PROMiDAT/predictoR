@@ -148,6 +148,7 @@ mod_carga_datos_server <- function(input, output, session,  updateData){
     dec        <- isolate(input$dec)
     encabezado <- isolate(input$header)
     deleteNA   <- isolate(input$deleteNA)
+    
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
       updateAceEditor(session, "fieldCodeData", value = codigo)
@@ -162,19 +163,20 @@ mod_carga_datos_server <- function(input, output, session,  updateData){
         showNotification(
           "ERROR: Check Separators", duration = 10, type = "error")
         updateData$originales <- NULL
-        updateData$datos <- NULL
-        datos <<- NULL
+        updateData$datos      <- NULL
+        datos                 <<- NULL
       } else {
         updateData$datos <- updateData$originales
         datos <<- updateData$originales
         colnames(updateData$datos)
       }
     }, error = function(e) {
-      updateData$datos <- NULL
+      updateData$datos      <- NULL
       updateData$originales <- NULL
-      datos <<- NULL
+      datos                 <<- NULL
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
+    
     close.menu("parte1", is.null(updateData$datos))
     close.menu("parte2", is.null(updateData$datos.aprendizaje))
   })

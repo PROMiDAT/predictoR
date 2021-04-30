@@ -1,9 +1,9 @@
 # -------------------  BAYES
 
 cod.bayes.modelo <<-  NULL
-cod.bayes.pred <<-  NULL
-cod.bayes.mc <<- NULL
-cod.bayes.ind <<- NULL
+cod.bayes.pred   <<-  NULL
+cod.bayes.mc     <<- NULL
+cod.bayes.ind    <<- NULL
 
 # Codigos de BAYES ---------------------------------------------------------------------------------------------------------
 

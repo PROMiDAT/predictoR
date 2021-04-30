@@ -1,24 +1,23 @@
 # -------------------  RF
 
 cod.rf.modelo <<-  NULL
-cod.rf.pred <<-  NULL
-cod.rf.mc <<- NULL
-cod.rf.ind <<- NULL
-
-rf.stop.excu <<- FALSE
+cod.rf.pred   <<-  NULL
+cod.rf.mc     <<- NULL
+cod.rf.ind    <<- NULL
+rf.stop.excu  <<- FALSE
 
 # Pagina de RF --------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo RF
 rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
-  ntree <- ifelse(!is.numeric(ntree), 500, ntree)
-  codigo <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
-                   " ntree =",ntree,",mtry =",mtry,")")
+  ntree   <- ifelse(!is.numeric(ntree), 500, ntree)
+  codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
+                    " ntree =",ntree,",mtry =",mtry,")")
   return(codigo)
 }
 
 rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
-  ntree <- ifelse(!is.numeric(ntree), 500, ntree)
+  ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
   codigo <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
                    " ntree =",ntree,",mtry =",mtry,")")
   return(codigo)
@@ -43,21 +42,13 @@ rf.plot <- function() {
   return(paste0(
     "aux <- data.frame(modelo.rf$importance)\n",
     "aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]\n",
-    "aux$nombre <- row.names(aux)\n\n",
-    "ggplot(aux, aes(x = MeanDecreaseAccuracy, y = fct_reorder(nombre, MeanDecreaseAccuracy), fill = nombre)) +\n",
-    "  geom_bar(stat = 'identity') + labs(y = '') +\n",
-    "  theme_minimal()+ theme(legend.position = 'none')\n"
+    "aux$label <- row.names(aux)\n\n",
+    "aux %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>% \n",
+    "  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% \n",
+    "  e_flip_coords() %>%\n",
+    "  e_y_axis(inverse = TRUE) \n"
   ))
 }
-
-# datos.rf<- data.frame(modelo.rf$importance)
-# datos.rf<- datos.rf[order(datos.rf$MeanDecreaseAccuracy, decreasing = T), ]
-# datos.rf$label <- row.names(datos.rf)
-# datos.rf$color <- gg_color_hue(length(row.names(datos.rf)))
-# datos.rf %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>%
-#   e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%
-#   e_flip_coords()%>%
-#   e_y_axis(inverse = TRUE)
 
 # V2 COLOR
 # datos.rf<- data.frame(modelo.rf$importance)

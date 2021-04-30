@@ -122,12 +122,12 @@ mod_d_tree_server <- function(input, output, session, updateData){
       isolate(exe(cod.dt.pred))
       tipo   <- isolate(input$split.dt)
       idioma <- updateData$idioma
-      pred <- exe("predict(modelo.dt.",tipo,", datos.prueba, type = 'prob')")
+      pred   <- exe("predict(modelo.dt.",tipo,", datos.prueba, type = 'prob')")
       scores[[paste0("dtl-", tipo)]] <<- pred$prediction[,2]
       output$dtPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.dt.",tipo),idioma = idioma),server = FALSE)
       
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",tipo))
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
     },
     error = function(e) { 
       limpia.dt(2)
@@ -146,7 +146,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
         
         exe(plot.MC.code(idioma = idioma))
         output$plot_dt_mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",tipo,")")))
-        nombres.modelos <<- c(nombres.modelos, paste0("MC.dt.",tipo))
+        nombres.modelos   <<- c(nombres.modelos, paste0("MC.dt.",tipo))
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error
         limpia.dt(3)
@@ -171,7 +171,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
         # Cambia la tabla con la indices de dt
         output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión", idioma = idioma)), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
-        output$dtIndErrTable <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
+        output$dtIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
                                                    bordered = T, width = "100%", align = "c", digits = 2)
         
         IndicesM[[paste0("dtl-",tipo)]] <<- indices.dt
@@ -222,7 +222,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
     tryCatch({
       tipo   <- isolate(input$split.dt)
       output$plot_dt <- renderPlot(isolate(exe(input$fieldCodeDtPlot)))
-      cod <- ifelse(input$fieldCodeDtPlot == "", dt.plot(tipo), input$fieldCodeDtPlot)
+      cod    <- ifelse(input$fieldCodeDtPlot == "", dt.plot(tipo), input$fieldCodeDtPlot)
     },
     error = function(e){
       output$plot_dt <- renderPlot(NULL)
@@ -231,7 +231,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
   
   #Mostrar Reglas
   mostrar.reglas.dt <- function(){
-    tipo <- isolate(input$split.dt)
+    tipo           <- isolate(input$split.dt)
     output$rulesDt <- renderPrint(rattle::asRules(exe("modelo.dt.",tipo)))
     updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",tipo,")"))
     
@@ -241,16 +241,16 @@ mod_d_tree_server <- function(input, output, session, updateData){
   limpia.dt <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
-        modelo.dt <<- NULL
-        output$txtDt <- renderPrint(invisible(""))
+        modelo.dt      <<- NULL
+        output$txtDt   <- renderPrint(invisible(""))
         output$plot_dt <- renderPlot(NULL)
       }, {
-        prediccion.dt <<- NULL
+        prediccion.dt       <<- NULL
         output$dtPrediTable <- DT::renderDataTable(NULL)
       }, {
-        MC.dt <<- NULL
+        MC.dt             <<- NULL
         output$plot_dt_mc <- renderPlot(NULL)
-        output$txtDtMC <- renderPrint(invisible(NULL))
+        output$txtDtMC    <- renderPrint(invisible(NULL))
       }, {
         indices.dt <<- rep(0, 10)
         IndicesM[[paste0("dtl-",input$split.dt)]] <<- NULL
@@ -264,11 +264,11 @@ mod_d_tree_server <- function(input, output, session, updateData){
   
   # Limpia los outputs 
   limpia.dt.run <- function(capa = NULL) {
-        output$txtDt <- renderPrint(invisible(""))
-        output$plot_dt <- renderPlot(NULL)
-        output$dtPrediTable <- DT::renderDataTable(NULL)
-        output$plot_dt_mc <- renderPlot(NULL)
-        output$txtDtMC <- renderPrint(invisible(NULL))
+        output$txtDt          <- renderPrint(invisible(""))
+        output$plot_dt        <- renderPlot(NULL)
+        output$dtPrediTable   <- DT::renderDataTable(NULL)
+        output$plot_dt_mc     <- renderPlot(NULL)
+        output$txtDtMC        <- renderPrint(invisible(NULL))
         output$dtIndPrecTable <- shiny::renderTable(NULL)
         output$dtIndErrTable  <- shiny::renderTable(NULL)
         output$dtPrecGlob     <-  flexdashboard::renderGauge(NULL)

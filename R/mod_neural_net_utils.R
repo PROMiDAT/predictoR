@@ -1,19 +1,23 @@
 # -------------------  NN
 
 cod.nn.modelo <<-  NULL
-cod.nn.pred <<-  NULL
-cod.nn.mc <<- NULL
-cod.nn.ind <<- NULL
-
-NN_EXECUTION <<- TRUE
+cod.nn.pred   <<-  NULL
+cod.nn.mc     <<- NULL
+cod.nn.ind    <<- NULL
+NN_EXECUTION  <<- TRUE
 
 #Crea el modelo NN
-nn.modelo <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
+nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   threshold <- ifelse(threshold == 0, 0.01, threshold)
-  stepmax <- ifelse(stepmax < 100, 100, stepmax)
-  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
+  stepmax   <- ifelse(stepmax < 100, 100, stepmax)
+  capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
   return(paste0("modelo.nn <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
-         "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
+                "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
+}
+
+#Codigo de la prediccion de nn
+nn.prediccion <- function() {
+  return(paste0("prediccion.nn <<- predict(modelo.nn, datos.prueba, type = 'class')"))
 }
 
 nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
@@ -24,14 +28,37 @@ nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant
                 "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
 }
 
-#Codigo de la prediccion de xgb
-nn.prediccion <- function() {
-  return(paste0("prediccion.nn <<- predict(modelo.nn, datos.prueba, type = 'class')"))
+nn.prediccion.np <- function() {
+  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')\n"))
 }
 
-nn.prediccion.np <- function(){
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
+predict.neuralnet.prmdt.np <- function(variable.predecir = "", type = "class", ...){
+  data     <- datos.prueba.completos
+  selector <- unlist(lapply(data, is.ordered))
+  if(any(selector)){
+    data[,selector] <- lapply(data[,selector, drop = FALSE], function(x) factor(x, ordered = FALSE, levels = levels(x)) )
+  }
+  
+  var.predict <- modelo.nuevos$prmdt$var.pred
+  selector <- which(colnames(data) == var.predict)
+  suppressWarnings(data <- cbind(dummy.data.frame(data[, -selector, drop = FALSE], drop = FALSE,
+                                                  dummy.classes = c("factor","character")), data[selector]))
+  
+  selector <- which(colnames(data) == var.predict)
+  
+  ans <- neuralnet::compute(original_model(modelo.nuevos), data[, -selector])
+  #ans <<- neuralnet::compute(modelo.nuevos, data[, -selector])
+  
+  ans <- ans$net.result
+  colnames(ans) <- modelo.nuevos$prmdt$levels
+  ans <- max.col(ans)
+  ans <- numeric_to_predict(datos.aprendizaje.completos[, variable.predecir], ans)
+  ans <- type_correction(modelo.nuevos, ans, T)
+
+ # predic.nuevos <<- create.prediction(modelo.nuevos, ans)
+  return(paste0("predic.nuevos <<- create.prediction(modelo.nuevos, ans)"))
 }
+
 
 #Codigo de la matriz de confucion de xgb
 nn.MC <- function(){
