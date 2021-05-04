@@ -769,9 +769,13 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     opc_bayes <- list(tags$span())
     
     opc_potenciacion <- list(tags$span())
-    
+    # opc_potenciacion <- list(fluidRow(col_3(numericInput(ns("iter.boosting.pred"), labelInput("numTree"), 50, width = "100%",min = 1)),
+    #                                   col_3(numericInput(ns("maxdepth.boosting.pred"),labelInput("maxdepth"), 15, width = "100%",min = 1)),
+    #                                   col_3(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1)),
+    #                                   col_3(selectInput(inputId = ns("tipo.boosting.pred"), label = labelInput("selectAlg"),selected = 1, width = "100%",
+    #                                                     choices =  c("discrete", "real", "gentle")))))
     opc_rl  <- list(tags$span())
-    
+   
     opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = tr("selectAlg", idioma),selected = 1,
                                   choices = list("Ridge" = 0, "Lasso" = 1))),
                              col_6(radioSwitchNP(ns("switch.scale.rlr.pred"), "escal", c("si", "no"),idioma = idioma ))),

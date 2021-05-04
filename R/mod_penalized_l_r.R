@@ -77,7 +77,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
 
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
-    #default.codigo.rlr()
+    default.codigo.rlr()
   })
   # # 
   # # observeEvent(updateData$idioma, {
@@ -87,12 +87,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   # #   }
   # # })
   # 
-  # observeEvent(input$runRlr, {
-  #   if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-  #     default.codigo.rlr()
-  #     rlr.full()
-  #   }
-  # }, priority =  -5)
+  observeEvent(input$runRlr, {
+    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
+      default.codigo.rlr()
+      rlr.full()
+    }
+  }, priority =  -5)
 
 
   # Habilitada o deshabilitada la semilla
@@ -106,7 +106,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
 
   get_landa_rlr <- function(){
     landa <- NULL
-    if (!is.na(input$landa) && input$permitir.landa) {
+    if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
       if (input$landa > 0) {
         landa <- input$landa
       }
@@ -132,8 +132,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       
       output$txtRlr <- renderPrint(print(exe("modelo.rlr.",tipo)))
   
-      #plot.posib.landa.rlr()
-      #plot.coeff()
+      plot.posib.landa.rlr()
+      plot.coeff()
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.rlr.",tipo))
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
@@ -152,7 +152,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       landa  <- ifelse(is.null(landa),paste0("cv.glm.",tipo,"$lambda.min"), landa)
       
       pred   <- predict(exe("modelo.rlr.",tipo), datos.prueba, type = "prob")
-      scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,2]
+      #scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,,1]
       # Cambia la tabla con la prediccion de rlr
       output$rlrPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rlr.",tipo),idioma = idioma), server = FALSE)
       
@@ -221,6 +221,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   default.codigo.rlr <- function(){
     landa <- get_landa_rlr()
     tipo  <- rlr.type()
+
     # Se actualiza el codigo del modelo
     codigo <- rlr.modelo(variable.pr = variable.predecir,
                          type        = tipo,
@@ -229,30 +230,30 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     
     updateAceEditor(session, "fieldCodeRlr", value = codigo)
     cod.rlr.modelo <<- codigo
-    
+
     # Se genera el codigo del posible landa
     codigo <- select.landa(variable.predecir,
                            input$alpha.rlr,
                            input$switch.scale.rlr,
                            tipo)
-    
+
     updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
     cod.select.landa <<- codigo
-    
+
     #Se genera el codigo de los coeficientes con el mejor landa
     codigo <- plot.coeff.landa(landa, tipo)
     updateAceEditor(session, "fieldCodeRlrLanda", value = codigo)
-    
+
     # Se genera el codigo de la prediccion
     codigo <- rlr.prediccion(tipo)
     updateAceEditor(session, "fieldCodeRlrPred", value = codigo)
     cod.rlr.pred <<- codigo
-    
+
     # Se genera el codigo de la matriz
     codigo <- rlr.MC(tipo)
     updateAceEditor(session, "fieldCodeRlrMC", value = codigo)
     cod.rlr.mc <<- codigo
-    
+
     # Se genera el codigo de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRlrIG", value = codigo)
@@ -273,7 +274,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   
   plot.coeff <- function(){
     tryCatch({  
-      isolate(tipo <- rlr.type())
+      isolate(tipo   <- rlr.type())
       isolate(codigo <- input$fieldCodeRlrLanda)
       output$plot_rlr_landa <- renderPlot(isolate(exe(codigo)))
     },
@@ -294,13 +295,16 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       switch(i, {
         modelo.rlr    <<- NULL
         output$txtRlr <- renderPrint(invisible(""))
+        output$plot_rlr_posiblanda <- renderPlot(NULL)
+        output$plot_rlr_landa      <- renderPlot(NULL)
+        
       }, {
         prediccion.rlr       <<- NULL
         output$rlrPrediTable <- DT::renderDataTable(NULL)
       }, {
         exe("MC.rlr.",tipo," <<- NULL")
         output$plot_rlr_mc <- renderPlot(NULL)
-        output$txtrlrMC    <- renderPrint(invisible(NULL))
+        output$txtrlrMC    <- renderPrint(invisible(""))
       },{
         indices.rlr            <<- rep(0, 10)
         output$rlrIndPrecTable <- shiny::renderTable(NULL)

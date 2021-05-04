@@ -46,23 +46,7 @@ tabBoxPrmdt(
            fluidRow(col_12(shiny::tableOutput(ns("bayesIndPrecTable")))),
            fluidRow(col_12(shiny::tableOutput(ns("bayesIndErrTable")))), hr(),
            fluidRow(col_1(actionButton (ns("indback"), labelInput("next"), width = "100%",
-                                        icon = icon("backward"))),col_10()), hr()),
-  tabPanel(title = labelInput("indices"), value = "tabBayesIndex",
-           fluidRow(  col_6(shinyglide::glide(
-             height = "350px",
-             shinyglide::screen(
-               p("This is a very simple shinyglide application."),
-               p("Please click on Next to go to the next screen.")
-             ),
-             shinyglide::screen(
-               p("Please choose a value."),
-               numericInput("n", "n", value = 10, min = 10)
-             ),
-             shinyglide::screen(
-               p("And here is the result."),
-               plotOutput("plot")
-             )
-           ))))
+                                        icon = icon("backward"))),col_10()), hr())
 
 )
   )
