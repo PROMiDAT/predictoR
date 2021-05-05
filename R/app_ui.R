@@ -91,8 +91,6 @@ app_ui <- function(request) {
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
                    icon = icon("info")),
-          menuItem(labelInput("acercade"), tabName = "wizard",
-                   icon = icon("info")),
           hr(),
           menu.idioma(),
           tags$div(style = "display:none;",
@@ -186,11 +184,7 @@ app_ui <- function(request) {
           
           # Acerca De
           tabItem(tabName = "acercaDe", 
-                  mod_acercade_ui("acercade_ui_1")),       
-          
-          # Acerca De
-          tabItem(tabName = "wizard", 
-                  mod_wizard_ui("wizard_ui_1"))
+                  mod_acercade_ui("acercade_ui_1"))
         )
       )
     )

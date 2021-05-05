@@ -112,5 +112,4 @@ app_server <- function( input, output, session ) {
   #Prediccion de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases)
   
-  callModule(mod_wizard_server, "wizard_ui_1", updateData)
 }

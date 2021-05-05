@@ -12,11 +12,11 @@ cod.select.landa <<- NULL
 
 #Crea el modelo RL
 rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE){
-  return(paste0("modelo.rlr.",type,"<<- train.glmnet(",variable.predecir,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
+  return(paste0("modelo.rlr.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
 }
 
 rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
-  return(paste0("modelo.nuevos <<- train.glmnet(",variable.predecir,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
+  return(paste0("modelo.nuevos <<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
 }
 
 select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "ridge"){
@@ -38,7 +38,9 @@ rlr.prediccion <- function(type = "ridge") {
 }
 
 rlr.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
+  return(paste0("datos.prueba.aux <<- datos.prueba.completos\n",
+                "datos.prueba.aux[['",variable.predecir.np,"']]<- as.factor(levels(datos.aprendizaje.completos[['",variable.predecir.np,"']]))\n",
+                "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.aux, type = 'class')"))
 }
 
 #Codigo de la matriz de confucion de rlr

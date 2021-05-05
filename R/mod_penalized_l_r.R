@@ -207,7 +207,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.rlr.",tipo))
-        IndicesM[[paste0("rlr-",tipo)]] <<- indices.rlr
+        #IndicesM[[paste0("rlr-",tipo)]] <<- indices.rlr
         updateData$selector.comparativa <- actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error

@@ -12,6 +12,31 @@
   max-height: 400px !important;
 }
 
+.wrapper-tag {
+	  text-align: center;
+		color: #fff;
+		font-size: 15px;
+		font-weight: 700;
+		background: linear-gradient(to right,#CBB051 10%, #777777 50%, #CBB051 60%);
+		background-size: auto auto;
+		background-clip: border-box;
+		background-size: 200% auto;
+		color: #fff;
+		background-clip: text;
+		text-fill-color: transparent;
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		animation: textclip 1.5s linear infinite;
+		display: inline-block;
+	
+}
+
+@keyframes textclip {
+	to {
+		background-position: 200% center;
+	}
+}
+
 .bootstrap-switch-id-carga_datos_ui_1-permitir_semilla2{
   display:none;
 }

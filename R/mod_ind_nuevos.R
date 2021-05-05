@@ -39,10 +39,10 @@ mod_ind_nuevos_ui <- function(id){
     tabBoxPrmdt(
       id = "BoxModelo", 
       tabPanel(
-        title = labelInput("predicnuevos"), width = 12, solidHeader = FALSE,
+        title = p(labelInput("home"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
         collapsible = FALSE, collapsed = FALSE, value = "Cargar",
         fluidRow(
-          col_5(HTML('&nbsp;'), tags$b(labelInput("cargar")),hr(),
+          col_5(HTML('&nbsp;'), strong(labelInput("cargar")),hr(),
         checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
         checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
         radioButtons(
@@ -56,7 +56,7 @@ mod_ind_nuevos_ui <- function(id){
           placeholder = "", buttonLabel = labelInput("subir"),
           accept = c('text/csv', '.csv', '.txt')), hr(),
         actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
-         col_7(br(),br(),br(),muestra.datos.pred)), 
+         col_7(br(),muestra.datos.pred)), 
         fluidRow(col_11(),
                  col_1(actionButton(ns("cargarnext"), labelInput("next"), width = "100%",
                                     icon = icon("forward")))), hr()),
@@ -64,7 +64,7 @@ mod_ind_nuevos_ui <- function(id){
         title = labelInput("trans"), width = 12, solidHeader = FALSE,
         collapsible = FALSE, collapsed = FALSE, value = "Trasformar",
         fluidRow(
-          col_5(tags$b(labelInput("trans")),br(),br(),
+          col_5(HTML('&nbsp;'), strong(labelInput("trans")),hr(),
         uiOutput(ns('transDataPredN')), hr(), 
         actionButton(ns('transButton'), labelInput("aplicar"), width = "100%"), hr()
         ),
@@ -75,7 +75,8 @@ mod_ind_nuevos_ui <- function(id){
                  col_1(actionButton(ns("transnext"), labelInput("next"), width = "100%",
                                     icon = icon("forward")))), hr()),
       tabPanel(title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
-               list(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"),
+               list(HTML('&nbsp;'),strong(labelInput("seleParModel")),hr(),
+                    selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"),
                     radioGroupButtons(ns("selectModelsPred"), labelInput("selectMod"), list("<span data-id=\"knnl\"></span>" = "knn",
                                                                                             "<span data-id=\"dtl\"></span>" = "dt",
                                                                                             "<span data-id=\"rfl\"></span>" = "rf",
@@ -94,7 +95,7 @@ mod_ind_nuevos_ui <- function(id){
                           type = "html", loader = "loader4"),
                
                actionButton(ns("PredNuevosBttnModelo"), labelInput("generarM"), width  = "100%" ),
-               fluidRow(br(),br(),col_1(actionButton (ns("modelback"), labelInput("next"), width = "100%",
+               fluidRow(br(),col_1(actionButton (ns("modelback"), labelInput("next"), width = "100%",
                                             icon = icon("backward"))),col_10(),
                         col_1(actionButton(ns("modelnext"), labelInput("next"), width = "100%",
                                            icon = icon("forward")))), br()),
@@ -102,7 +103,7 @@ mod_ind_nuevos_ui <- function(id){
         title = labelInput("cargarNuev"), width = 12, solidHeader = FALSE,
         collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
         fluidRow(
-          col_5(
+          col_5(HTML('&nbsp;'),strong(labelInput("cargarNuev")),hr(),
             checkboxInput(ns('headerNPred2'), labelInput("header"), value = T),
             checkboxInput(ns('rownameNPred2'), labelInput("Rownames"), value = T),
             radioButtons(
@@ -116,17 +117,18 @@ mod_ind_nuevos_ui <- function(id){
               placeholder = "", buttonLabel = labelInput("subir"),
               accept = c('text/csv', '.csv', '.txt')), hr(),
             actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"), hr()),
-          col_7(muestra.datos.pred3)),br(),
+          col_7(br(), muestra.datos.pred3)),br(),
         fluidRow(col_1(actionButton (ns("nuevosback"), labelInput("next"), width = "100%",
                                      icon = icon("backward"))),col_10(),
                  col_1(actionButton(ns("nuevosnext"), labelInput("next"), width = "100%",
                                     icon = icon("forward")))), br()),
       tabPanel(title = labelInput("predicnuevos"), value = "predicModelo",
+               HTML('&nbsp;'),strong(labelInput("predicnuevos")),hr(),
                DT::dataTableOutput(ns("PrediTablePN")),
                hr(),
                downloadButton(ns("downloaDatosPred"), labelInput("descargar"), style = "width:100%;"),
                actionButton(ns("predecirPromidat"), "preditc"),
-               fluidRow(br(),br(),col_1(actionButton (ns("predicback"), labelInput("next"), width = "100%",
+               fluidRow(br(),col_1(actionButton (ns("predicback"), labelInput("next"), width = "100%",
                                             icon = icon("backward"))),col_10()), br()),
       conditionalPanel("input.BoxModelo == 'crearModelo'", tabs.modelos),
       conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos2)
@@ -139,8 +141,6 @@ mod_ind_nuevos_ui <- function(id){
 mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   ns <- session$ns
   
-  ################### WIZARD 
-
   #' Load Button Function
   observeEvent(input$loadButtonNPred, {
     rowname    <- isolate(input$rownameNPred)
@@ -150,7 +150,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     encabezado <- isolate(input$headerNPred)
     deleteNA   <- isolate(input$deleteNAnPred)
     
-    #menu.values <- c(" a[data-value=Cargar]", " a[data-value=Trasformar]", " a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
     menu.values <- c(" a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
     mostrar.tabs(FALSE, menu.values) 
     
@@ -223,7 +222,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         newCases$datos <- newCases$datos.prueba
         menu.values <- c( " a[data-value=predicModelo]")
         mostrar.tabs(TRUE, menu.values) 
-        #crear.modelo()
       }
     }, error = function(e) {
       borrar.datos(newCases,  prueba = TRUE)
@@ -479,7 +477,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     if(!is.null(newCases$datos.aprendizaje)){
       variable.predecir.np       <- input$sel.predic.var.nuevos
       newCases$variable.predecir <- input$sel.predic.var.nuevos
-       
+       print(input$sel.predic.var.nuevos)
       codigo <- switch (input$selectModelsPred ,
                         knn   = kkn.modelo.np(variable.pr = newCases$variable.predecir,
                                               scale = input$switch.scale.knn.pred,
@@ -510,7 +508,13 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                                              input$nn.cap.pred.5,input$nn.cap.pred.6,
                                              input$nn.cap.pred.7,input$nn.cap.pred.8,
                                              input$nn.cap.pred.9,input$nn.cap.pred.10),
-                        rlr    = rl.modelo.np(input$sel.predic.var.nuevos)
+                        rlr    = rlr.modelo.np(variable.pr = input$sel.predic.var.nuevos,
+                                               input$alpha.rlr.pred,
+                                               input$switch.scale.rlr.pred),
+                        ada    = boosting.modelo.np(variable.pr = input$sel.predic.var.nuevos,
+                                                    iter        = input$iter.boosting.pred,
+                                                    maxdepth    = input$maxdepth.boosting.pred,
+                                                    minsplit    = input$minsplit.boosting.pred)
       )
       borrar.datos.modelos.np()
       borrar.datos(newCases,  prueba = TRUE)
@@ -525,10 +529,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         
         exe(codigo)
         actualizar.texto.modelo.pn(codigo)
-        menu.values <- c(" a[data-value=CargarNuevos]")
-        mostrar.tabs(TRUE, menu.values) 
-        menu.values <- c(" a[data-value=predicModelo]")
-        mostrar.tabs(FALSE, menu.values) 
+        mostrar.tabs(TRUE,  c(" a[data-value=CargarNuevos]")) 
+        mostrar.tabs(FALSE, c(" a[data-value=predicModelo]")) 
       },
       error =  function(e){
         showNotification(paste0(e), duration = 10, type = "error")
@@ -540,8 +542,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         if(input$selectModelsPred == "rl"){
           exe(codigo)
           actualizar.texto.modelo.pn(codigo) 
-          menu.values <- c( " a[data-value=CargarNuevos]")
-          mostrar.tabs(TRUE, menu.values)           
+          mostrar.tabs(TRUE, c( " a[data-value=CargarNuevos]"))           
 
         }
       })
@@ -574,6 +575,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
   })
   
+  
   output$downloaDatosPred <- downloadHandler(
     filename = function() {
       input$archivoNPred2$name
@@ -598,7 +600,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                          xgb   = xgb.prediccion.np(),
                          nn    = nn.prediccion.np(),
                          rl    = rl.prediccion.np(),
-                         rlr   = rl.prediccion.np())
+                         rlr   = rlr.prediccion.np())
         
         tryCatch({
           exe(codigo)
@@ -614,9 +616,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       showNotification(paste0("Error :", tr("ErrorDatosPN", updateData$idioma)), duration = 10, type = "error")
     }
   }
+  
   mostrar.tabs <- function(mostrar = FALSE, menu.values){
-    # menu.values <- c(" a[data-value=predicModelo]")
-    # mostrar.tabs(FALSE, menu.values)
     
     element <- "#BoxModelo li"
     lapply(menu.values, function(i){
@@ -631,16 +632,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
     })
   }
-  mostrar.tabs2 <- function(menu.values){
-    # menu.values <- c(" a[data-value=predicModelo]")
-    # mostrar.tabs(FALSE, menu.values)
-    
-    element <- "#BoxModelo li"
-    lapply(menu.values, function(i){
-        shinyjs::show(selector = paste0(element, i))
-      
-    })
-  }
+  
+  
   actualizar.texto.modelo.pn <- function(codigo){
     updateAceEditor(session, "fieldPredNuevos", value = codigo)
     if(is.null(modelo.nuevos)){
@@ -657,7 +650,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       actualizar.tabla.predic.np(datos.aux.prueba)
       }else{
       actualizar.tabla.predic.np(data.frame())
-    }
+      }
   }
   
  actualizar.tabla.predic.np <- function(datos) {
@@ -697,9 +690,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   
   crear.datos.np <- function(){
     datos.aux.prueba <- datos.prueba.completos
-    if(modelo.seleccionado.pn== "xgb")
-      datos.aux.prueba[,newCases$variable.predecir] <- predic.nuevos
-    else
     datos.aux.prueba[,newCases$variable.predecir]   <- predic.nuevos$prediction
     
     return(datos.aux.prueba)
@@ -713,6 +703,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
     }
   }
+  
   # Habilitada o deshabilita la semilla RLR
   observeEvent(input$permitir.landa.pred, {
     if (input$permitir.landa.pred) {
@@ -721,16 +712,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       shinyjs::disable("landa.pred")
     }
   })
+  
   # Habilitada o deshabilita la semilla RLR
   observeEvent(newCases$datos.aprendizaje, {
-    # transback
-    # transnext
-    # modelback
-    # modelnext
-    # nuevosback
-    # nuevosnext
-    # predicback
-    
+
     tryCatch({
         if(!is.null(newCases$datos.aprendizaje)){
           menu.values <- c( " a[data-value=Trasformar]")
@@ -768,12 +753,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                                          choices =  list("gini" = "gini", "Entropía" = "information")))))
     opc_bayes <- list(tags$span())
     
-    opc_potenciacion <- list(tags$span())
-    # opc_potenciacion <- list(fluidRow(col_3(numericInput(ns("iter.boosting.pred"), labelInput("numTree"), 50, width = "100%",min = 1)),
-    #                                   col_3(numericInput(ns("maxdepth.boosting.pred"),labelInput("maxdepth"), 15, width = "100%",min = 1)),
-    #                                   col_3(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1)),
-    #                                   col_3(selectInput(inputId = ns("tipo.boosting.pred"), label = labelInput("selectAlg"),selected = 1, width = "100%",
-    #                                                     choices =  c("discrete", "real", "gentle")))))
+    opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), tr("numTree", idioma), 50, width = "100%",min = 1)),
+                                      col_4(numericInput(ns("maxdepth.boosting.pred"),tr("maxdepth", idioma), 15, width = "100%",min = 1)),
+                                      col_4(numericInput(ns("minsplit.boosting.pred"),tr("minsplit", idioma), 20, width = "100%",min = 1))))
     opc_rl  <- list(tags$span())
    
     opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = tr("selectAlg", idioma),selected = 1,
