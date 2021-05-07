@@ -93,7 +93,7 @@ cambiar.labels <- function() {
       'dtl', 'garbol', 'reglas', 'minsplit', 'maxdepth', 'splitIndex', 'numTree', 'numVars', 'ruleNumTree', 'evolerror',
       'varImp', 'rfl', 'NoDRule', 'xgb', 'selbooster', 'selnrounds', 'bl', 'selectAlg', 'nn', 'redPlot', 'threshold',
       'selectCapas', 'stepmax', 'nnWar', 'bigPlot', 'rl', 'rlr', 'landa', 'automatico', 'posibLanda', 'gcoeff', 'limitModel', 'aROC', 'RocNo',
-      'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home')
+      'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras')
   
   return(x)
 }
@@ -125,10 +125,10 @@ error.plot <- function(msg) {
 
 
 # # Función para generar diccionario.
-# crear.traslation <- function() {
-#    library(plyr)
-#    archivo <- read.table("diccionario.csv", header = TRUE, sep = ";", as.is = TRUE)
-#    translation <- dlply(archivo , .(key), function(s) key = as.list(s))
-# 
-#    save(translation, file = "translation.bin")
-#  }
+crear.traslation <- function() {
+   library(plyr)
+   archivo <- read.table("diccionario.csv", header = TRUE, sep = ";", as.is = TRUE)
+   translation <- dlply(archivo , .(key), function(s) key = as.list(s))
+
+   save(translation, file = "translation.bin")
+ }

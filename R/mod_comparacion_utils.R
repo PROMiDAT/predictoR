@@ -96,7 +96,7 @@ plotROC <- function(sel) {
   
   nombres.tr <- unlist(lapply(names(scores), split_name))
   SCORES     <<- scores[nombres.tr %in% sel]
-  nombres.tr <- nombres.tr[nombres.tr %in% sel]
+  nombres.tr <<- nombres.tr[nombres.tr %in% sel]
   
   if(length(SCORES) == 0) {
     return(NULL)

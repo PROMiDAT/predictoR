@@ -152,7 +152,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       landa  <- ifelse(is.null(landa),paste0("cv.glm.",tipo,"$lambda.min"), landa)
       
       pred   <- predict(exe("modelo.rlr.",tipo), datos.prueba, type = "prob")
-      #scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,,1]
+      scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,1,]
       # Cambia la tabla con la prediccion de rlr
       output$rlrPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rlr.",tipo),idioma = idioma), server = FALSE)
       
@@ -207,7 +207,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         
         nombres.modelos <<- c(nombres.modelos, paste0("indices.rlr.",tipo))
-        #IndicesM[[paste0("rlr-",tipo)]] <<- indices.rlr
+        IndicesM[[paste0("rlr-",tipo)]] <<- indices.rlr
         updateData$selector.comparativa <- actualizar.selector.comparativa()
       },
       error = function(e) { # Regresamos al estado inicial y mostramos un error

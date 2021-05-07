@@ -85,6 +85,7 @@ ejecutar.roc <- function(){
     idioma <- updateData$idioma
     if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
       calcular.areas(input$roc.sel)
+      print(input$select.models)
       plotROC(input$select.models)
     } else {
       showNotification(tr("RocNo", idioma), duration = 15, type = "warning")

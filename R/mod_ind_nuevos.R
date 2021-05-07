@@ -58,7 +58,7 @@ mod_ind_nuevos_ui <- function(id){
         actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
          col_7(br(),muestra.datos.pred)), 
         fluidRow(col_11(),
-                 col_1(actionButton(ns("cargarnext"), labelInput("next"), width = "100%",
+                 col_1(actionButton(ns("cargarnext"), labelInput("siguiente"), width = "100%",
                                     icon = icon("forward")))), hr()),
       tabPanel(
         title = labelInput("trans"), width = 12, solidHeader = FALSE,
@@ -69,10 +69,10 @@ mod_ind_nuevos_ui <- function(id){
         actionButton(ns('transButton'), labelInput("aplicar"), width = "100%"), hr()
         ),
         col_7(br(),muestra.datos.pred2)),
-        fluidRow(col_1(actionButton (ns("transback"), labelInput("next"), width = "100%",
+        fluidRow(col_1(actionButton (ns("transback"), labelInput("atras"), width = "100%",
                                      icon = icon("backward"))),col_10(actionButton (ns("transback2"), labelInput("next"), width = "100%",
                                                                                     icon = icon("backward"))),
-                 col_1(actionButton(ns("transnext"), labelInput("next"), width = "100%",
+                 col_1(actionButton(ns("transnext"), labelInput("siguiente"), width = "100%",
                                     icon = icon("forward")))), hr()),
       tabPanel(title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
                list(HTML('&nbsp;'),strong(labelInput("seleParModel")),hr(),
@@ -477,7 +477,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     if(!is.null(newCases$datos.aprendizaje)){
       variable.predecir.np       <- input$sel.predic.var.nuevos
       newCases$variable.predecir <- input$sel.predic.var.nuevos
-       print(input$sel.predic.var.nuevos)
       codigo <- switch (input$selectModelsPred ,
                         knn   = kkn.modelo.np(variable.pr = newCases$variable.predecir,
                                               scale = input$switch.scale.knn.pred,

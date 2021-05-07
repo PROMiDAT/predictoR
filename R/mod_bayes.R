@@ -198,13 +198,14 @@ mod_bayes_server <- function(input, output, session, updateData){
       }, {
         indices.bayes            <<- NULL
         IndicesM[["Bayes"]]      <<- indices.bayes
-        output$bayesIndPrecTable <- shiny::renderTable(NULL)
-        output$bayesIndErrTable  <- shiny::renderTable(NULL)
+        output$bayesIndPrecTable <-  shiny::renderTable(NULL)
+        output$bayesIndErrTable  <-  shiny::renderTable(NULL)
         output$bayesPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$bayesErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }
+  
   # Limpia los datos segun el proceso donde se genera el error
   limpia.bayes.run <- function() {
         output$txtbayes          <- renderPrint(invisible(""))

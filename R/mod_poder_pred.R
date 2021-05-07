@@ -59,7 +59,7 @@ mod_poder_pred_ui <- function(id){
                    type = "html", loader = "loader4")),
       tabPanel(
         title = labelInput("denspred"), value = "tabDenspred",
-        withLoader(plotOutput(ns('plot_density_poder'), height = "75vh"), 
+        withLoader(echarts4rOutput(ns('plot_density_poder'), height = "75vh"), 
                    type = "html", loader = "loader4"))
     )
   )
@@ -135,17 +135,18 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   })
   
   
-  output$plot_density_poder <- renderPlot({
+  output$plot_density_poder <- renderEcharts4r({
     input$run_podpred
     variable.num  <- isolate(input$sel_dens_pred)
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
     tryCatch({
-      cod.poder.den <- code.plot.numerico.dens(variable.num,variable.pred,label=tr("distpodcat",idioma))
+      cod.poder.den <- plot.numerico.dens2(datos,variable.num,variable.pred,label=tr("denspodlab",idioma))
       updateAceEditor(session, "fieldCodeDenspred", value = cod.poder.den)
       if (ncol(var.numericas(datos)) >= 1) {
-        plot.numerico.dens(datos,variable.num,variable.pred,label=tr("distpodcat",idioma)) 
+        exe(cod.poder.den)
+        #plot.numerico.dens(datos,variable.num,variable.pred,label=tr("distpodcat",idioma)) 
       }else{
         res <- error.variables(T,idioma)
         return(res)
@@ -167,10 +168,13 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     datos         <- updateData$datos
 
     tryCatch({
-      cod.poder.dist.cat <- code.plot.dist.cat(variable.cat,variable.pred,label=tr("denspodlab",idioma))
+      cod.poder.dist.cat <- code.plot.dist.cat(variable.cat,variable.pred,label=tr("distpodcat",idioma))
       updateAceEditor(session, "fieldCodeDistpredcat", value = cod.poder.dist.cat)
       if (ncol(var.categoricas(datos)) > 1) {
-        plot.dist.cat(datos,variable.cat,variable.pred,label=tr("denspodlab",idioma)) 
+        # plot <<- plot.dist.cat2(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
+        # plot <<- exe(plot)
+        plot.dist.cat(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
+        
       }else{
         res <- error.variables(F,idioma)
         return(res)
