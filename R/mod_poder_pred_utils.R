@@ -97,7 +97,7 @@ e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.
       formatter = e_axis_formatter("percent", digits = 0)) %>%
     e_labels(position = 'inside' ,formatter = htmlwidgets::JS("
                                         function(params){
-                                        return(parseFloat(params.value[0] *100).toFixed(2) + '%' )}"))%>% 
+                                        return(params.name + ' (' + parseFloat(params.value[0] *100).toFixed(2) + '%)' )}"))%>% 
     e_datazoom(show = F) %>% 
     e_show_loading()
 }

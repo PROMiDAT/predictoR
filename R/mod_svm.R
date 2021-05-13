@@ -90,7 +90,7 @@ mod_svm_server <- function(input, output, session, updateData){
   # Cuando se genera el modelo knn
   observeEvent(input$runSvm, {
     if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-      #limpia.svm.run()
+      limpia.svm.run()
       default.codigo.svm()
       svm.full()
     }

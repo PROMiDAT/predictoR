@@ -41,6 +41,7 @@ rf.MC <- function(){
 rf.plot <- function() {
   return(paste0(
     "aux <- data.frame(modelo.rf$importance)\n",
+    "aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)\n",
     "aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]\n",
     "aux$label <- row.names(aux)\n\n",
     "aux %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>% \n",
@@ -76,7 +77,7 @@ e_rf_error <- function(dataplot) {
   }
   plot <- paste0("dataplot %>% \n",
          "e_charts(x = x) %>% \n",
-         "e_line(serie = OOB, showSymbol = FALSE) %>% \n",
+         "e_line(serie = OOB) %>% \n",
          aux,
          "e_legend(orient = 'vertical',
              right = '20', top = '10%') %>% \n",

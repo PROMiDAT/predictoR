@@ -35,6 +35,8 @@ opc_knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,
     tabBoxPrmdt(
       id = "BoxKnn", opciones = opc_knn,
       tabPanel(title = labelInput("generatem"), value = "tabKknModelo",
+               # conditionalPanel(condition="($('html').hasClass('shiny-busy'))",
+               #                  div(class = "loaderWrapper", div(class="loader"))),
                withLoader(verbatimTextOutput(ns("txtknn")), 
                           type = "html", loader = "loader4")),
       

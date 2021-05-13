@@ -500,33 +500,33 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   
   observeEvent(newCases$datos.aprendizaje, {
     if(!is.null(newCases$datos.aprendizaje)){
-      shinyjs::show("cargarnext")
+      shinyjs::show("cargarnext", anim = TRUE, animType = "slide" )
     }
     else{
-      shinyjs::hide("cargarnext")
+      shinyjs::hide("cargarnext", anim = TRUE, animType = "fade")
     }
   },ignoreNULL = FALSE)
   
   observeEvent(newCases$datos.prueba, {
     if(!is.null(newCases$datos.prueba)){
-      shinyjs::show("nuevosnext")
+      shinyjs::show("nuevosnext", anim = TRUE, animType = "slide")
     }
     else{
-      shinyjs::hide("nuevosnext")
+      shinyjs::hide("nuevosnext", anim = TRUE, animType = "fade")
     }
   },ignoreNULL = FALSE)
   
   observeEvent(newCases$variable.predecir, {
     if(!is.null(newCases$variable.predecir)){
-      shinyjs::show("modelnext")
+      shinyjs::show("modelnext", anim = TRUE, animType = "slide")
     }
     else{
-      shinyjs::hide("modelnext")
+      shinyjs::hide("modelnext", anim = TRUE, animType = "fade")
     }
   },ignoreNULL = FALSE)
   
   observeEvent(input$cargarnext, {
-    shinyjs::hide("primera", anim = TRUE)
+    shinyjs::hide("primera", anim = TRUE )
     shinyjs::show("segundo", anim = TRUE)
   })
 

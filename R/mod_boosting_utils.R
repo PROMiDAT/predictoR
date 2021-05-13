@@ -51,8 +51,9 @@ boosting.plot <- function(){
 boosting.plot.import <- function() {
   return(paste0(
     "aux <- data.frame(importancia = modelo.boosting$importance)\n",
-    "aux$nombre <- row.names(aux)\n\n",
-    "aux <- aux[order(aux$importancia, decreasing = T), ]\n",
+    "aux$nombre <- row.names(aux)\n",
+    "aux$importancia <- abs(aux$importancia)\n",
+    "aux <- aux[order(aux$importancia, decreasing = T), ]\n\n",
     "aux %>% e_charts(nombre) %>% e_bar(importancia, name = var) %>% \n",
     "  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% \n",
     "  e_flip_coords() %>%\n",

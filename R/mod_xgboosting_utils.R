@@ -42,12 +42,29 @@ xgb.varImp <- function(booster = "gbtree"){
   )
 }
 
+#Codigo del grafico de importancia de variables
+e_xgb_varImp <- function(booster = "gbtree"){
+  paste0("nombres                   <- modelo.xgb.",booster,"$feature_names\n",   
+         "variables.importantes     <- xgboost::xgb.importance(feature_names = nombres, model = modelo.xgb.",booster,")\n",
+         "variables.importantes     <- variables.importantes[1:length(nombres),]","\n",
+         "variables.importantes[,2] <- abs(variables.importantes[,2])","\n",
+         "variables.importantes     <- na.omit(variables.importantes)\n",
+         "datos.xgb <- data.frame(label = variables.importantes$Feature, values = variables.importantes[,2])\n",
+         "datos.xgb %>% e_charts(label) %>% e_bar(values, name = var) %>%\n",
+         "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%\n",
+         "e_flip_coords()%>%\n",
+         "e_y_axis(inverse = TRUE)\n"
+         
+  )
+}
+
 # V1 
 # nombres <- modelo.xgb.gbtree$feature_names
 # variables.importantes <<- xgboost::xgb.importance(feature_names = nombres, model = modelo.xgb.gbtree)
-# vars <- variables.importantes[1:length(nombres),]
+# vars    <- variables.importantes[1:length(nombres),]
 # vars[,2] <- abs(vars[,2])
-# datos.xgb<- data.frame(label = nombres, values = vars[,2])
+# vars <- na.omit(vars)
+# datos.xgb<- data.frame(label = vars$Feature  , values = vars[,2])
 # datos.xgb %>% e_charts(label) %>% e_bar(Gain, name = var) %>%
 #        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%
 #        e_flip_coords()%>%

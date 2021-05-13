@@ -36,7 +36,7 @@ mod_xgboosting_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabXgbImp",
-               withLoader(plotOutput(ns('plot_xgb'), height = "55vh"), 
+               withLoader(echarts4rOutput(ns('plot_xgb'), height = "55vh"), 
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabXgbPred",
@@ -188,7 +188,7 @@ mod_xgboosting_server <- function(input, output, session, updateData){
     cod.xgb.modelo <<- codigo
     
     #Codigo de importancia de variables
-    updateAceEditor(session, "fieldCodeXgbImp", value = xgb.varImp(booster = tipo))
+    updateAceEditor(session, "fieldCodeXgbImp", value = e_xgb_varImp(booster = tipo))
      
     codigo <- xgb.prediccion(booster = tipo)
     updateAceEditor(session, "fieldCodeXgbPred", value = codigo)
@@ -208,10 +208,10 @@ mod_xgboosting_server <- function(input, output, session, updateData){
     tryCatch({
       tipo   <- input$boosterXgb
       codigo <- input$fieldCodeXgbImp
-      output$plot_xgb <- renderPlot(exe(codigo))
-      cod    <- ifelse(codigo == "", xgb.varImp(booster = tipo), codigo)
+      output$plot_xgb <- renderEcharts4r(exe(codigo))
+      cod    <- ifelse(codigo == "", e_xgb_varImp(booster = tipo), codigo)
     }, error = function(e) {
-      output$plot_xgb <- renderPlot(NULL)
+      output$plot_xgb <- renderEcharts4r(NULL)
     })
   }
   

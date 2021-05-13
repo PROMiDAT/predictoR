@@ -281,7 +281,7 @@ mod_boosting_server <- function(input, output, session, updateData){
       switch(i, {
         exe("modelo.boosting <<- NULL")
         output$txtBoosting          <- renderPrint(invisible(""))
-        output$plot_boosting        <- renderPlot(NULL)
+        output$plot_boosting        <- renderEcharts4r(NULL)
         output$plot_rf <- renderEcharts4r(NULL)
       }, {
         exe("prediccion.boosting <<- NULL")
@@ -303,8 +303,8 @@ mod_boosting_server <- function(input, output, session, updateData){
   # Limpia los datos segun el proceso donde se genera el error
   limpia.boosting.run <- function() {
         output$txtBoosting          <- renderPrint(invisible(""))
-        output$plot_boosting        <- renderPlot(NULL)
-        output$plot_boosting_import <- renderPlot(NULL)
+        output$plot_boosting        <- renderEcharts4r(NULL)
+        output$plot_boosting_import <- renderEcharts4r(NULL)
         output$boostingPrediTable   <- DT::renderDataTable(NULL)
         output$plot_boosting_mc     <- renderPlot(NULL)
         output$txtBoostingMC        <- renderPrint(invisible(NULL))
