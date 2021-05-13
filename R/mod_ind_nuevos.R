@@ -189,10 +189,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     dec        <- isolate(input$decNPred)
     encabezado <- isolate(input$headerNPred)
     deleteNA   <- isolate(input$deleteNAnPred)
-    
-    # menu.values <- c(" a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
-    # mostrar.tabs(FALSE, menu.values) 
-    # 
+
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
       newCases$variable.predecir <- NULL
@@ -251,10 +248,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       
       newCases$datos.prueba <- datos.prueba.completos
       
-      # code.trans.pn <<- gsub("datos.originales.completos", "datos.prueba.completos", code.trans.pn)
-      # code.trans.pn <<- gsub("datos.aprendizaje.completos", "datos.prueba.completos", code.trans.pn)
-      # exe(code.trans.pn)
-      
       if(ncol(newCases$datos.prueba) <= 1) {
         showNotification(
           "ERROR: Check Separators", duration = 10, type = "error")
@@ -262,8 +255,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         
       } else {
         newCases$datos <- newCases$datos.prueba
-        menu.values <- c( " a[data-value=predicModelo]")
-        mostrar.tabs(TRUE, menu.values) 
       }
     }, error = function(e) {
       borrar.datos(newCases,  prueba = TRUE)
@@ -289,8 +280,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     )
     if(is.null(datos)){
       output$txtPredNuevos <- renderPrint(invisible(NULL))
-      menu.values <- c( " a[data-value=Trasformar]", " a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
-      mostrar.tabs(FALSE, menu.values) 
     }
 
     tryCatch({
@@ -445,8 +434,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
     newCases$datos.aprendizaje  <- datos
     datos.aprendizaje.completos <<- newCases$datos.aprendizaje
-    menu.values <- c( " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
-    mostrar.tabs(FALSE, menu.values) 
   }) 
   
   selectInputTrans <- function(datos, var, idioma = "es") {
@@ -520,6 +507,24 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   },ignoreNULL = FALSE)
   
+  observeEvent(newCases$datos.prueba, {
+    if(!is.null(newCases$datos.prueba)){
+      shinyjs::show("nuevosnext")
+    }
+    else{
+      shinyjs::hide("nuevosnext")
+    }
+  },ignoreNULL = FALSE)
+  
+  observeEvent(newCases$variable.predecir, {
+    if(!is.null(newCases$variable.predecir)){
+      shinyjs::show("modelnext")
+    }
+    else{
+      shinyjs::hide("modelnext")
+    }
+  },ignoreNULL = FALSE)
+  
   observeEvent(input$cargarnext, {
     shinyjs::hide("primera", anim = TRUE)
     shinyjs::show("segundo", anim = TRUE)
@@ -559,8 +564,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     shinyjs::show("cuarta", anim = TRUE)
     shinyjs::hide("quinta", anim = TRUE)
   })
-  
-  
   
   observeEvent(input$PredNuevosBttnModelo,{
     crear.modelo()
@@ -621,8 +624,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         
         exe(codigo)
         actualizar.texto.modelo.pn(codigo)
-        mostrar.tabs(TRUE,  c(" a[data-value=CargarNuevos]")) 
-        mostrar.tabs(FALSE, c(" a[data-value=predicModelo]")) 
       },
       error =  function(e){
         showNotification(paste0(e), duration = 10, type = "error")
@@ -634,7 +635,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         if(input$selectModelsPred == "rl"){
           exe(codigo)
           actualizar.texto.modelo.pn(codigo) 
-          mostrar.tabs(TRUE, c( " a[data-value=CargarNuevos]"))           
 
         }
       })
@@ -652,20 +652,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     })
     
   })  
-  
-  observeEvent(input$transback2, {
-
-    tryCatch({
-      if(!is.null(newCases$datos.aprendizaje)){
-        menu.values <- c( " a[data-value=crearModelo]")
-        mostrar.tabs(TRUE, menu.values) 
-      }
-      
-    }, error = function(e) {
-      showNotification(paste0("ERROR debe cargar los datos: ", e), type = "error")
-    })
-    
-  })
   
   
   output$downloaDatosPred <- downloadHandler(
@@ -708,23 +694,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       showNotification(paste0("Error :", tr("ErrorDatosPN", updateData$idioma)), duration = 10, type = "error")
     }
   }
-  
-  mostrar.tabs <- function(mostrar = FALSE, menu.values){
-    
-    # element <- "#BoxModelo li"
-    # lapply(menu.values, function(i){
-    #   if(mostrar) {
-    #     shinyjs::enable(selector = paste0(element, i))
-    #     #shinyjs::show(selector = paste0(element, i))
-    #     
-    #   } else {
-    #     shinyjs::disable(selector = paste0(element, i))
-    #     shinyjs::hide(selector = paste0(element, i))
-    #     
-    #   }
-    # })
-  }
-  
   
   actualizar.texto.modelo.pn <- function(codigo){
     updateAceEditor(session, "fieldPredNuevos", value = codigo)
@@ -805,21 +774,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   })
   
-  # Habilitada o deshabilita la semilla RLR
-  observeEvent(newCases$datos.aprendizaje, {
-
-    tryCatch({
-        if(!is.null(newCases$datos.aprendizaje)){
-          menu.values <- c( " a[data-value=Trasformar]")
-          mostrar.tabs(TRUE, menu.values) 
-        }
-      
-    }, error = function(e) {
-      showNotification(paste0("ERROR debe cargar los datos: ", e), type = "error")
-    })
-
-  })
-  
   #' Update Models Opcions
   output$opcModelsPredN = renderUI({
     idioma  <- updateData$idioma
@@ -885,7 +839,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                    dt    =  opc_dt)
     
     if(!is.null(newCases$datos.aprendizaje)){
-      #output$txtPredNuevos <- renderPrint(invisible(NULL))
       updateSelectInput(session, "sel.predic.var.nuevos", choices = rev(colnames.empty(var.categoricas(newCases$datos.aprendizaje))))
       updateNumericInput(session, "kmax.knn.pred", value = round(sqrt(nrow(newCases$datos.aprendizaje))))
       updateNumericInput(session, "mtry.rf.pred",  value = round(sqrt(ncol(newCases$datos.aprendizaje) -1)))
