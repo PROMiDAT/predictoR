@@ -64,7 +64,40 @@ rf.plot <- function() {
 
 #Codigo del grafico de error del modelo
 plot.rf.error <- function(){
-  return(paste0("plot(modelo.rf, main='')\n",
-                "legend('topright', c('OOB','",
-                paste0(unique(datos[,variable.predecir]), collapse = "','"), "'), text.col=1:6, lty=1:5, col=1:6)"))
+  return(paste0("data     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate)) \n",
+                "e_rf_error(data)\n"))
 }
+
+e_rf_error <- function(dataplot) {
+  categorias   <- colnames(dataplot[,-c(1,2)])
+  aux <- ''
+  for (i in 1:length(categorias)) {
+    aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
+  }
+  plot <- paste0("dataplot %>% \n",
+         "e_charts(x = x) %>% \n",
+         "e_line(serie = OOB, showSymbol = FALSE) %>% \n",
+         aux,
+         "e_legend(orient = 'vertical',
+             right = '20', top = '10%') %>% \n",
+         "e_axis_labels(
+            x = 'Trees',
+            y = 'Error') %>%  \n",
+         "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
+  )
+  exe(plot)
+}
+# 
+# datata %>%
+#   e_charts(x = x) %>%
+#   e_line(serie = OOB,lineStyle = list(type = 'dashed', color = 'black'), showSymbol = FALSE) %>%
+#   e_title('Ensemble error vs number or trees',
+#           left = 'center',
+#           top = 5,
+#           textStyle = list(fontSize = 15)) %>%
+#   e_legend(orient = 'vertical',
+#            right = '20', top = '10%') %>%
+#   e_axis_labels(
+#     x = 'Iterations',
+#     y = 'Error'
+#   )%>%  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()

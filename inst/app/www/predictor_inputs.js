@@ -116,16 +116,16 @@ window.addEventListener("load", function(event) {
 
     //Botones de Wizard
   $("a[data-value='predicModelo']").on('click',function(e) {$("#ind_nuevos_ui_1-predecirPromidat").click()});
-  $("a[data-value='Trasformar']").on('click',  function(e) {$("#ind_nuevos_ui_1-transback2").click()});
+  //$("a[data-value='Trasformar']").on('click',  function(e) {$("#ind_nuevos_ui_1-transback2").click()});
   //$("#ind_nuevos_ui_1-cargarnext").on('click', function(e) {$("a[data-value='Trasformar']").click();$("a[data-value='Cargar']").hide(); $("a[data-value='Trasformar']").show()});
-  $("#ind_nuevos_ui_1-cargarnext").on('click', function(e) {$("a[data-value='Trasformar']").click();});
-  $("#ind_nuevos_ui_1-transback").on('click',  function(e) {$("a[data-value='Cargar']").click();});
-  $("#ind_nuevos_ui_1-transnext").on('click',  function(e) {$("a[data-value='crearModelo']").click()});
-  $("#ind_nuevos_ui_1-modelback").on('click',  function(e) {$("a[data-value='Trasformar']").click()});
-  $("#ind_nuevos_ui_1-modelnext").on('click',  function(e) {$("a[data-value='CargarNuevos']").click()});
-  $("#ind_nuevos_ui_1-nuevosback").on('click', function(e) {$("a[data-value='crearModelo']").click()});
+  //$("#ind_nuevos_ui_1-cargarnext").on('click', function(e) {$("a[data-value='Trasformar']").click();});
+  //$("#ind_nuevos_ui_1-transback").on('click',  function(e) {$("a[data-value='Cargar']").click();});
+  //$("#ind_nuevos_ui_1-transnext").on('click',  function(e) {$("a[data-value='crearModelo']").click()});
+  //$("#ind_nuevos_ui_1-modelback").on('click',  function(e) {$("a[data-value='Trasformar']").click()});
+  //$("#ind_nuevos_ui_1-modelnext").on('click',  function(e) {$("a[data-value='CargarNuevos']").click()});
+ /* $("#ind_nuevos_ui_1-nuevosback").on('click', function(e) {$("a[data-value='crearModelo']").click()});
   $("#ind_nuevos_ui_1-nuevosnext").on('click', function(e) {$("a[data-value='predicModelo']").click()});
-  $("#ind_nuevos_ui_1-predicback").on('click', function(e) {$("a[data-value='CargarNuevos']").click()});
+  $("#ind_nuevos_ui_1-predicback").on('click', function(e) {$("a[data-value='CargarNuevos']").click()});*/
 
   /* Los modelos se vuelven ejecutar al ser seleccionados una vez se haga una segmentacion diferente
   $($($($("#tabDyA").next().children()[2]).children()[4]).children()[2]).on('click', nya_btn_fun);*/

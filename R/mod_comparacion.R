@@ -72,7 +72,6 @@ observeEvent(input$runComp, {
 ejecutar.roc <- function(){
   output$TablaComp <- DT::renderDataTable({
     if (!is.null(updateData$datos.aprendizaje)) {
-      roc.sel <<- input$roc.sel
       calcular.areas(input$roc.sel)
       DT::datatable(tabla.comparativa(input$select.models, updateData$selector.comparativa, updateData$idioma),
                     selection = "none", editable = FALSE,
@@ -85,8 +84,7 @@ ejecutar.roc <- function(){
     idioma <- updateData$idioma
     if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
       calcular.areas(input$roc.sel)
-      print(input$select.models)
-      plotROC(input$select.models)
+      plotROC(input$select.models, input$roc.sel)
     } else {
       showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
       return(NULL)

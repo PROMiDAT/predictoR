@@ -10,13 +10,18 @@
 mod_ind_nuevos_ui <- function(id){
   ns <- NS(id)
   muestra.datos.pred  <- box(title = labelInput("data"), status = "primary", width = 12, 
-                            solidHeader = TRUE, collapsible = TRUE,
-                            withLoader(DT::dataTableOutput(ns('contentsPred'))), 
-                            type = "html", loader = "loader4")  
+                             solidHeader = TRUE, collapsible = TRUE,
+                             withLoader(DT::dataTableOutput(ns('contentsPred'))), 
+                             type = "html", loader = "loader4")  
   
   muestra.datos.pred2 <- box(title = labelInput("data"), status = "primary", width = 12, 
                              solidHeader = TRUE, collapsible = TRUE,
                              withLoader(DT::dataTableOutput(ns('contentsPred2'))), 
+                             type = "html", loader = "loader4")  
+  
+  muestra.datos.pred4 <- box(title = labelInput("data"), status = "primary", width = 12, 
+                             solidHeader = TRUE, collapsible = TRUE,
+                             withLoader(DT::dataTableOutput(ns('contentsPred24'))), 
                              type = "html", loader = "loader4")  
   
   muestra.datos.pred3 <- box(title = labelInput("data"), status = "primary", width = 12, 
@@ -36,103 +41,138 @@ mod_ind_nuevos_ui <- function(id){
                                 tabs.content = list(codigo.monokai(ns("fieldCodePredPN"),height = "10vh")))
 
   tagList(
-    tabBoxPrmdt(
-      id = "BoxModelo", 
-      tabPanel(
-        title = p(labelInput("home"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
-        collapsible = FALSE, collapsed = FALSE, value = "Cargar",
+    div(id = ns("primera"),
         fluidRow(
-          col_5(HTML('&nbsp;'), strong(labelInput("cargar")),hr(),
-        checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
-        checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
-        radioButtons(
-          ns('sepNPred'), labelInput("separador"), inline = T,
-          choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
-        ),
-        radioButtons(ns('decNPred'), labelInput("separadordec"), c(',', '.'), inline = T),
-        radioSwitch(ns("deleteNAnPred"), "eliminana", c("eliminar", "imputar")),
-        fileInput(
-          ns('archivoNPred'), labelInput("cargarchivo"), width = "100%",
-          placeholder = "", buttonLabel = labelInput("subir"),
-          accept = c('text/csv', '.csv', '.txt')), hr(),
-        actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
-         col_7(br(),muestra.datos.pred)), 
-        fluidRow(col_11(),
-                 col_1(actionButton(ns("cargarnext"), labelInput("siguiente"), width = "100%",
-                                    icon = icon("forward")))), hr()),
-      tabPanel(
-        title = labelInput("trans"), width = 12, solidHeader = FALSE,
-        collapsible = FALSE, collapsed = FALSE, value = "Trasformar",
+          col_11(
+            tabBoxPrmdt(
+            id = "BoxModeloq", 
+            tabPanel(
+            title = p(labelInput("cargar"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
+            collapsible = FALSE, collapsed = FALSE, value = "Cargar",
+            fluidRow(
+              col_5(
+                    checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
+                    checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
+                    radioButtons(
+                      ns('sepNPred'), labelInput("separador"), inline = T,
+                      choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
+                    ),
+                    radioButtons(ns('decNPred'), labelInput("separadordec"), c(',', '.'), inline = T),
+                    radioSwitch(ns("deleteNAnPred"), "eliminana", c("eliminar", "imputar")),
+                    fileInput(
+                      ns('archivoNPred'), labelInput("cargarchivo"), width = "100%",
+                      placeholder = "", buttonLabel = labelInput("subir"),
+                      accept = c('text/csv', '.csv', '.txt')), hr(),
+                    actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
+              col_7(br(),muestra.datos.pred)))
+            )),
+          col_1(
+            actionButton(ns("cargarnext"), labelInput("siguiente"), width = "100%",
+                         icon = icon("forward"))
+          )
+        )
+      ),
+    div(id = ns("segundo"),
+        style = "display:none",
         fluidRow(
-          col_5(HTML('&nbsp;'), strong(labelInput("trans")),hr(),
-        uiOutput(ns('transDataPredN')), hr(), 
-        actionButton(ns('transButton'), labelInput("aplicar"), width = "100%"), hr()
-        ),
-        col_7(br(),muestra.datos.pred2)),
-        fluidRow(col_1(actionButton (ns("transback"), labelInput("atras"), width = "100%",
-                                     icon = icon("backward"))),col_10(actionButton (ns("transback2"), labelInput("next"), width = "100%",
-                                                                                    icon = icon("backward"))),
-                 col_1(actionButton(ns("transnext"), labelInput("siguiente"), width = "100%",
-                                    icon = icon("forward")))), hr()),
-      tabPanel(title = labelInput("seleParModel"),solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
-               list(HTML('&nbsp;'),strong(labelInput("seleParModel")),hr(),
-                    selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"),
-                    radioGroupButtons(ns("selectModelsPred"), labelInput("selectMod"), list("<span data-id=\"knnl\"></span>" = "knn",
-                                                                                            "<span data-id=\"dtl\"></span>" = "dt",
-                                                                                            "<span data-id=\"rfl\"></span>" = "rf",
-                                                                                            "<span data-id=\"bl\"></span>" = "ada",
-                                                                                            "<span data-id=\"svml\"></span>" = "svm",
-                                                                                            "Bayes" = "bayes",
-                                                                                            "<span data-id=\"xgb\"></span>" = "xgb",
-                                                                                            "<span data-id=\"nn\"></span>" = "nn",
-                                                                                            "<span data-id=\"rl\"></span>" = "rl",
-                                                                                            "<span data-id=\"rlr\"></span>" = "rlr"),
-                                      size = "sm", status = "primary",individual = FALSE, justified = FALSE, selected = "knn",
-                                      checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                       no = icon("remove", lib = "glyphicon")), width = "100%")),
-               uiOutput(ns('opcModelsPredN')),
-               withLoader(verbatimTextOutput(ns("txtPredNuevos")), 
-                          type = "html", loader = "loader4"),
-               
-               actionButton(ns("PredNuevosBttnModelo"), labelInput("generarM"), width  = "100%" ),
-               fluidRow(br(),col_1(actionButton (ns("modelback"), labelInput("next"), width = "100%",
-                                            icon = icon("backward"))),col_10(),
-                        col_1(actionButton(ns("modelnext"), labelInput("next"), width = "100%",
-                                           icon = icon("forward")))), br()),
-      tabPanel(
-        title = labelInput("cargarNuev"), width = 12, solidHeader = FALSE,
-        collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
-        fluidRow(
-          col_5(HTML('&nbsp;'),strong(labelInput("cargarNuev")),hr(),
-            checkboxInput(ns('headerNPred2'), labelInput("header"), value = T),
-            checkboxInput(ns('rownameNPred2'), labelInput("Rownames"), value = T),
-            radioButtons(
-              ns('sepNPred2'), labelInput("separador"), inline = T,
-              choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
-            ),
-            radioButtons(ns('decNPred2'), labelInput("separadordec"), c(',', '.'), inline = T),
-            radioSwitch(ns("deleteNAnPred2"), "eliminana", c("eliminar", "imputar")),
-            fileInput(
-              ns('archivoNPred2'), labelInput("cargarchivo"), width = "100%",
-              placeholder = "", buttonLabel = labelInput("subir"),
-              accept = c('text/csv', '.csv', '.txt')), hr(),
-            actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"), hr()),
-          col_7(br(), muestra.datos.pred3)),br(),
-        fluidRow(col_1(actionButton (ns("nuevosback"), labelInput("next"), width = "100%",
-                                     icon = icon("backward"))),col_10(),
-                 col_1(actionButton(ns("nuevosnext"), labelInput("next"), width = "100%",
-                                    icon = icon("forward")))), br()),
-      tabPanel(title = labelInput("predicnuevos"), value = "predicModelo",
-               HTML('&nbsp;'),strong(labelInput("predicnuevos")),hr(),
-               DT::dataTableOutput(ns("PrediTablePN")),
-               hr(),
-               downloadButton(ns("downloaDatosPred"), labelInput("descargar"), style = "width:100%;"),
-               actionButton(ns("predecirPromidat"), "preditc"),
-               fluidRow(br(),col_1(actionButton (ns("predicback"), labelInput("next"), width = "100%",
-                                            icon = icon("backward"))),col_10()), br()),
-      conditionalPanel("input.BoxModelo == 'crearModelo'", tabs.modelos),
-      conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos2)
-    )
+          col_1(actionButton (ns("transback"), labelInput("atras"), width = "100%",
+                              icon = icon("backward"))),
+          col_10(
+            tabBoxPrmdt(
+            id = "BoxModeloe",
+            tabPanel(
+              title = p(labelInput("trans"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
+              collapsible = FALSE, collapsed = FALSE, value = "Trasformar",
+              fluidRow(
+                col_5(
+                      uiOutput(ns('transDataPredN')), hr(), 
+                      actionButton(ns('transButton'), labelInput("aplicar"), width = "100%"), hr()
+                ),
+                col_7(br(),muestra.datos.pred2)), hr())
+            )),
+          col_1(actionButton(ns("transnext"), labelInput("siguiente"), width = "100%",
+                             icon = icon("forward")))
+        )
+    ),
+    div(id = ns("tercera"),
+        style = "display:none",
+        fluidRow(col_1(actionButton(ns("modelback"), labelInput("atras"), width = "100%",
+                                          icon = icon("backward"))),
+                 col_10(
+                   tabBoxPrmdt(
+                     id = "BoxModeloa",
+                     tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag") ,solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
+                              list(
+                                   selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"),
+                                   radioGroupButtons(ns("selectModelsPred"), labelInput("selectMod"), list("<span data-id=\"knnl\"></span>" = "knn",
+                                                                                                           "<span data-id=\"dtl\"></span>" = "dt",
+                                                                                                           "<span data-id=\"rfl\"></span>" = "rf",
+                                                                                                           "<span data-id=\"bl\"></span>" = "ada",
+                                                                                                           "<span data-id=\"svml\"></span>" = "svm",
+                                                                                                           "Bayes" = "bayes",
+                                                                                                           "<span data-id=\"xgb\"></span>" = "xgb",
+                                                                                                           "<span data-id=\"nn\"></span>" = "nn",
+                                                                                                           "<span data-id=\"rl\"></span>" = "rl",
+                                                                                                           "<span data-id=\"rlr\"></span>" = "rlr"),
+                                                     size = "sm", status = "primary",individual = FALSE, justified = FALSE, selected = "knn",
+                                                     checkIcon = list(yes = icon("ok", lib = "glyphicon"),
+                                                                      no = icon("remove", lib = "glyphicon")), width = "100%")),
+                              uiOutput(ns('opcModelsPredN')),
+                              withLoader(verbatimTextOutput(ns("txtPredNuevos")), 
+                                         type = "html", loader = "loader4"),
+                              
+                              actionButton(ns("PredNuevosBttnModelo"), labelInput("generarM"), width  = "100%" ),br()),
+                     conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos)
+
+                 )),
+                 col_1(actionButton(ns("modelnext"), labelInput("siguiente"), width = "100%",
+                                    icon = icon("forward")))
+        )),
+    div(id = ns("cuarta"),
+        style = "display:none",
+        fluidRow(col_1(actionButton (ns("nuevosback"), labelInput("atras"), width = "100%",
+                                     icon = icon("backward"))),
+                 col_10(
+                   tabBoxPrmdt(
+                     id = "BoxModelor",
+                     tabPanel(
+                       title = p(labelInput("cargarNuev"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
+                       collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
+                       fluidRow(
+                         col_5(checkboxInput(ns('headerNPred2'), labelInput("header"), value = T),
+                               checkboxInput(ns('rownameNPred2'), labelInput("Rownames"), value = T),
+                               radioButtons(
+                                 ns('sepNPred2'), labelInput("separador"), inline = T,
+                                 choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
+                               ),
+                               radioButtons(ns('decNPred2'), labelInput("separadordec"), c(',', '.'), inline = T),
+                               radioSwitch(ns("deleteNAnPred2"), "eliminana", c("eliminar", "imputar")),
+                               fileInput(
+                                 ns('archivoNPred2'), labelInput("cargarchivo"), width = "100%",
+                                 placeholder = "", buttonLabel = labelInput("subir"),
+                                 accept = c('text/csv', '.csv', '.txt')), hr(),
+                               actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"), hr()),
+                         col_7(br(), muestra.datos.pred3)),br())
+                   )),
+                 col_1(actionButton(ns("nuevosnext"), labelInput("siguiente"), width = "100%",
+                                    icon = icon("forward")))
+        )
+    ),
+    div(id = ns("quinta"),
+        style = "display:none",
+        fluidRow(col_1(actionButton (ns("predicback"), labelInput("atras"), width = "100%",
+                                     icon = icon("backward"))),
+                 col_10(
+                   tabBoxPrmdt(
+                     id = "BoxModelo",
+                     tabPanel(title = p(labelInput("predicnuevos"),class = "wrapper-tag"), value = "predicModelo",
+                              DT::dataTableOutput(ns("PrediTablePN")),
+                              hr(),
+                              downloadButton(ns("downloaDatosPred"), labelInput("descargar"), style = "width:100%;"),
+                              actionButton(ns("predecirPromidat"), "preditc"),  br()),
+                     conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos2)
+                   ))
+        ))
   )
 }
 
@@ -150,9 +190,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     encabezado <- isolate(input$headerNPred)
     deleteNA   <- isolate(input$deleteNAnPred)
     
-    menu.values <- c(" a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
-    mostrar.tabs(FALSE, menu.values) 
-    
+    # menu.values <- c(" a[data-value=crearModelo]", " a[data-value=CargarNuevos]", " a[data-value=predicModelo]")
+    # mostrar.tabs(FALSE, menu.values) 
+    # 
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
       newCases$variable.predecir <- NULL
@@ -171,6 +211,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         
       }
     }, error = function(e) {
+      newCases$datos.aprendizaje <- NULL
+      
       borrar.datos(newCases)
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
@@ -467,7 +509,58 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         }
       }
     }
-})
+  })
+  
+  observeEvent(newCases$datos.aprendizaje, {
+    if(!is.null(newCases$datos.aprendizaje)){
+      shinyjs::show("cargarnext")
+    }
+    else{
+      shinyjs::hide("cargarnext")
+    }
+  },ignoreNULL = FALSE)
+  
+  observeEvent(input$cargarnext, {
+    shinyjs::hide("primera", anim = TRUE)
+    shinyjs::show("segundo", anim = TRUE)
+  })
+
+  observeEvent(input$transback, {
+    shinyjs::show("primera", anim = TRUE)
+    shinyjs::hide("segundo", anim = TRUE)
+  })
+  
+  observeEvent(input$transnext, {
+    shinyjs::show("tercera", anim = TRUE)
+    shinyjs::hide("segundo", anim = TRUE)
+  })
+  
+  observeEvent(input$modelback, {
+    shinyjs::show("segundo", anim = TRUE)
+    shinyjs::hide("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$modelnext, {
+    shinyjs::show("cuarta", anim = TRUE)
+    shinyjs::hide("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$nuevosback, {
+    shinyjs::hide("cuarta",  anim = TRUE)
+    shinyjs::show("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$nuevosnext, {
+    shinyjs::hide("cuarta", anim = TRUE)
+    shinyjs::show("quinta", anim = TRUE)
+  })  
+  
+  observeEvent(input$predicback, {
+    shinyjs::show("cuarta", anim = TRUE)
+    shinyjs::hide("quinta", anim = TRUE)
+  })
+  
+  
   
   observeEvent(input$PredNuevosBttnModelo,{
     crear.modelo()
@@ -618,18 +711,18 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   
   mostrar.tabs <- function(mostrar = FALSE, menu.values){
     
-    element <- "#BoxModelo li"
-    lapply(menu.values, function(i){
-      if(mostrar) {
-        shinyjs::enable(selector = paste0(element, i))
-        #shinyjs::show(selector = paste0(element, i))
-        
-      } else {
-        shinyjs::disable(selector = paste0(element, i))
-        shinyjs::hide(selector = paste0(element, i))
-        
-      }
-    })
+    # element <- "#BoxModelo li"
+    # lapply(menu.values, function(i){
+    #   if(mostrar) {
+    #     shinyjs::enable(selector = paste0(element, i))
+    #     #shinyjs::show(selector = paste0(element, i))
+    #     
+    #   } else {
+    #     shinyjs::disable(selector = paste0(element, i))
+    #     shinyjs::hide(selector = paste0(element, i))
+    #     
+    #   }
+    # })
   }
   
   

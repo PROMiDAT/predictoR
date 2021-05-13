@@ -152,7 +152,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       landa  <- ifelse(is.null(landa),paste0("cv.glm.",tipo,"$lambda.min"), landa)
       
       pred   <- predict(exe("modelo.rlr.",tipo), datos.prueba, type = "prob")
-      scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,1,]
+      scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,2,]
       # Cambia la tabla con la prediccion de rlr
       output$rlrPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rlr.",tipo),idioma = idioma), server = FALSE)
       

@@ -44,7 +44,7 @@ boosting.MC <- function(){
 #Codigo del grafico de boosting
 boosting.plot <- function(){
   return(paste0("error(modelo.boosting, datos.aprendizaje) -> evol.train\n",
-                 "plot.errorevol.ada(evol.train)"))
+                 "e_evol_error(evol.train)"))
 }
 
 #Codigo del grafico de importancia de variables
@@ -58,6 +58,27 @@ boosting.plot.import <- function() {
     "  e_flip_coords() %>%\n",
     "  e_y_axis(inverse = TRUE) \n"
   ))
+}
+
+#Codigo del grafico de evolucion del error
+e_evol_error <- function(x) {
+  if (!((class(x) == "errorevol"))) 
+    stop("x class should be errorevol")
+  
+  evolplot <- data.frame(x = c(1:length(x$error)), train = x$error)
+  evolplot %>%
+    e_charts(x) %>%
+    e_line(train) %>%
+    e_title("Ensemble error vs number or trees",
+            left = 'center',
+            top = 5,
+            textStyle = list(fontSize = 15))%>%
+    e_legend(orient = 'vertical',
+             right = '20', top = '10%') %>%
+    e_axis_labels(
+      x = "Iterations",
+      y = "Error"
+    )%>%  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
 }
 
 rules.boosting <- function(i){

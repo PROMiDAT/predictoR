@@ -43,7 +43,7 @@ mod_r_forest_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("evolerror"), value = "tabRferror",
-               withLoader(plotOutput(ns('plot_error_rf'), height = "55vh"),
+               withLoader(echarts4rOutput(ns('plot_error_rf'), height = "55vh"),
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabRfImp",
@@ -114,6 +114,8 @@ mod_r_forest_server <- function(input, output, session, updateData){
       
       plotear.rf.imp()
       plotear.rf.error()
+      updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
+      
       mostrar.reglas.rf(input$rules.rf.n)
       nombres.modelos <<- c(nombres.modelos, "modelo.rf")
     },
@@ -241,7 +243,8 @@ mod_r_forest_server <- function(input, output, session, updateData){
   
   plotear.rf.error <- function(){
     tryCatch({
-      output$plot_error_rf <- renderPlot(isolate(exe(input$fieldCodeRfPlotError)))
+      dataplot     <<- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))
+      output$plot_error_rf <- renderEcharts4r(e_rf_error(dataplot))
       cod                  <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
     }, error = function(e){
       limpia.rf(1)

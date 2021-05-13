@@ -47,7 +47,7 @@ mod_boosting_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("evolerror"), value = "tabBError",
-               withLoader(plotOutput(ns('plot_boosting'), height = "55vh"), 
+               withLoader(echarts4rOutput(ns('plot_boosting'), height = "55vh"), 
                type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabBImp",
@@ -244,7 +244,7 @@ mod_boosting_server <- function(input, output, session, updateData){
   # Grafico de boosting
   plotear.boosting <- function() {
     tryCatch({
-      output$plot_boosting <- renderPlot(isolate(exe(input$fieldCodeBoostingPlot)))
+      output$plot_boosting <- renderEcharts4r(isolate(exe(input$fieldCodeBoostingPlot)))
       cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
      
     }, error = function(e) {
@@ -261,16 +261,7 @@ mod_boosting_server <- function(input, output, session, updateData){
       limpia.boosting(1)
     })
   }
-  
-  # Grafico de importancia
-  plotear.rf.imp <- function() {
-    tryCatch({
-      output$plot_rf <- renderEcharts4r(isolate(exe(input$fieldCodeRfPlot)))
-      cod            <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
-    }, error = function(e) {
-      output$plot_rf <- renderEcharts4r(NULL)
-    })
-  }
+
   
   
   #Mostrar Reglas

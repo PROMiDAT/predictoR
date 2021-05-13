@@ -25,54 +25,28 @@ pairs.poder  <- function(datos,variable.predecir){
   return(r)
 }
 
-
 #Grafica la densidad de las variables numericas
-plot.numerico.dens <- function(datos,variable,variable.predecir, label = "${X} ${Y}"){
+e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${X} ${Y}"){
   label = stringr::str_interp(label,list(X=variable,Y=variable.predecir))
-  g <- ggplot(datos, aes_string(variable, fill = variable.predecir)) +
-    geom_density( alpha = .85) +
-    theme_minimal() +
-    theme(text = element_text(size=15)) +
-    scale_fill_manual(values = gg_color_hue(length(levels(datos[,variable.predecir])))) +
-    labs(title = label, y = '', x = '') +
-    theme(legend.position = 'top', legend.title = element_blank(), text = element_text(size = 15))
-  g
+  datos.plot <- data.frame(
+    "variable" = datos.dens[, variable],
+    "variable.predecir" = datos.dens[, variable.predecir]
+  )
+  datos.plot %>%
+  group_by(variable.predecir) %>%
+                 e_charts() %>%
+                 e_density(variable) %>%
+                 e_title(label,
+                         left = 'left',
+                         top = 5,
+                         textStyle = list(fontSize = 18)) %>%
+                 e_legend(orient = 'vertical',
+                          right = '5', top = '15%') %>%
+                 e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
 }
-
-#Grafica la densidad de las variables numericas
-plot.numerico.dens2 <- function(datos.dens,variable,variable.predecir, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=variable.predecir))
-  datos.dens <<- datos.dens
-  return(paste0("datos.dens %>% \n ",
-                 "group_by(",variable.predecir,") %>%\n ",
-                 "e_charts() %>% \n ",
-                 "e_density(",variable,") %>%  \n ",
-                 "e_title('",label,"', \n ",
-                 "        left = 'left',  \n ",
-                 "        top = 5,  \n ",
-                 "        textStyle = list(fontSize = 15)) %>%    \n ",
-                 "e_legend(orient = 'vertical',\n ",
-                 "         right = '5', top = '15%') %>%\n ",
-                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()\n "
-                 ))
-}
-
-# datos %>% 
-#   group_by(variable.predecir) %>% 
-#   e_charts() %>% 
-#   e_density(variable) %>% 
-#   e_title(label, 
-#           left = "center", 
-#           top = 5,
-#           textStyle = list(fontSize = 15)) %>%  
-#   e_legend(orient = 'vertical', 
-#            right = '5', top = '15%')
-
 
 #Hace la grafica de proporciones segun la variable predictiva
 plot.dist.cat <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
-
-  
   label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
   colores <- gg_color_hue(length(unique(datos[,var.predecir])))
   label.size <- label.size - length(unique(datos[,variable]))
@@ -92,93 +66,43 @@ plot.dist.cat <- function(datos,variable, var.predecir, colores = NA, label.size
     theme(legend.position = 'top', legend.title = element_blank())
 }
 
-plot.dist.cat2 <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
+e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
   label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
   
-  dataplot <<-  dist.x.predecir(datos, variable, var.predecir)
-  codedataplot <<- paste0("dataplot %>% \n ",
-                      "group_by(",variable.predecir,") %>%\n ",
-                      "e_charts(",variable,", stack = 'grp') %>% \n ",
-                      "e_bar(prop, count, label = list(show = T)) %>%  \n ",
-                      "e_title('",label,"', \n ",
-                      "        left = 'left',  \n ",
-                      "        top = 5,  \n ",
-                      "        textStyle = list(fontSize = 15)) "
+  dataplot <-  dist.x.predecir(datos, variable, var.predecir)
+  colnames(dataplot) <- c(
+    "variable" ,
+    "variable.predecir" ,
+    "count" ,
+    "prop"
   )
-
-  return(codedataplot)   
-   # dataplot %>%
-   # group_by(deposito) %>%
-   # e_charts(trabajo, stack = "grp") %>%
-   # e_bar(prop, count, label = list(show = T)) %>%
-   # e_title(label,
-   #           left = "center",
-   #           top = 5,
-   #           textStyle = list(fontSize = 15)) %>%
-   # e_legend(orient = 'vertical',
-   #            right = '5', top = '15%') %>%
-   # e_flip_coords() %>%
-   # e_tooltip(formatter = htmlwidgets::JS("
-   #                                      function(params){
-   #                                      return('<strong>' + params.value[1] +
-   #                                      '</strong><br />Percent: ' + parseFloat(params.value[0] * 100).toFixed(2)+
-   #                                      '%<br /> ' + 'Count: ' + params.name)}"))%>%
-   # e_x_axis(
-   #   formatter = e_axis_formatter("percent", digits = 0)) %>%
-   # e_labels(position = 'inside' ,formatter = htmlwidgets::JS("
-   #                                      function(params){
-   #                                      return(parseFloat(params.value[0] *100).toFixed(2) + '%' )}"))
+  #dataplot <<- dataplot[order(dataplot$variable,dataplot$count,  decreasing = T), ]
+  dataplot %>%
+    group_by(variable.predecir) %>%
+    e_charts(variable, stack = "grp") %>%
+    e_bar(prop, count, label = list(show = T)) %>%
+    e_title(label,
+            left = "left",
+            top = 5,
+            textStyle = list(fontSize = 18)) %>%
+    e_legend(orient = 'vertical',
+             right = '5', top = '15%') %>%
+    e_flip_coords() %>%
+    e_tooltip(formatter = htmlwidgets::JS("
+                                        function(params){
+                                        return('<strong>' + params.value[1] +
+                                        '</strong><br />Percent: ' + parseFloat(params.value[0] * 100).toFixed(2)+
+                                        '%<br /> ' + 'Count: ' + params.name)}"))%>%
+    e_x_axis(
+      formatter = e_axis_formatter("percent", digits = 0)) %>%
+    e_labels(position = 'inside' ,formatter = htmlwidgets::JS("
+                                        function(params){
+                                        return(parseFloat(params.value[0] *100).toFixed(2) + '%' )}"))%>% 
+    e_datazoom(show = F) %>% 
+    e_show_loading()
 }
 
 
-# 
-# dataplot %>%
-#   group_by(deposito)%>%
-#   e_charts(trabajo, stack = "grp") %>%
-#   e_bar(prop, count, label = list(show = T)) %>%
-#   e_tooltip(
-#     trigger = "axis",
-#     axisPointer = list(
-#       type = "shadow"
-#     )
-#   )%>% e_flip_coords()%>% e_tooltip(formatter = htmlwidgets::JS("
-#                                         function(params){
-#                                         return('<strong>' + params.value[1] +
-#                                         '</strong><br />Percent: ' + parseFloat(params.value[0] *100).toFixed(2)+
-#                                         '<br /> ' + 'Count: ' +  params.name )   }  "))%>%
-#   e_title(label,
-#           left = "center",
-#           top = 5,
-#           textStyle = list(fontSize = 15)) %>%
-#   e_legend(orient = 'vertical',
-#            right = '5', top = '15%') %>%
-#   e_x_axis(
-#     formatter = e_axis_formatter("percent", digits = 0)
-#   )
-# dataplot %>%
-#   group_by(deposito)%>%
-#   e_charts(trabajo, stack = "grp") %>%
-#   e_bar(prop, count, label = list(show = T)) %>%
-#   e_tooltip(
-#     trigger = "axis",
-#     axisPointer = list(
-#       type = "shadow"
-#     )
-#   )%>% e_flip_coords()%>% e_tooltip(formatter = htmlwidgets::JS("
-#                                         function(params){
-#                                         return('<strong>' + params.value[1] +
-#                                         '</strong><br />Percent: ' + parseFloat(params.value[0] *100).toFixed(2)+
-#                                         '<br /> ' + 'Count: ' +  params.name )   }  "))%>%
-#   e_title(label,
-#           left = "center",
-#           top = 5,
-#           textStyle = list(fontSize = 15)) %>%
-#   e_legend(orient = 'vertical',
-#            right = '5', top = '15%') %>%
-#   e_x_axis(
-#     formatter = e_axis_formatter("percent", digits = 0)
-#   )%>%
-#   e_labels(position = 'inside')
 ###############################Generar Codigo##############################################
 
 #Grafica de distribucion de la Variable a predecir
@@ -202,42 +126,61 @@ code.pairs.poder <- function(variable.predecir){
                 pch= 22, main='', hist.col = gg_color_hue(1), ellipses = FALSE, oma=c(3,3,3,15))
                 legend('topright', fill = unique(col[datos[,'",variable.predecir,"']]), legend = c(levels(datos[,'",variable.predecir,"'])))"))
 }
+df <- data.frame(
+  x = 1:20, 
+  testing123 = runif(20, 10, 100),
+  v = runif(20, 15, 100),
+  w = runif(20, 1, 100),
+  z = runif(20, 25, 75)
+)
 
-
-#Hace la grafica de proporciones segun la variable predictiva
-code.plot.dist.cat <- function(variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
-  return(paste0(
-                "colores <- gg_color_hue(length(unique(datos[,'",var.predecir,"'])))
-                label.size <- ",label.size," - length(unique(datos[,'",variable,"']))
-                label.size <- ifelse(label.size < 3, 3, label.size)
-                data <- dist.x.predecir(datos, '",variable,"', '",var.predecir,"')
-                ggplot(data, aes(fct_reorder(data[['",variable,"']], count, .desc = T), prop, fill = data[['",var.predecir,"']])) +
-                geom_bar(stat = 'identity') +
-                geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop), color = 'black',
-                position = position_stack(vjust = .5), size = label.size) +
-                theme_minimal() +
-                theme(text = element_text(size=15)) +
-                scale_fill_manual(values = colores) +
-                scale_y_continuous(labels = scales::percent)+
-                coord_flip() +
-                labs(title = '",label,"', x = '', y = '') +
-                guides(fill = guide_legend(reverse=T)) +
-                theme(legend.position = 'top', legend.title = element_blank())
-                "))
-}
-
-
-#Grafica la densidad de las variables numericas
-code.plot.numerico.dens <- function(variable,variable.predecir, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=variable.predecir))
-   return(paste0("ggplot(datos, aes_string('",variable,"', fill = '",variable.predecir,"')) +
-                  geom_density( alpha = .85) +
-                  theme_minimal() +
-                  theme(text = element_text(size=15)) +
-                  scale_fill_manual(values = gg_color_hue(length(levels(datos[,'",variable.predecir,"'])))) +
-                  labs(title = '",label,"', y = '', x = '') +
-                  theme(legend.position = 'top', legend.title = element_blank(), text = element_text(size = 15))"))
-}
-
-#iris %>% e_charts() %>% e_density(Sepal.Length ) %>% e_density(Petal.Length  ) 
+########################MULTIPLE PLOT##################################
+# df %>% 
+#   e_charts(x) %>% 
+#   e_y_axis(gridIndex = 0, min=0,max=100) %>% 
+#   e_y_axis(gridIndex = 1, min=0,max=100) %>% 
+#   e_y_axis(gridIndex = 2, min=0,max=100) %>%
+#   e_y_axis(gridIndex = 3, min=0,max=100) %>% 
+#   e_x_axis(gridIndex = 0, min=0,max=20) %>%
+#   e_x_axis(gridIndex = 1, min=0,max=20) %>%
+#   e_x_axis(gridIndex = 2, min=0,max=20) %>%
+#   e_x_axis(gridIndex = 3, min=0,max=20) %>% 
+#   e_grid(x= '7%',y='7%',width='38%',height='38%') %>%
+#   e_grid(x2= '7%',y='7%',width='38%',height='38%') %>%
+#   e_grid(x= '7%',y2='7%',width='38%',height='38%') %>%
+#   e_grid(x2= '7%',y2='7%',width='38%',height='38%') %>%
+#   e_line(serie = w, x_index = 0, y_index = 0) %>%
+#   e_line(serie = z, x_index = 1, y_index = 1) %>%
+#   e_line(serie = v, x_index = 2, y_index = 2) %>%
+#   e_line(serie = testing123, x_index = 3, y_index = 3) %>%
+#   e_tooltip(trigger = "axis") 
+# 
+# 
+# df <- data.frame(
+#   x = 1:20, 
+#   testing123 = runif(20, 10, 100),
+#   v = runif(20, 15, 100),
+#   w = runif(20, 1, 100),
+#   z = runif(20, 25, 75)
+# )
+# 
+# # remember to specify the ids
+# p1 <- e_charts(df, x, elementId = "chart1") %>% 
+#   e_line(serie = w, name = "common") %>% 
+#   e_tooltip(trigger = "axis")
+# 
+# p2 <- e_charts(df, x, elementId = "chart2") %>% 
+#   e_line(serie = v, name = "common") %>% 
+#   e_tooltip(trigger = "axis")
+# 
+# p3 <- e_charts(df, x, elementId = "chart3") %>% 
+#   e_line(serie = z, name = "common") %>% 
+#   e_tooltip(trigger = "axis")
+# 
+# p4 <- e_charts(df, x) %>% 
+#   e_line(serie = testing123, name = "common") %>% 
+#   e_tooltip(trigger = "axis") %>% 
+#   e_connect(c("chart1", "chart2", "chart3")) # connect the last chart to all others
+# 
+# # this is a convenience function to display the charts in a grid
+# e_arrange(p1, p2, p3, p4, rows = 2, cols = 2)

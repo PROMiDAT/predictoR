@@ -55,7 +55,7 @@ mod_poder_pred_ui <- function(id){
                    type = "html", loader = "loader4")),
       tabPanel(
         title = labelInput("distpredcat"), value = "tabDistpredcat",
-        withLoader(plotOutput(ns('plot_dist_poder'), height = "75vh"), 
+        withLoader(echarts4rOutput(ns('plot_dist_poder'), height = "75vh"), 
                    type = "html", loader = "loader4")),
       tabPanel(
         title = labelInput("denspred"), value = "tabDenspred",
@@ -141,13 +141,16 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
+
+    
     tryCatch({
-      cod.poder.den <- plot.numerico.dens2(datos,variable.num,variable.pred,label=tr("denspodlab",idioma))
-      updateAceEditor(session, "fieldCodeDenspred", value = cod.poder.den)
+
       if (ncol(var.numericas(datos)) >= 1) {
-        exe(cod.poder.den)
-        #plot.numerico.dens(datos,variable.num,variable.pred,label=tr("distpodcat",idioma)) 
-      }else{
+        cod <- paste0("e_numerico_dens(datos, '", variable.num,
+                      "', '", variable.pred, "', label = '",tr("denspodlab",idioma) ,"' ))")
+        updateAceEditor(session, "fieldCodeDenspred", value = cod)
+        e_numerico_dens(datos, variable.num, variable.pred, label=tr("denspodlab", idioma))
+      }else{#No retorna nada porque el grafico de error es con PLOT no ECHARTS4R
         res <- error.variables(T,idioma)
         return(res)
       }
@@ -160,7 +163,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   })
   
   # Hace el grafico de poder predictivo categorico
-  output$plot_dist_poder <- renderPlot({
+  output$plot_dist_poder <- renderEcharts4r({
     input$run_podpred
     variable.cat  <- isolate(input$sel_pred_cat)
     idioma        <- updateData$idioma
@@ -168,12 +171,13 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     datos         <- updateData$datos
 
     tryCatch({
-      cod.poder.dist.cat <- code.plot.dist.cat(variable.cat,variable.pred,label=tr("distpodcat",idioma))
-      updateAceEditor(session, "fieldCodeDistpredcat", value = cod.poder.dist.cat)
       if (ncol(var.categoricas(datos)) > 1) {
-        # plot <<- plot.dist.cat2(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
-        # plot <<- exe(plot)
-        plot.dist.cat(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
+        cod <- paste0("e_categorico_dist(datos, '", variable.cat,
+                      "', '", variable.pred, "', label = '",tr("distpodcat",idioma) ,"' ))")
+        updateAceEditor(session, "fieldCodeDistpredcat", value = cod)
+        e_categorico_dist(datos, variable.cat, variable.pred, label=tr("distpodcat",idioma))
+        
+        #plot.dist.cat(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
         
       }else{
         res <- error.variables(F,idioma)

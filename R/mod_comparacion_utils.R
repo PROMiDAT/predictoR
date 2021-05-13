@@ -68,10 +68,12 @@ calcular.areas <- function(sel) {
   }
 }
 
+
+
 #Calcula el area de la curva ROC
 areaROC <- function(prediccion,real) {
   pred  <- ROCR::prediction(prediccion,real)
-  auc   <- ROCR::performance(pred,"auc")
+  auc   <<- ROCR::performance(pred,"auc")
   return(attributes(auc)$y.values[[1]])
 }
 
@@ -85,7 +87,7 @@ plotROCInd <- function(prediccion,real,adicionar=FALSE,color="red") {
 }
 
 #Hace el grafico de la curba de roc de los modelos
-plotROC <- function(sel) {
+plotROC <- function(sel, categoria) {
 
   clase   <- datos.prueba[,variable.predecir]
   col     <- gg_color_hue(length(scores))
@@ -94,19 +96,41 @@ plotROC <- function(sel) {
   adicionar <- FALSE
   index   <- 1
   
-  nombres.tr <- unlist(lapply(names(scores), split_name))
+  nombres.tr <<- unlist(lapply(names(scores), split_name))
   SCORES     <<- scores[nombres.tr %in% sel]
   nombres.tr <<- nombres.tr[nombres.tr %in% sel]
   
   if(length(SCORES) == 0) {
     return(NULL)
   }
+  # #
+  # correcion.xgb <- names(SCORES)[grepl("xgb", names(SCORES))]
+  # 
+  # for (i in correcion.xgb) {
+  #   SCORES[[i]] <- data.frame(1-SCORES[[i]],SCORES[[i]])
+  #   colnames(SCORES[[i]]) <- levels(clase)
+  #   SCORES[[i]] <- as.matrix(SCORES[[i]])
+  # }
+  # 
+  # if(any("rl" %in% names(SCORES))){
+  #   SCORES[["rl"]] <- data.frame(1-SCORES[["rl"]],SCORES[["rl"]])
+  #   colnames(SCORES[["rl"]]) <- levels(clase)
+  #   SCORES[["rl"]] <- as.matrix(SCORES[["rl"]])
+  # }
+  # 
+  # if(!is.null(SCORES[["nn"]])){
+  #   colnames(SCORES[["nn"]]) <- levels(clase)
+  # }
   
+  #
   for (nombre in names(SCORES)) {
     if(is.numeric(SCORES[[nombre]])){
+      #plotROCInd(as.data.frame(SCORES[[nombre]])[,which(levels(clase) == categoria)],clase, adicionar, col[index])
       plotROCInd(SCORES[[nombre]],clase, adicionar, col[index])
     }else{
       if(is.factor(SCORES[[nombre]])){
+        #plotROCInd(attributes(SCORES[[nombre]])$probabilities[,categoria],clase,adicionar,col[index])
+        
         plotROCInd(SCORES[[nombre]],clase, adicionar, col[index])
         }
     }

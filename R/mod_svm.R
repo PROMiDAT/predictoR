@@ -247,11 +247,12 @@ mod_svm_server <- function(input, output, session, updateData){
     datos <- updateData$datos
     
     if (length(input$select_var_svm_plot) == 2){
+      variables <<- input$select_var_svm_plot
       v <- colnames(datos)
       v <- v[v != variable.predecir]
-      v <- v[!(v %in% input$select_var_svm_plot)]
+      v <<- v[!(v %in% input$select_var_svm_plot)]
       if(length(v) == 0){
-        v <- input$select_var_svm_plot
+        v <<- input$select_var_svm_plot
       }
       isolate(kernel <- input$kernel.svm)
       updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(input$select_var_svm_plot, v, kernel))
