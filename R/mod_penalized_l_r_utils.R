@@ -31,6 +31,37 @@ plot.coeff.landa <- function(landa = NULL, type = "ridge"){
   paste0("plot(modelo.rlr.",type,", 'lambda', label = TRUE)\n",
          "abline(v = log(",landa,"), col = 'blue', lwd = 2, lty = 3)")
 }
+e_coeff_landa <- function(dataplot, modelo, category) {
+  predictoras   <- colnames(dataplot[,-"x"])
+  aux <- ''
+  for (i in 1:length(predictoras)) {
+    aux <- paste0(aux, "e_line(serie = ",predictoras[i],", lineStyle = list(type = 'dashed')) %>% \n ")
+  }
+  plot <- paste0("dataplot %>% \n",
+                 "e_charts(x = x) %>% \n",
+                 "e_line(serie = OOB) %>% \n",
+                 aux,
+                 "e_legend(orient = 'vertical',
+             right = '20', top = '10%') %>% \n",
+                 "e_axis_labels(
+            x = 'Trees',
+            y = 'Error') %>%  \n",
+                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
+  )
+  exe(plot)
+}
+
+#x <- log(modelo.rlr.lasso$lambda)
+#y <-as.data.frame(as.matrix(modelo.rlr.lasso$beta$virginica))   
+#yt<- data.frame(t(y))
+#yt$x <- x
+#ytaux <- yt[order(yt$x),]
+# ytaux %>% 
+#   e_charts(x) %>% 
+#   e_line(s.largo)%>% 
+#   e_line(s.ancho)%>% 
+#   e_line(p.largo)%>% 
+#   e_line(p.ancho)
 
 #Codigo de la prediccion de rlr
 rlr.prediccion <- function(type = "ridge") {

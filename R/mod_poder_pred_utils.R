@@ -126,13 +126,13 @@ code.pairs.poder <- function(variable.predecir){
                 pch= 22, main='', hist.col = gg_color_hue(1), ellipses = FALSE, oma=c(3,3,3,15))
                 legend('topright', fill = unique(col[datos[,'",variable.predecir,"']]), legend = c(levels(datos[,'",variable.predecir,"'])))"))
 }
-df <- data.frame(
-  x = 1:20, 
-  testing123 = runif(20, 10, 100),
-  v = runif(20, 15, 100),
-  w = runif(20, 1, 100),
-  z = runif(20, 25, 75)
-)
+# df <- data.frame(
+#   x = 1:20, 
+#   testing123 = runif(20, 10, 100),
+#   v = runif(20, 15, 100),
+#   w = runif(20, 1, 100),
+#   z = runif(20, 25, 75)
+# )
 
 ########################MULTIPLE PLOT##################################
 # df %>% 

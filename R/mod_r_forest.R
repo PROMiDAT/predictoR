@@ -243,7 +243,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
   
   plotear.rf.error <- function(){
     tryCatch({
-      dataplot     <<- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))
+      dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))
       output$plot_error_rf <- renderEcharts4r(e_rf_error(dataplot))
       cod                  <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
     }, error = function(e){

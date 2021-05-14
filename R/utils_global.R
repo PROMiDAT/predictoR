@@ -112,15 +112,6 @@ plot.MC <<- function(cm,idioma) {
 }"))
 }
 
-# Dibujar cuadrado en ggplot
-# d=data.frame(x1=c(1,3,1,3), x2=c(3,5,3,5), y1=c(1,1,3,3), y2=c(3,3,5,5), t=c('a','a','a','a'), r=c(1,2,3,4))
-# ggplot() + 
-#   scale_x_continuous(name="x") + 
-#   scale_y_continuous(name="y") +
-#   geom_rect(data=d, mapping=aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=t), color="black", alpha=0.5)+ 
-#   geom_text(data = d, aes(x = x1+1, y = y1+1,label=r)) + theme_void()
-
-
 #Codigo del calculo de los indices
 indices.generales <- function(MC) {
   if(1 == dim(MC)[2]) {
@@ -165,14 +156,6 @@ new.gauge <- function(val, lab){
 fill.gauges <- function(indices, titulos) {
     exe(new.gauge(indices, titulos))
 }
-
-# val <- 80
-# label <- "Precision Global"
-# e_charts() %>% 
-#   e_gauge(val, 
-#           label, 
-#           min=0, 
-#           max=100) 
 
 # Concatena y ejecuta un string como codigo
 exe <- function(...){
@@ -516,6 +499,7 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
         lines(ellipse, ...)
     }
   }
+  
   old.par <- par(no.readonly = TRUE)
   on.exit(par(old.par))
   if (missing(cex.cor))
@@ -549,6 +533,7 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
     }
   }
 }
+
 
 #Colores de ggplot2
 gg_color_hue <- function(n) {

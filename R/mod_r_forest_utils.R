@@ -51,18 +51,6 @@ rf.plot <- function() {
   ))
 }
 
-# V2 COLOR
-# datos.rf<- data.frame(modelo.rf$importance)
-# datos.rf<- datos.rf[order(datos.rf$MeanDecreaseAccuracy, decreasing = T), ]
-# datos.rf$label <- row.names(datos.rf)
-# datos.rf$color <- gg_color_hue(length(row.names(datos.rf)))
-# datos.rf %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>%
-#   e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%
-#   e_flip_coords()%>%
-#   e_y_axis(inverse = TRUE)%>%
-#   e_add("itemStyle", color)
-
-
 #Codigo del grafico de error del modelo
 plot.rf.error <- function(){
   return(paste0("data     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate)) \n",
@@ -75,7 +63,8 @@ e_rf_error <- function(dataplot) {
   for (i in 1:length(categorias)) {
     aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
   }
-  plot <- paste0("dataplot %>% \n",
+  plot <- paste0("dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))\n",
+         "dataplot %>% \n",       
          "e_charts(x = x) %>% \n",
          "e_line(serie = OOB) %>% \n",
          aux,
@@ -88,17 +77,3 @@ e_rf_error <- function(dataplot) {
   )
   exe(plot)
 }
-# 
-# datata %>%
-#   e_charts(x = x) %>%
-#   e_line(serie = OOB,lineStyle = list(type = 'dashed', color = 'black'), showSymbol = FALSE) %>%
-#   e_title('Ensemble error vs number or trees',
-#           left = 'center',
-#           top = 5,
-#           textStyle = list(fontSize = 15)) %>%
-#   e_legend(orient = 'vertical',
-#            right = '20', top = '10%') %>%
-#   e_axis_labels(
-#     x = 'Iterations',
-#     y = 'Error'
-#   )%>%  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
