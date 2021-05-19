@@ -139,15 +139,12 @@ e_plot_ROC <- function(sel) {
     return(NULL)
   }
   pred <-  ROCR::prediction(SCORES[[1]],clase)
-  perf <- ROCR::performance(pred,"tpr","fpr")
-  # colList <- list(c(1,2,3),c(4,5,6),c(34,1,1))
-  # df <- do.call(data.frame,colList)
-  
+  perf <-  ROCR::performance(pred,"tpr","fpr")
+
   col_names <- c('x',nombres.tr)
   colList <- list(attributes(perf)$y.values[[1]])
   df <- do.call(data.frame,colList)
   df <- cbind(x =  attributes(perf)$x.values[[1]], df)
-  #gdata::cbindX(df1, df2) 
   #df <- binding(df,as.data.frame(attributes(perf3)$y.values[[1]]) )
   for (nombre in names(SCORES)[2:length(SCORES)]) {
     if(is.numeric(SCORES[[nombre]])){
@@ -165,9 +162,17 @@ e_plot_ROC <- function(sel) {
     
   }
   colnames(df) <- col_names
-  
 }
+
+
 #df %>% e_charts(x) %>% e_line(`Bosques Aleatorios`) %>% e_tooltip()
+# pred <-  ROCR::prediction(SCORES[[3]],clase)
+# perf <- ROCR::performance(pred,"tpr","fpr")
+# x2 <- attributes(perf)$x.values[[1]]
+# df <- binding(df, as.data.frame(x2) )
+# df %>%  e_charts(x2) %>% e_line(`Bosques Aleatorios`) %>% e_tooltip()
+# df %>% e_charts(x1) %>% e_line(`Potenciación`) %>% e_line(`Bosques Aleatorios`) %>% e_line(`Árboles De Decisión-gini`) %>% e_tooltip()%>% e_datazoom(show = F)
+# 
 
 binding <- function (...) 
 {

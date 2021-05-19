@@ -45,8 +45,7 @@ e_coeff_landa <- function(type, category) {
   plot <- paste0("plot.rlr.coeff %>% \n",
                  "e_charts(x = x) %>% \n",
                  aux,
-                 "e_legend(orient = 'vertical',
-                  left = '2', top = '10%') %>% \n",
+                 "e_legend(type = 'scroll', bottom = 1) %>% \n",
                  "e_axis_labels(
                     x = 'Log Lambda',
                      y = 'Coefficients: Response ",category,"') %>%  \n",
@@ -54,7 +53,9 @@ e_coeff_landa <- function(type, category) {
   )
   exe(plot)
 }
-
+#type = 'scroll', bottom = 1
+# "e_legend(orient = 'vertical',
+#                   left = '2', top = '10%') %>% \n",
 
 #Codigo de la prediccion de rlr
 rlr.prediccion <- function(type = "ridge") {
