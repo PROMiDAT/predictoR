@@ -80,15 +80,21 @@ areaROC <- function(prediccion,real) {
 #Hace el grafico de una curba de roc
 plotROCInd <- function(prediccion,real,adicionar=FALSE,color="red") {
   pred <- ROCR::prediction(prediccion,real)
-  perf <- ROCR::performance(pred,"tpr","fpr")
+  perf <<- ROCR::performance(pred,"tpr","fpr")
   plot(perf, col=color, add=adicionar, main="Curva ROC")
   segments(0,0,1,1, col='black')
   grid()
 }
 
+performanceROC <- function(prediccion,real) {
+  pred <- ROCR::prediction(prediccion,real)
+  perf <<- ROCR::performance(pred,"tpr","fpr")
+  return(perf)
+}
+
 #Hace el grafico de la curba de roc de los modelos
 plotROC <- function(sel) {
-
+  
   clase   <- datos.prueba[,variable.predecir]
   col     <- gg_color_hue(length(scores))
   nombres <- c()
@@ -103,14 +109,14 @@ plotROC <- function(sel) {
   if(length(SCORES) == 0) {
     return(NULL)
   }
-
+  
   for (nombre in names(SCORES)) {
     if(is.numeric(SCORES[[nombre]])){
       plotROCInd(SCORES[[nombre]],clase, adicionar, col[index])
     }else{
       if(is.factor(SCORES[[nombre]])){
         plotROCInd(SCORES[[nombre]],clase, adicionar, col[index])
-        }
+      }
     }
     adicionar <- TRUE
     colores   <- c(colores, col[index])
@@ -119,5 +125,73 @@ plotROC <- function(sel) {
   }
   legend(x=0.85, y=0.8, legend = nombres, bty = "n", pch=19 ,
          col = colores , text.col = "black", cex=0.7, pt.cex=0.7)
+}
+
+e_plot_ROC <- function(sel) {
+  index   <- 2
+  
+  clase   <- datos.prueba[,variable.predecir]
+  nombres.tr <<- unlist(lapply(names(scores), split_name))
+  SCORES     <<- scores[nombres.tr %in% sel]
+  nombres.tr <<- nombres.tr[nombres.tr %in% sel]
+   
+  if(length(SCORES) == 0) {
+    return(NULL)
+  }
+  pred <-  ROCR::prediction(SCORES[[1]],clase)
+  perf <- ROCR::performance(pred,"tpr","fpr")
+  # colList <- list(c(1,2,3),c(4,5,6),c(34,1,1))
+  # df <- do.call(data.frame,colList)
+  
+  col_names <- c('x',nombres.tr)
+  colList <- list(attributes(perf)$y.values[[1]])
+  df <- do.call(data.frame,colList)
+  df <- cbind(x =  attributes(perf)$x.values[[1]], df)
+  #gdata::cbindX(df1, df2) 
+  #df <- binding(df,as.data.frame(attributes(perf3)$y.values[[1]]) )
+  for (nombre in names(SCORES)[2:length(SCORES)]) {
+    if(is.numeric(SCORES[[nombre]])){
+      pred <-  ROCR::prediction(SCORES[[nombre]],clase)
+      perf <- ROCR::performance(pred,"tpr","fpr")
+      df <- binding(df,as.data.frame(attributes(perf)$y.values[[1]]) )
+      #attributes(p)$y.values[[1]]
+      #attributes(p)$x.values[[1]]
+    }else{
+      if(is.factor(SCORES[[nombre]])){
+      p <- performanceROC(SCORES[[nombre]],clase)
+      }
+    }
+    index     <- index + 1
+    
+  }
+  colnames(df) <- col_names
+  
+}
+#df %>% e_charts(x) %>% e_line(`Bosques Aleatorios`) %>% e_tooltip()
+
+binding <- function (...) 
+{
+  x <- list(...)
+  test <- sapply(x, function(z) is.matrix(z) | is.data.frame(z))
+  if (any(!test)) 
+    stop("only matrices and data.frames can be used")
+  tmp <- sapply(x, nrow)
+  maxi <- which.max(tmp)
+  test <- tmp < tmp[maxi]
+  for (i in 1:length(tmp)) {
+    if (test[i]) {
+      add <- matrix(nrow = tmp[maxi] - tmp[i], ncol = ncol(x[[i]]))
+      if (is.data.frame(x[[i]])) {
+        add <- as.data.frame(add)
+      }
+      colnames(add) <- colnames(x[[i]])
+      x[[i]] <- rbind(x[[i]], add)
+    }
+  }
+  ret <- x[[1]]
+  for (i in 2:length(tmp)) {
+    ret <- cbind(ret, x[[i]])
+  }
+  ret
 }
 

@@ -10,16 +10,17 @@
 mod_penalized_l_r_ui <- function(id){
   ns <- NS(id)
   opciones.rlr <- list(options.run(ns("runRlr")), tags$hr(style = "margin-top: 0px;"),
-                       fluidRow(col_6(
-                                      selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
-                                                   choices = list("Ridge" = 0, "Lasso" = 1))),
-                                col_6(
-                                      radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
-                       fluidRow(col_6(id = ns("colManualLanda"),br(),
-                                      numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
-                                col_6(
-                                      radioSwitch(ns("permitir.landa"), "", c("manual", "automatico")))))
-  
+                       conditionalPanel("input.BoxRlr != 'tabRlrLanda'",
+                                        fluidRow(col_6(selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
+                                                                     choices = list("Ridge" = 0, "Lasso" = 1))),
+                                                 col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
+                                        fluidRow(col_6(id = ns("colManualLanda"),br(),
+                                                        numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
+                                                 col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"))))),
+                       conditionalPanel("input.BoxRlr == 'tabRlrLanda'",
+                                        fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
+                                                                    choices =  "", width = "100%")))))
+                    
   codigo.rlr  <- list(conditionalPanel("input.BoxRlr == 'tabRlrModelo'",
                                        codigo.monokai(ns("fieldCodeRlr"), height = "10vh")),
                       conditionalPanel("input.BoxRlr == 'tabRlrLanda'",
@@ -48,7 +49,7 @@ mod_penalized_l_r_ui <- function(id){
                type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("gcoeff"),value = "tabRlrLanda",
-               withLoader(plotOutput(ns('plot_rlr_landa'), height = "55vh"), 
+               withLoader(echarts4rOutput(ns('plot_rlr_landa'), height = "55vh"), 
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabRlrPred",
@@ -77,6 +78,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
 
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
+    variable     <- updateData$variable.predecir
+    datos        <- updateData$datos
+    choices      <- unique(datos[, variable])
+    updateSelectInput(session, "coeff.sel", choices = choices, selected = choices[1])
     default.codigo.rlr()
   })
   # # 
@@ -222,6 +227,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     landa <- get_landa_rlr()
     tipo  <- rlr.type()
 
+
     # Se actualiza el codigo del modelo
     codigo <- rlr.modelo(variable.pr = variable.predecir,
                          type        = tipo,
@@ -239,10 +245,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
 
     updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
     cod.select.landa <<- codigo
-
-    #Se genera el codigo de los coeficientes con el mejor landa
-    codigo <- plot.coeff.landa(landa, tipo)
-    updateAceEditor(session, "fieldCodeRlrLanda", value = codigo)
 
     # Se genera el codigo de la prediccion
     codigo <- rlr.prediccion(tipo)
@@ -275,8 +277,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   plot.coeff <- function(){
     tryCatch({  
       isolate(tipo   <- rlr.type())
-      isolate(codigo <- input$fieldCodeRlrLanda)
-      output$plot_rlr_landa <- renderPlot(isolate(exe(codigo)))
+      landa <- get_landa_rlr()
+      output$plot_rlr_landa <- renderEcharts4r({
+        updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa('",tipo,"', '",input$coeff.sel,"')"))
+        e_coeff_landa(tipo, input$coeff.sel)})
     },
     error = function(e){ # Regresamos al estado inicial y mostramos un error
       limpia.rlr(1)
@@ -296,7 +300,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         modelo.rlr    <<- NULL
         output$txtRlr <- renderPrint(invisible(""))
         output$plot_rlr_posiblanda <- renderPlot(NULL)
-        output$plot_rlr_landa      <- renderPlot(NULL)
+        output$plot_rlr_landa      <- renderEcharts4r(NULL)
         
       }, {
         prediccion.rlr       <<- NULL

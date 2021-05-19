@@ -31,37 +31,30 @@ plot.coeff.landa <- function(landa = NULL, type = "ridge"){
   paste0("plot(modelo.rlr.",type,", 'lambda', label = TRUE)\n",
          "abline(v = log(",landa,"), col = 'blue', lwd = 2, lty = 3)")
 }
-e_coeff_landa <- function(dataplot, modelo, category) {
-  predictoras   <- colnames(dataplot[,-"x"])
+
+e_coeff_landa <- function(type, category) {
+  exe(paste0("plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo.rlr.",type,"$beta$",category,"))))\n",
+             "plot.rlr.coeff <<- cbind(x = log(modelo.rlr.",type,"$lambda), plot.rlr.coeff)\n"))
+  plot.rlr.coeff <<- plot.rlr.coeff[order(plot.rlr.coeff$x),]
+  predictoras    <- colnames(plot.rlr.coeff)
+
   aux <- ''
-  for (i in 1:length(predictoras)) {
-    aux <- paste0(aux, "e_line(serie = ",predictoras[i],", lineStyle = list(type = 'dashed')) %>% \n ")
+  for (i in 2:length(predictoras)) {
+    aux <- paste0(aux, "e_line(serie = ",predictoras[i],") %>%\n ")
   }
-  plot <- paste0("dataplot %>% \n",
+  plot <- paste0("plot.rlr.coeff %>% \n",
                  "e_charts(x = x) %>% \n",
-                 "e_line(serie = OOB) %>% \n",
                  aux,
                  "e_legend(orient = 'vertical',
-             right = '20', top = '10%') %>% \n",
+                  left = '2', top = '10%') %>% \n",
                  "e_axis_labels(
-            x = 'Trees',
-            y = 'Error') %>%  \n",
+                    x = 'Log Lambda',
+                     y = 'Coefficients: Response ",category,"') %>%  \n",
                  "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
   )
   exe(plot)
 }
 
-#x <- log(modelo.rlr.lasso$lambda)
-#y <-as.data.frame(as.matrix(modelo.rlr.lasso$beta$virginica))   
-#yt<- data.frame(t(y))
-#yt$x <- x
-#ytaux <- yt[order(yt$x),]
-# ytaux %>% 
-#   e_charts(x) %>% 
-#   e_line(s.largo)%>% 
-#   e_line(s.ancho)%>% 
-#   e_line(p.largo)%>% 
-#   e_line(p.ancho)
 
 #Codigo de la prediccion de rlr
 rlr.prediccion <- function(type = "ridge") {
@@ -78,3 +71,4 @@ rlr.prediccion.np <- function() {
 rlr.MC <- function(type = "ridge"){
   return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
 }
+
