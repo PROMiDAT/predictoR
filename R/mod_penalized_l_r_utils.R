@@ -36,26 +36,37 @@ e_coeff_landa <- function(type, category) {
   exe(paste0("plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo.rlr.",type,"$beta$",category,"))))\n",
              "plot.rlr.coeff <<- cbind(x = log(modelo.rlr.",type,"$lambda), plot.rlr.coeff)\n"))
   plot.rlr.coeff <<- plot.rlr.coeff[order(plot.rlr.coeff$x),]
-  predictoras    <- colnames(plot.rlr.coeff)
-
-  aux <- ''
+  predictoras    <-  colnames(plot.rlr.coeff)
+  
   for (i in 2:length(predictoras)) {
-    aux <- paste0(aux, "e_line(serie = ",predictoras[i],") %>%\n ")
+    exe(paste0("plot.rlr.coeff$n",i," <<- '",predictoras[i], "'\n"))
+  }
+  
+  nombres <- colnames(plot.rlr.coeff)
+  aux <- ''
+  n <- length(predictoras) + 1
+  for (i in 2:length(predictoras)) {
+    aux <- paste0(aux, "e_line(serie = ",predictoras[i],", bind = ",nombres[n],") %>%\n ")
+    n <- n +1
   }
   plot <- paste0("plot.rlr.coeff %>% \n",
                  "e_charts(x = x) %>% \n",
                  aux,
-                 "e_legend(type = 'scroll', bottom = 1) %>% \n",
                  "e_axis_labels(
                     x = 'Log Lambda',
-                     y = 'Coefficients: Response ",category,"') %>%  \n",
-                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
+                    y = 'Coefficients: Response ",category,"') %>%  \n",
+                 "e_legend(show = FALSE)%>%  \n",
+                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() "
   )
-  exe(plot)
+  plot <- exe(plot)
+  plot  %>% 
+    e_labels(position = 'left',formatter = htmlwidgets::JS("
+                                        function(params){
+                                        if(params.dataIndex==0){
+                                        return(params.name)
+                                        }else
+                                        {return('')}}"))
 }
-#type = 'scroll', bottom = 1
-# "e_legend(orient = 'vertical',
-#                   left = '2', top = '10%') %>% \n",
 
 #Codigo de la prediccion de rlr
 rlr.prediccion <- function(type = "ridge") {
