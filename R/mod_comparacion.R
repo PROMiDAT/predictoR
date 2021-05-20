@@ -29,7 +29,7 @@ mod_comparacion_ui <- function(id){
                          withLoader(DT::dataTableOutput(ns("TablaComp"), height="70vh"), 
                                     type = "html", loader = "loader4")),
                 tabPanel(title = labelInput("rocCurva"), 
-                         withLoader(plotOutput(ns('plot_roc'), height = "70vh"), 
+                         withLoader(echarts4rOutput(ns('plot_roc'), height = "70vh"), 
                                     type = "html", loader = "loader4")))
   )
 }
@@ -80,11 +80,11 @@ ejecutar.roc <- function(){
   },server = FALSE)
   
   #Hace el grafico de la curva roc
-  output$plot_roc <- renderPlot({
+  output$plot_roc <- renderEcharts4r({
     idioma <- updateData$idioma
     if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
       calcular.areas(input$roc.sel)
-      plotROC(input$select.models)
+      e_plot_ROC(input$select.models)
     } else {
       showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
       return(NULL)
