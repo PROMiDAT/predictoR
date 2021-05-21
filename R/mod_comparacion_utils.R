@@ -113,8 +113,8 @@ e_plot_ROC <- function(sel) {
     e_legend(type = "scroll", bottom = 1) %>% 
     e_color(c(colores))    %>% 
     e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+  plotroc$x$opts$color[[which(plotroc$x$opts$legend$data == "roc")]] <- "#5F5C5C"
   plotroc$x$opts$legend$data[[which(plotroc$x$opts$legend$data == "roc")]] <- NULL
-  #plotroc$x$opts$color[[which(plotroc$x$opts$legend$data == "roc")]] <- "black"
   plotroc$x$opts$xAxis[[1]]$inverse <- TRUE
   plotroc
 }

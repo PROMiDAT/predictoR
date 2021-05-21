@@ -24,6 +24,26 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",
          "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')")
 }
+#cv.glm.lasso$cvm valor de y 
+#cv.glm.lasso$cvup valor de la rayita superior
+#cv.glm.lasso$name y label
+#x = log(modelo.rlr.lasso$lambda)
+#y = cv.glm.lasso$cvm
+# data.lambda %>% 
+#   e_charts(x) %>% 
+#   e_scatter(y) 
+
+# df <- data.frame(
+#   x = factor(c(1, 2)),
+#   y = c(1, 5),
+#   upper = c(1.1, 5.3),
+#   lower = c(0.8, 4.3)
+# )
+# 
+# df %>% 
+#   e_charts(x) %>% 
+#   e_bar(y) %>% 
+#   e_error_bar(lower, upper)
 
 
 plot.coeff.landa <- function(landa = NULL, type = "ridge"){

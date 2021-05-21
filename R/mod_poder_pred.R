@@ -151,6 +151,9 @@ mod_poder_pred_server <- function(input, output, session, updateData){
         updateAceEditor(session, "fieldCodeDenspred", value = cod)
         e_numerico_dens(datos, variable.num, variable.pred, label=tr("denspodlab", idioma))
       }else{#No retorna nada porque el grafico de error es con PLOT no ECHARTS4R
+        showNotification(paste0(tr("errornum",idioma)),
+                         duration = 10,
+                         type = "message")
         res <- error.variables(T,idioma)
         return(res)
       }
@@ -177,9 +180,10 @@ mod_poder_pred_server <- function(input, output, session, updateData){
         updateAceEditor(session, "fieldCodeDistpredcat", value = cod)
         e_categorico_dist(datos, variable.cat, variable.pred, label=tr("distpodcat",idioma))
         
-        #plot.dist.cat(datos,variable.cat,variable.pred,label=tr("distpodcat",idioma)) 
-        
       }else{
+        showNotification(paste0(tr("errorcat",idioma)),
+                         duration = 10,
+                         type = "message")
         res <- error.variables(F,idioma)
         return(res)
       }
