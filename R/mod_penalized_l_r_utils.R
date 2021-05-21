@@ -27,24 +27,22 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
 #cv.glm.lasso$cvm valor de y 
 #cv.glm.lasso$cvup valor de la rayita superior
 #cv.glm.lasso$name y label
-#x = log(modelo.rlr.lasso$lambda)
-#y = cv.glm.lasso$cvm
-# data.lambda %>% 
-#   e_charts(x) %>% 
-#   e_scatter(y) 
-
-# df <- data.frame(
-#   x = factor(c(1, 2)),
-#   y = c(1, 5),
-#   upper = c(1.1, 5.3),
-#   lower = c(0.8, 4.3)
-# )
-# 
-# df %>% 
-#   e_charts(x) %>% 
-#   e_bar(y) %>% 
-#   e_error_bar(lower, upper)
-
+# x = log(modelo.rlr.lasso$lambda)
+# y = cv.glm.lasso$cvm
+# upper <- cv.glm.lasso$cvup
+# lower <- cv.glm.lasso$cvlo
+# name  <- cv.glm.lasso$name[[1]]
+# data.lambda <- data.frame(x, y, upper, lower, name)
+# data.lambda %>%
+#   e_charts(x) %>%
+#   e_scatter(y, symbol_size = 7) %>%
+#   e_error_bar(lower, upper)%>%
+#   e_axis_labels(
+#     x = 'Log Lambda',
+#     y = name)%>%
+#   e_x_axis(
+#     formatter = e_axis_formatter(digits = 1)
+#   )%>% e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
 
 plot.coeff.landa <- function(landa = NULL, type = "ridge"){
   landa <- ifelse(is.null(landa),paste0("cv.glm.",type,"$lambda.min"), landa)
