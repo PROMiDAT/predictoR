@@ -2,42 +2,31 @@
 
 cod.rf.modelo <<-  NULL
 cod.rf.pred   <<-  NULL
-cod.rf.mc     <<- NULL
-cod.rf.ind    <<- NULL
-rf.stop.excu  <<- FALSE
+cod.rf.mc     <<-  NULL
+cod.rf.ind    <<-  NULL
+rf.stop.excu  <<-  FALSE
 
-# Pagina de RF --------------------------------------------------------------------------------------------------------------
+# Códigos de RF--------------------------------------------------------------------------------------------------
 
 #Crea el modelo RF
 rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
   ntree   <- ifelse(!is.numeric(ntree), 500, ntree)
-  codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
+  Código  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
                     " ntree =",ntree,",mtry =",mtry,")")
-  return(codigo)
+  return(Código)
 }
 
-rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
-  ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
-  codigo <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
-                   " ntree =",ntree,",mtry =",mtry,")")
-  return(codigo)
-}
-
-#Codigo de la prediccion de rf
+#Código de la predicción de rf
 rf.prediccion <- function() {
   return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')"))
 }
 
-rf.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
-}
-
-#Codigo de la matriz de confucion de rf
+#Código de la matriz de confución de rf
 rf.MC <- function(){
   return(paste0("MC.rf <<- confusion.matrix(datos.prueba, prediccion.rf)\n"))
 }
 
-#Codigo del grafico de importancia de variables
+#Código del gráfico de importancia de variables
 rf.plot <- function() {
   return(paste0(
     "aux <- data.frame(modelo.rf$importance)\n",
@@ -51,12 +40,13 @@ rf.plot <- function() {
   ))
 }
 
-#Codigo del grafico de error del modelo
+#Código del gráfico de error del modelo
 plot.rf.error <- function(){
   return(paste0("data     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate)) \n",
                 "e_rf_error(data)\n"))
 }
 
+#Gráfico de evolución del error
 e_rf_error <- function(dataplot) {
   categorias   <- colnames(dataplot[,-c(1,2)])
   aux <- ''
@@ -76,4 +66,19 @@ e_rf_error <- function(dataplot) {
          "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
   )
   exe(plot)
+}
+
+# Códigos de RF Ind.Nuevos--------------------------------------------------------------------------------------------------
+
+#Crea el modelo RF
+rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
+  ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
+  Código <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
+                   " ntree =",ntree,",mtry =",mtry,")")
+  return(Código)
+}
+
+#Código de la predicción de rf
+rf.prediccion.np <- function() {
+  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
 }

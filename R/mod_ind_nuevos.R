@@ -205,7 +205,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       } else {
         newCases$datos.aprendizaje <- newCases$originales
         newCases$datos.prueba <- NULL
-        
+        tabla.trans()
       }
     }, error = function(e) {
       newCases$datos.aprendizaje <- NULL
@@ -305,36 +305,39 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     })
   }, server = T)  
   
-  
-  output$contentsPred2 <- DT::renderDataTable({
-    datos  <- newCases$datos.aprendizaje
-    tipos  <- c(
-      tr("numerico",   isolate(updateData$idioma)),
-      tr("categorico", isolate(updateData$idioma))
-    )
-    
-    tryCatch({
-      nombre.columnas <- c("ID", colnames(datos))
-      tipo.columnas   <- sapply(colnames(datos), function(i)
-        ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-               paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-               paste0("<span data-id='categorico'>", tipos[2], "</span>")))
-      sketch = htmltools::withTags(table(
-        tableHeader(nombre.columnas),
-        tags$tfoot(
-          tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
-            tags$th(shiny::HTML(i))))
-        )
-      ))
-      DT::datatable(
-        datos, selection = 'none', editable = TRUE,  container = sketch,
-        options = list(dom = 'frtip', scrollY = "40vh")
+  tabla.trans <- function(){
+    output$contentsPred2 <- DT::renderDataTable({
+      datos  <- newCases$datos.aprendizaje
+      datata <<- datos
+      tipos  <- c(
+        tr("numerico",   isolate(updateData$idioma)),
+        tr("categorico", isolate(updateData$idioma))
       )
-    }, error = function(e) {
-      showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
-      return(NULL)
-    })
-  }, server = T)
+      
+      tryCatch({
+        nombre.columnas <- c("ID", colnames(datos))
+        tipo.columnas   <- sapply(colnames(datos), function(i)
+          ifelse(class(datos[,i]) %in% c("numeric", "integer"),
+                 paste0("<span data-id='numerico'>", tipos[1], "</span>"),
+                 paste0("<span data-id='categorico'>", tipos[2], "</span>")))
+        sketch = htmltools::withTags(table(
+          tableHeader(nombre.columnas),
+          tags$tfoot(
+            tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
+              tags$th(shiny::HTML(i))))
+          )
+        ))
+        DT::datatable(
+          datos, selection = 'none', editable = TRUE,  container = sketch,
+          options = list(dom = 'frtip', scrollY = "40vh")
+        )
+      }, error = function(e) {
+        showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
+        return(NULL)
+      })
+    }, server = T)
+    
+  }
   
   output$contentsPred3 <- DT::renderDataTable({
     datos  <- newCases$datos.prueba
@@ -526,6 +529,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   },ignoreNULL = FALSE)
   
   observeEvent(input$cargarnext, {
+    tabla.trans()
     shinyjs::hide("primera", anim = TRUE )
     shinyjs::show("segundo", anim = TRUE)
   })

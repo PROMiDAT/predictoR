@@ -68,11 +68,13 @@ mod_d_tree_ui <- function(id){
 #' @noRd 
 mod_d_tree_server <- function(input, output, session, updateData){
   ns <- session$ns
+  
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.dt()
   })
-  # 
+  
   # observeEvent(updateData$idioma, {
   #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
   #     ejecutar.dt.mc()
@@ -90,7 +92,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
     }
   }, priority =  -5)
   
-  # Ejecuta el modelo, prediccion, mc e indices de dt
+  # Ejecuta el modelo, predicción, mc e indices de dt
   dt.full <- function() {
     ejecutar.dt()
     ejecutar.dt.pred()
@@ -109,14 +111,15 @@ mod_d_tree_server <- function(input, output, session, updateData){
       mostrar.reglas.dt()
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.dt.", tipo))
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.dt(1)
       showNotification(paste0("Error (DT-01) : ",e), duration = 15, type = "error")
     })
   }
   
   
-  # Genera la prediccion
+  # Genera la predicción
   ejecutar.dt.pred <- function() {
     tryCatch({ 
       isolate(exe(cod.dt.pred))
@@ -127,7 +130,8 @@ mod_d_tree_server <- function(input, output, session, updateData){
       output$dtPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.dt.",tipo),idioma = idioma),server = FALSE)
       
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",tipo))
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #gráfica otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
     },
     error = function(e) { 
       limpia.dt(2)
@@ -135,7 +139,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
     })
   }
   
-  # Genera la matriz de confusion
+  # Genera la matriz de confusión
   ejecutar.dt.mc <- function() {
     idioma <- updateData$idioma
     tipo   <- isolate(input$split.dt)
@@ -148,7 +152,8 @@ mod_d_tree_server <- function(input, output, session, updateData){
         output$plot_dt_mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",tipo,")")))
         nombres.modelos   <<- c(nombres.modelos, paste0("MC.dt.",tipo))
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.dt(3)
         showNotification(paste0("Error (DT-03) : ", e), duration = 15, type = "error")
       })
@@ -168,7 +173,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
         output$dtPrecGlob  <-  fill.gauges(indices.dt[[1]], tr("precG",idioma))
         output$dtErrorGlob <-  fill.gauges(indices.dt[[2]], tr("errG",idioma))
 
-        # Cambia la tabla con la indices de dt
+        # Cambia la tabla con los indices de dt
         output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión", idioma = idioma)), spacing = "xs",
                                                     bordered = T, width = "100%", align = "c", digits = 2)
         output$dtIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
@@ -178,14 +183,15 @@ mod_d_tree_server <- function(input, output, session, updateData){
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.dt(4)
         showNotification(paste0("Error (DT-04) : ",e), duration = 15, type = "error")
       })
     }
   }
   
-  # Actualiza el codigo a la version por defecto
+  # Actualiza el código a la version por defecto
   default.codigo.dt <- function() {
     
     tipo   <- isolate(input$split.dt)
@@ -197,32 +203,32 @@ mod_d_tree_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeDt", value = codigo)
     cod.dt.modelo <<- codigo
     
-    # Cambia el codigo del grafico del árbol
+    # Cambia el código del gráfico del árbol
     updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
     
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la predicción
     codigo <- dt.prediccion(tipo)
     updateAceEditor(session, "fieldCodeDtPred", value = codigo)
     cod.dt.pred <<- codigo
     
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- dt.MC(tipo)
     updateAceEditor(session, "fieldCodeDtMC", value = codigo)
     cod.dt.mc <<- codigo
 
-    # Se genera el codigo de la indices
+    # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeDtIG", value = codigo)
     cod.dt.ind <<- codigo
   }
   
   
-  #Plotear el arbol
+  #Plotear el árbol
   plotear.arbol <- function(){
     tryCatch({
-      tipo   <- isolate(input$split.dt)
+      tipo           <- isolate(input$split.dt)
       output$plot_dt <- renderPlot(isolate(exe(input$fieldCodeDtPlot)))
-      cod    <- ifelse(input$fieldCodeDtPlot == "", dt.plot(tipo), input$fieldCodeDtPlot)
+      cod            <- ifelse(input$fieldCodeDtPlot == "", dt.plot(tipo), input$fieldCodeDtPlot)
     },
     error = function(e){
       output$plot_dt <- renderPlot(NULL)
@@ -237,7 +243,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
     
   }
   
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos según el proceso donde se genera el error
   limpia.dt <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
@@ -246,23 +252,23 @@ mod_d_tree_server <- function(input, output, session, updateData){
         output$plot_dt <- renderPlot(NULL)
       }, {
         prediccion.dt       <<- NULL
-        output$dtPrediTable <- DT::renderDataTable(NULL)
+        output$dtPrediTable <-  DT::renderDataTable(NULL)
       }, {
         MC.dt             <<- NULL
-        output$plot_dt_mc <- renderPlot(NULL)
-        output$txtDtMC    <- renderPrint(invisible(NULL))
+        output$plot_dt_mc <-  renderPlot(NULL)
+        output$txtDtMC    <-  renderPrint(invisible(NULL))
       }, {
         indices.dt <<- rep(0, 10)
         IndicesM[[paste0("dtl-",input$split.dt)]] <<- NULL
-        output$dtIndPrecTable <- shiny::renderTable(NULL)
-        output$dtIndErrTable  <- shiny::renderTable(NULL)
+        output$dtIndPrecTable <-  shiny::renderTable(NULL)
+        output$dtIndErrTable  <-  shiny::renderTable(NULL)
         output$dtPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$dtErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }  
   
-  # Limpia los outputs 
+  # Limpia los datos al ejecutar el botón run
   limpia.dt.run <- function(capa = NULL) {
         output$txtDt          <- renderPrint(invisible(""))
         output$plot_dt        <- renderPlot(NULL)
@@ -271,15 +277,16 @@ mod_d_tree_server <- function(input, output, session, updateData){
         output$txtDtMC        <- renderPrint(invisible(NULL))
         output$dtIndPrecTable <- shiny::renderTable(NULL)
         output$dtIndErrTable  <- shiny::renderTable(NULL)
-        output$dtPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$dtErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$dtPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$dtErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.dt(1)
-    limpia.dt(2)
-    limpia.dt(3)
-    limpia.dt(4)
+        limpia.dt(1)
+        limpia.dt(2)
+        limpia.dt(3)
+        limpia.dt(4)
   }
 }
     

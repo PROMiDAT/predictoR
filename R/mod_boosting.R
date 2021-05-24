@@ -9,8 +9,6 @@
 #' @importFrom shiny NS tagList 
 mod_boosting_ui <- function(id){
   ns <- NS(id)
-  #HAY QUE QUITAR OPCION DE ALGORITMO 
-  #PORQUE YA NO SE VA A USAR CON LA NUEVA VERSION DE TRAINER 
   opciones.b <- list(options.run(ns("runBoosting")), tags$hr(style = "margin-top: 0px;"),
                      conditionalPanel("input.BoxB != 'tabBRules'",
                                       fluidRow(col_6(numericInput(ns("iter.boosting"), labelInput("numTree"), 50, width = "100%",min = 1)),
@@ -81,34 +79,31 @@ mod_boosting_ui <- function(id){
 mod_boosting_server <- function(input, output, session, updateData){
   ns <- session$ns
   
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.boosting()
   })
 
-  # # observeEvent(updateData$idioma, {
-  # #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  # #     default.codigo.boosting()
-  # #     boosting.full(TRUE)
-  # #   }
-  # # })
-
   # Cuando se genera el modelo boosting
   observeEvent(input$runBoosting, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
+    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { 
+      # Si se tiene los datos entonces :
       default.codigo.boosting()
       boosting.full()
     }
   }, priority =  -5)
 
+  #Cuando se cambia el número de regla
   observeEvent(input$rules.b.n,{
-    if (!(is.null(updateData$variable.predecir) & is.null(updateData$datos.aprendizaje))) { # Si se tiene los datos entonces :
+    if (!(is.null(updateData$variable.predecir) & is.null(updateData$datos.aprendizaje))) { 
+      # Si se tiene los datos entonces :
       mostrar.reglas.boosting(input$rules.b.n)
     }
   }, priority =  5)
 
 
-  # Ejecuta el modelo, prediccion, mc e indices de knn
+  # Ejecuta el modelo, predicción, mc e indices de boosting
   boosting.full <- function() {
       ejecutar.boosting()
       ejecutar.boosting.pred()
@@ -119,7 +114,8 @@ mod_boosting_server <- function(input, output, session, updateData){
 
   # Genera el modelo
   ejecutar.boosting <- function() {
-    tryCatch({ # Se corren los codigo
+    tryCatch({ 
+      # Se corren los códigos
       isolate(exe(cod.b.modelo))
       output$txtBoosting <- renderPrint(exe("print(modelo.boosting)"))
       
@@ -129,38 +125,43 @@ mod_boosting_server <- function(input, output, session, updateData){
  
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting"))
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.boosting(1)
       showNotification(paste0("Error (B-01) : ",e), duration = 15, type = "error")
     })
   }
   
-  # Genera la prediccion
+  # Genera la predicción
   ejecutar.boosting.pred <- function(){
-    tryCatch({ # Se corren los codigo
+    tryCatch({ 
+      # Se corren los códigos
       idioma <- updateData$idioma
       
       isolate(exe(cod.b.pred))
       pred <- predict(modelo.boosting, datos.prueba, type = "prob")
       scores[[paste0("bl")]] <<- pred$prediction[,2]
       
-      # Cambia la tabla con la prediccion de boosting
+      # Cambia la tabla con la predicción de boosting
       output$boostingPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.boosting"),idioma = idioma),server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.boosting"))
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #gráfica otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.boosting(2)
       showNotification(paste0("Error (B-02) : ",e), duration = 15, type = "error")
     })
   }
   
-  # Genera la matriz de confusion
+  # Genera la matriz de confusión
   ejecutar.boosting.mc <- function() {
     if(exists(paste0("prediccion.boosting"))){
       idioma <- updateData$idioma
-      tryCatch({ # Se corren los codigo
+      tryCatch({ 
+        # Se corren los códigos
         isolate(exe(cod.b.mc))
         output$txtBoostingMC <- renderPrint(exe("print(MC.boosting)"))
         
@@ -170,17 +171,19 @@ mod_boosting_server <- function(input, output, session, updateData){
         
         nombres.modelos <<- c(nombres.modelos, paste0("MC.boosting"))
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.boosting(3)
         showNotification(paste0("Error (B-03) : ",e), duration = 15, type = "error")
       })
     }
   }
   
-  # Genera los indices
+  # Genera los índices
   ejecutar.boosting.ind <- function() {
     if(exists(paste0("MC.boosting"))){
-      tryCatch({ # Se corren los codigo
+      tryCatch({ 
+        # Se corren los códigos
         idioma <- updateData$idioma
         
         isolate(exe(cod.b.ind))
@@ -191,7 +194,7 @@ mod_boosting_server <- function(input, output, session, updateData){
         output$boostingErrorGlob <-  fill.gauges(indices.boosting[[2]], tr("errG",idioma))
         
 
-        # Cambia la tabla con la indices de boosting
+        # Cambia la tabla con los índices de boosting
         output$boostingIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.boosting,"ADA-BOOSTING", idioma = idioma)), spacing = "xs",
                                                           bordered = T, width = "100%", align = "c", digits = 2)
         
@@ -202,16 +205,17 @@ mod_boosting_server <- function(input, output, session, updateData){
         IndicesM[[paste0("bl")]] <<- indices.boosting
         updateData$selector.comparativa <- actualizar.selector.comparativa()
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.boosting(4)
         showNotification(paste0("Error (B-04) : ", e), duration = 15, type = "error")
       })
     }
   }
-  # Acualiza el codigo a la version por defecto
+  # Actualiza el código a la versión por defecto
   default.codigo.boosting <- function() {
 
-    # Se acualiza el codigo del modelo
+    # Se actualiza el código del modelo
     codigo <- boosting.modelo(variable.pr = updateData$variable.predecir,
                               iter        = input$iter.boosting,
                               maxdepth    = input$maxdepth.boosting,
@@ -220,28 +224,29 @@ mod_boosting_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeBoosting", value = codigo)
     cod.b.modelo <<- codigo
     
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la predicción
     codigo <- boosting.prediccion()
     updateAceEditor(session, "fieldCodeBoostingPred", value = codigo)
     cod.b.pred <<- codigo
 
-    # Cambia el codigo del grafico del modelo
+    # Cambia el código del gráfico del modelo
     updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
 
-    # Cambia el codigo del grafico de importancia
+    # Cambia el código del gráfico de importancia
     updateAceEditor(session, "fieldCodeBoostingPlotImport", value = boosting.plot.import())
 
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- boosting.MC()
     updateAceEditor(session, "fieldCodeBoostingMC", value = codigo)
     cod.b.mc <<- codigo
     
-    # Se genera el codigo de la indices
+    # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
     cod.b.ind <<- codigo
   }
-  # Grafico de boosting
+  
+  # Gráfico de evolución del error boosting
   plotear.boosting <- function() {
     tryCatch({
       output$plot_boosting <- renderEcharts4r(isolate(exe(input$fieldCodeBoostingPlot)))
@@ -252,7 +257,7 @@ mod_boosting_server <- function(input, output, session, updateData){
     })
   }
   
-  # Grafico de importancia
+  # Gráfico de importancia
   plotear.boosting.imp <- function() {
     tryCatch({
       output$plot_boosting_import <- renderEcharts4r(isolate(exe(input$fieldCodeBoostingPlotImport)))
@@ -275,7 +280,8 @@ mod_boosting_server <- function(input, output, session, updateData){
       }
       )})
   }
-  # Limpia los datos segun el proceso donde se genera el error
+  
+  # Limpia los datos según el proceso donde se genera el error
   limpia.boosting <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
@@ -293,14 +299,15 @@ mod_boosting_server <- function(input, output, session, updateData){
       }, {
         exe("indices.boosting <<- NULL")
         IndicesM[[paste0("bl")]]    <<- NULL
-        output$boostingIndPrecTable <- shiny::renderTable(NULL)
-        output$boostingIndErrTable  <- shiny::renderTable(NULL)
+        output$boostingIndPrecTable <-  shiny::renderTable(NULL)
+        output$boostingIndErrTable  <-  shiny::renderTable(NULL)
         output$boostingPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$boostingErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }
-  # Limpia los datos segun el proceso donde se genera el error
+  
+  # Limpia los datos al ejecutar el botón run
   limpia.boosting.run <- function() {
         output$txtBoosting          <- renderPrint(invisible(""))
         output$plot_boosting        <- renderEcharts4r(NULL)
@@ -314,12 +321,12 @@ mod_boosting_server <- function(input, output, session, updateData){
         output$boostingErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
-  
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.boosting(1)
-    limpia.boosting(2)
-    limpia.boosting(3)
-    limpia.boosting(4)
+        limpia.boosting(1)
+        limpia.boosting(2)
+        limpia.boosting(3)
+        limpia.boosting(4)
   }
   
 }

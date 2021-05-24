@@ -2,71 +2,52 @@
 
 cod.nn.modelo <<-  NULL
 cod.nn.pred   <<-  NULL
-cod.nn.mc     <<- NULL
-cod.nn.ind    <<- NULL
-NN_EXECUTION  <<- TRUE
+cod.nn.mc     <<-  NULL
+cod.nn.ind    <<-  NULL
+NN_EXECUTION  <<-  TRUE
+
+# Códigos de NN ---------------------------------------------------------------------------------------------------------
 
 #Crea el modelo NN
 nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
   threshold <- ifelse(threshold == 0, 0.01, threshold)
   stepmax   <- ifelse(stepmax < 100, 100, stepmax)
   capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
+  
   return(paste0("modelo.nn <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
                 "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
 }
 
-#Codigo de la prediccion de nn
+#Código de la prediccion de nn
 nn.prediccion <- function() {
   return(paste0("prediccion.nn <<- predict(modelo.nn, datos.prueba, type = 'class')"))
 }
 
-nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
-  capas <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
-  stepmax <- ifelse(1000>stepmax, 1000, stepmax)
-  threshold <- ifelse(0.01>threshold, 0.01, threshold)
-  return(paste0("modelo.nuevos <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje.completos, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
-                "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
-}
-
-nn.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')\n"))
-}
-
-predict.neuralnet.prmdt.np <- function(variable.predecir = "", type = "class", ...){
-  data     <- datos.prueba.completos
-  selector <- unlist(lapply(data, is.ordered))
-  if(any(selector)){
-    data[,selector] <- lapply(data[,selector, drop = FALSE], function(x) factor(x, ordered = FALSE, levels = levels(x)) )
-  }
-  
-  var.predict <- modelo.nuevos$prmdt$var.pred
-  selector <- which(colnames(data) == var.predict)
-  suppressWarnings(data <- cbind(dummy.data.frame(data[, -selector, drop = FALSE], drop = FALSE,
-                                                  dummy.classes = c("factor","character")), data[selector]))
-  
-  selector <- which(colnames(data) == var.predict)
-  
-  ans <- neuralnet::compute(original_model(modelo.nuevos), data[, -selector])
-  #ans <<- neuralnet::compute(modelo.nuevos, data[, -selector])
-  
-  ans <- ans$net.result
-  colnames(ans) <- modelo.nuevos$prmdt$levels
-  ans <- max.col(ans)
-  ans <- numeric_to_predict(datos.aprendizaje.completos[, variable.predecir], ans)
-  ans <- type_correction(modelo.nuevos, ans, T)
-
- # predic.nuevos <<- create.prediction(modelo.nuevos, ans)
-  return(paste0("predic.nuevos <<- create.prediction(modelo.nuevos, ans)"))
-}
-
-
-#Codigo de la matriz de confucion de xgb
+#Código de la matriz de confucion de xgb
 nn.MC <- function(){
   return(paste0("MC.nn <<- confusion.matrix(datos.prueba, prediccion.nn)","\n"))
 }
 
+#Gráfico de la red neuronal
 nn.plot <- function(){
   paste0("plot(modelo.nn,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t",
          "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t",
          "dimension=15, radius = 0.2, fontsize = 10)")
+}
+
+# Códigos de NN Ind.Nuevos--------------------------------------------------------------------------------------------------
+
+#Crea el modelo NN
+nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
+  capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
+  stepmax   <- ifelse(1000>stepmax, 1000, stepmax)
+  threshold <- ifelse(0.01>threshold, 0.01, threshold)
+  
+  return(paste0("modelo.nuevos <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje.completos, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+                "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
+}
+
+#Código de la prediccion de nn
+nn.prediccion.np <- function() {
+  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')\n"))
 }

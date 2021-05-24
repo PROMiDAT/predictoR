@@ -53,6 +53,7 @@ mod_bayes_ui <- function(id){
 mod_bayes_server <- function(input, output, session, updateData){
   ns <- session$ns
 
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.bayes()
@@ -65,6 +66,8 @@ mod_bayes_server <- function(input, output, session, updateData){
   #   }
   # })
   # 
+  
+  #Cuando se ejecuta el botón 
   observeEvent(input$runBayes, {
     if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
       limpia.bayes.run()
@@ -74,27 +77,32 @@ mod_bayes_server <- function(input, output, session, updateData){
   }, priority =  -5)
   
 
+  #Código por defecto de bayes
   default.codigo.bayes <- function() {
 
+    #Modelo
     codigo <- bayes.modelo(updateData$variable.predecir)
     updateAceEditor(session, "fieldCodeBayes", value = codigo)
     cod.bayes.modelo <<- codigo
     
+    #Predicción
     codigo <- bayes.prediccion()
     updateAceEditor(session, "fieldCodeBayesPred", value = codigo)
     cod.bayes.pred <<- codigo
 
+    #Matríz de Confusión
     codigo <- bayes.MC()
     updateAceEditor(session, "fieldCodeBayesMC", value = codigo)
     cod.bayes.mc <<- codigo
 
+    #Indices generales
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
     cod.bayes.ind <<- codigo
   }
 
   
-  # Ejecuta el modelo, prediccion, mc e indices de bayyes
+  #Ejecuta el modelo, predicción, mc e indices de bayes
   bayes.full <- function() {
      ejecutar.bayes()
      ejecutar.bayes.pred()
@@ -110,12 +118,14 @@ mod_bayes_server <- function(input, output, session, updateData){
  
       nombres.modelos <<- c(nombres.modelos, "modelo.bayes")
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.bayes(1)
       showNotification(paste0("Error (BAYES-01) : ", e), duration = 15, type = "error")
     })
   }
   
+  # Genera la predicción
   ejecutar.bayes.pred <- function() {
     tryCatch({ 
       idioma <- updateData$idioma
@@ -127,7 +137,8 @@ mod_bayes_server <- function(input, output, session, updateData){
       output$bayesPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.bayes"),idioma = idioma), server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, "prediccion.bayes")
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
     },
     error = function(e) { 
       limpia.bayes(2)
@@ -135,6 +146,7 @@ mod_bayes_server <- function(input, output, session, updateData){
     })
   }
   
+  # Genera la mc
   ejecutar.bayes.mc <- function() {
     if(exists("prediccion.bayes")){
       tryCatch({ 
@@ -155,7 +167,7 @@ mod_bayes_server <- function(input, output, session, updateData){
     }
   }
   
-  # Genera los indices
+  # Genera los índices
   ejecutar.bayes.ind <- function(){
     if(exists("MC.bayes")){
       tryCatch({ 
@@ -175,7 +187,8 @@ mod_bayes_server <- function(input, output, session, updateData){
         IndicesM[["Bayes"]] <<- indices.bayes
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.bayes(4)
         showNotification(paste0("Error (BAYES-04) : ",e), duration = 15, type = "error")
       })
@@ -206,7 +219,7 @@ mod_bayes_server <- function(input, output, session, updateData){
     }
   }
   
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos al ejecutar el botón run
   limpia.bayes.run <- function() {
         output$txtbayes          <- renderPrint(invisible(""))
         output$bayesPrediTable   <- DT::renderDataTable(NULL)
@@ -218,6 +231,7 @@ mod_bayes_server <- function(input, output, session, updateData){
         output$bayesErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
+  # Limpia todos los datos
   limpiar <- function(){
         limpia.bayes(1)
         limpia.bayes(2)

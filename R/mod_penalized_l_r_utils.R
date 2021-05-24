@@ -1,22 +1,27 @@
-# -------------------  LR
+# -------------------  RLR
 
-cod.rlr.modelo <<-  NULL
-cod.rlr.pred   <<-  NULL
-cod.rlr.mc     <<- NULL
-cod.rlr.ind    <<- NULL
-cod.select.landa <<- NULL
+cod.rlr.modelo   <<-  NULL
+cod.rlr.pred     <<-  NULL
+cod.rlr.mc       <<-  NULL
+cod.rlr.ind      <<-  NULL
+cod.select.landa <<-  NULL
 
 
 # Pagina de RLR -------------------------------------------------------------------------------------------------------------
 
-
-#Crea el modelo RL
+#Crea el modelo RLR
 rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE){
   return(paste0("modelo.rlr.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
 }
 
-rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
-  return(paste0("modelo.nuevos <<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
+#Código de la prediccion de rlr
+rlr.prediccion <- function(type = "ridge") {
+  return(paste0("prediccion.rlr.",type," <<- predict(modelo.rlr.",type,", datos.prueba, type = 'class')"))
+}
+
+#Código de la matriz de confución de rlr
+rlr.MC <- function(type = "ridge"){
+  return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
 }
 
 select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "ridge"){
@@ -24,32 +29,48 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",
          "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')")
 }
-#cv.glm.lasso$cvm valor de y 
-#cv.glm.lasso$cvup valor de la rayita superior
-#cv.glm.lasso$name y label
-# x = log(modelo.rlr.lasso$lambda)
-# y = cv.glm.lasso$cvm
-# upper <- cv.glm.lasso$cvup
-# lower <- cv.glm.lasso$cvlo
-# name  <- cv.glm.lasso$name[[1]]
-# data.lambda <- data.frame(x, y, upper, lower, name)
-# data.lambda %>%
-#   e_charts(x) %>%
-#   e_scatter(y, symbol_size = 7) %>%
-#   e_error_bar(lower, upper)%>%
-#   e_axis_labels(
-#     x = 'Log Lambda',
-#     y = name)%>%
-#   e_x_axis(
-#     formatter = e_axis_formatter(digits = 1)
-#   )%>% e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
 
-plot.coeff.landa <- function(landa = NULL, type = "ridge"){
-  landa <- ifelse(is.null(landa),paste0("cv.glm.",type,"$lambda.min"), landa)
-  paste0("plot(modelo.rlr.",type,", 'lambda', label = TRUE)\n",
-         "abline(v = log(",landa,"), col = 'blue', lwd = 2, lty = 3)")
+#Crea el gráfico de posibles lambda para rlr
+#e_posib_lambda(exe("modelo.rlr.",tipo), exe("cv.glm.",tipo))
+e_posib_lambda <- function(cv.glm){
+  cv.glm <- cv.glm.lasso
+  x  <- log(cv.glm$lambda)
+  y  <-cv.glm$cvm
+  x1 <- x[cv.glm$index[[1]]]
+  x2 <- x[cv.glm$index[[2]]]
+  upper <- cv.glm$cvup
+  lower <- cv.glm$cvlo
+  name  <- cv.glm$name[[1]]
+  data.lambda <- data.frame(x, y, y2, upper, lower, name)
+  plot <- data.lambda %>%
+    e_charts(x) %>%
+    e_scatter(y, symbol_size = 7) %>%
+    e_error_bar(lower, upper)%>%
+    e_axis_labels(
+      x = 'Log(λ)',
+      y = name)%>%
+    e_x_axis(
+      formatter = e_axis_formatter(digits = 1))  %>% 
+    e_legend(FALSE) %>% 
+    e_mark_line(data = list(
+      list(xAxis = "min", yAxis = "min"), 
+      list(xAxis = "max", yAxis = "max")
+    )) %>% 
+    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+  plot
 }
+# 
+# avg <- list(
+#   name = "AVG",
+#   type = "avg"
+# )
+# 
+# min <- list(
+#   name = "Min",
+#   type = "min"
+# )
 
+#Gráfico de coeficientes lambda RLR
 e_coeff_landa <- function(type, category) {
   exe(paste0("plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo.rlr.",type,"$beta$",category,"))))\n",
              "plot.rlr.coeff <<- cbind(x = log(modelo.rlr.",type,"$lambda), plot.rlr.coeff)\n"))
@@ -86,19 +107,18 @@ e_coeff_landa <- function(type, category) {
                                         {return('')}}"))
 }
 
-#Codigo de la prediccion de rlr
-rlr.prediccion <- function(type = "ridge") {
-  return(paste0("prediccion.rlr.",type," <<- predict(modelo.rlr.",type,", datos.prueba, type = 'class')"))
+
+# Códigos de RLR Ind.Nuevos--------------------------------------------------------------------------------------------------
+
+#Crea el modelo RLR
+rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
+  return(paste0("modelo.nuevos <<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
 }
 
+#Código de la prediccion de rlr
 rlr.prediccion.np <- function() {
   return(paste0("datos.prueba.aux <<- datos.prueba.completos\n",
                 "datos.prueba.aux[['",variable.predecir.np,"']]<- as.factor(levels(datos.aprendizaje.completos[['",variable.predecir.np,"']]))\n",
                 "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.aux, type = 'class')"))
-}
-
-#Codigo de la matriz de confucion de rlr
-rlr.MC <- function(type = "ridge"){
-  return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
 }
 
