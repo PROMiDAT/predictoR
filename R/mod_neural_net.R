@@ -69,6 +69,7 @@ mod_neural_net_ui <- function(id){
 mod_neural_net_server <- function(input, output, session, updateData){
   ns <- session$ns
   
+  #Actualiza la cantidad de capas ocultas
   observeEvent(c(input$cant.capas.nn, updateData$datos.aprendizaje), {
     if(!is.null(updateData$datos.aprendizaje) && !is.null(input$cant.capas.nn)){
       for (i in 1:10) {
@@ -81,6 +82,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   })
   
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.nn()
@@ -93,6 +95,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
   #   }
   # })
 
+  #Cuando se ejecuta el botón run
   observeEvent(input$runNn, {
     if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { 
         limpia.nn.run()
@@ -101,8 +104,9 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   }, priority =  -5)
 
-  
+  # Actualiza el código a la versión por defecto
   default.codigo.nn <- function(){
+    #Modelo
     codigo <- nn.modelo(updateData$variable.predecir,
                         input$threshold.nn,
                         input$stepmax.nn,
@@ -116,22 +120,26 @@ mod_neural_net_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeNn", value = codigo)
     cod.nn.modelo <<- codigo
 
+    #Neuralnet PLot
     updateAceEditor(session, "fieldCodeNnPlot", value = nn.plot())
 
+    #Predicción
     codigo <- nn.prediccion()
     updateAceEditor(session, "fieldCodeNnPred", value = codigo)
     cod.nn.pred <<- codigo
 
+    #Matriz de Confusión
     codigo <- nn.MC()
     updateAceEditor(session, "fieldCodeNnMC", value = codigo)
     cod.nn.mc <<- codigo
 
+    #Indices Generales
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeNnIG", value = codigo)
     cod.nn.ind <<- codigo
   }
   
-
+  # Ejecuta el modelo, predicción, mc e indices de nn
   nn.full <- function() {
      ejecutar.nn()
      if(NN_EXECUTION){
@@ -141,7 +149,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
      }
   }
   
- 
+  #Genera el modelo
   ejecutar.nn <- function() {
     idioma <- updateData$idioma
     tryCatch({ 
@@ -162,6 +170,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     })
   }
   
+  #Genera la predicción
   ejecutar.nn.pred <- function() {
     idioma <- updateData$idioma
     tryCatch({ 
@@ -173,7 +182,8 @@ mod_neural_net_server <- function(input, output, session, updateData){
       
        
       nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #gráfica otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
       
     },
     error = function(e) { 
@@ -182,7 +192,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     })
   }
   
-
+  #Matriz de Confusión
   ejecutar.nn.mc <- function() {
     idioma <- updateData$idioma
     if(exists("prediccion.nn")){
@@ -202,6 +212,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   }
   
+  #Indices Generales
   ejecutar.nn.ind <- function() {
     idioma <- updateData$idioma
     if(exists("MC.nn")){
@@ -227,6 +238,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   }
   
+  #Genera el gráfico de la red neuronal
   plotear.red <- function(){
     idioma <- updateData$idioma
     tryCatch({
@@ -250,6 +262,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     })
   }
   
+  # Limpia los datos según el proceso donde se genera el error
   limpia.nn <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
@@ -274,6 +287,7 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   }
   
+  # Limpia los datos al ejecutar el botón run
   limpia.nn.run <- function() {
         output$txtnn          <- renderPrint(invisible(""))
         output$plot_nn        <- renderPlot(NULL)
@@ -282,15 +296,16 @@ mod_neural_net_server <- function(input, output, session, updateData){
         output$txtNnMC        <- renderPrint(invisible(NULL))
         output$nnIndPrecTable <- shiny::renderTable(NULL)
         output$nnIndErrTable  <- shiny::renderTable(NULL)
-        output$nnPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$nnErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$nnPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$nnErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.nn(1)
-    limpia.nn(2)
-    limpia.nn(3)
-    limpia.nn(4)
+        limpia.nn(1)
+        limpia.nn(2)
+        limpia.nn(3)
+        limpia.nn(4)
   }
   
 }

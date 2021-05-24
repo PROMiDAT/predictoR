@@ -67,6 +67,8 @@ mod_svm_ui <- function(id){
 #' @noRd 
 mod_svm_server <- function(input, output, session, updateData){
   ns <- session$ns
+  
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
@@ -96,8 +98,7 @@ mod_svm_server <- function(input, output, session, updateData){
     }
   }, priority =  -5)
   
-  
- 
+  # Ejecuta el modelo, predicción, mc e indices de SVM
   svm.full <- function() {
      ejecutar.svm()
      ejecutar.svm.pred()
@@ -105,6 +106,7 @@ mod_svm_server <- function(input, output, session, updateData){
      ejecutar.svm.ind()
   }
   
+  #Genera el modelo
   ejecutar.svm <- function() {
     tryCatch({ 
       isolate(exe(cod.svm.modelo))
@@ -121,6 +123,7 @@ mod_svm_server <- function(input, output, session, updateData){
     })
   }
   
+  #Genera la predicción
   ejecutar.svm.pred <- function() {
     tryCatch({ 
       isolate(exe(cod.svm.pred))
@@ -133,7 +136,8 @@ mod_svm_server <- function(input, output, session, updateData){
 
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.svm.",kernel))
       
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      #Gráfica otra vez la curva roc
+      updateData$roc <- !updateData$roc 
     },
     error = function(e) { 
       limpia.svm(2)
@@ -141,6 +145,7 @@ mod_svm_server <- function(input, output, session, updateData){
     })
   }
 
+  #Genera la matriz de confusión
   ejecutar.svm.mc <- function(){
     kernel <- isolate(input$kernel.svm)
     idioma <- updateData$idioma
@@ -188,16 +193,18 @@ mod_svm_server <- function(input, output, session, updateData){
         IndicesM[[paste0("svml-",kernel)]] <<- indices.svm
         updateData$selector.comparativa    <- actualizar.selector.comparativa()
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.svm(4)
         showNotification(paste0("Error (SVM-04) : ",e), duration = 15, type = "error")
       })
     }
   }
   
+  # Actualiza el código a la versión por defecto
   default.codigo.svm <- function() {
     kernel <- isolate(input$kernel.svm)
-    # Se actualiza el codigo del modelo
+    # Se actualiza el código del modelo
     codigo <- svm.modelo(variable.pr = updateData$variable.predecir,
                          scale = input$switch.scale.svm,
                          kernel = kernel)
@@ -205,24 +212,24 @@ mod_svm_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeSvm", value = codigo)
     cod.svm.modelo <<- codigo
     
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la predicción
     codigo <- svm.prediccion(kernel)
     updateAceEditor(session, "fieldCodeSvmPred", value = codigo)
     cod.svm.pred <<- codigo
     
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- svm.MC(kernel)
     updateAceEditor(session, "fieldCodeSvmMC", value = codigo)
     cod.svm.mc <<- codigo
     
-    # Se genera el codigo de la indices
+    # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
     cod.svm.ind <<- codigo
     
   }
   
-  #Hace el grafico de svm
+  #Hace el gráfico de svm
   output$plot_svm <- renderPlot({
     tryCatch({
       datos <- updateData$datos
@@ -241,7 +248,7 @@ mod_svm_server <- function(input, output, session, updateData){
       })
   })
   
-  # Cuando cambia el codigo del grafico de clasificacion svm
+  #Cuando se ejecuta el botón run
   observeEvent(c(input$runSvm),{
     variable.predecir <- updateData$variable.predecir
     datos <- updateData$datos
@@ -261,11 +268,12 @@ mod_svm_server <- function(input, output, session, updateData){
     }
   })
   
+  # Cuando cambia el código del gráfico de clasificación svm
   observeEvent(c(input$fieldCodeSvmPlot),{
     updatePlot$svm.graf <- input$fieldCodeSvmPlot
   })
   
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos según el proceso donde se genera el error
   limpia.svm <- function(capa = NULL){
     for(i in capa:4){
       switch(i, {
@@ -283,8 +291,8 @@ mod_svm_server <- function(input, output, session, updateData){
         exe("indices.svm.",input$kernel.svm,"<<- NULL")
         output$svmIndPrecTable <- shiny::renderTable(NULL)
         output$svmIndErrTable  <- shiny::renderTable(NULL)
-        output$svmPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$svmErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$svmPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$svmErrorGlob    <- flexdashboard::renderGauge(NULL)
       })
     }
   }
@@ -301,11 +309,12 @@ mod_svm_server <- function(input, output, session, updateData){
         output$svmErrorGlob     <- flexdashboard::renderGauge(NULL)
 }
   
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.svm(1)
-    limpia.svm(2)
-    limpia.svm(3)
-    limpia.svm(4)
+        limpia.svm(1)
+        limpia.svm(2)
+        limpia.svm(3)
+        limpia.svm(4)
   }
 }
     

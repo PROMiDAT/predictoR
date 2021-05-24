@@ -219,7 +219,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     actualizar.pred.pn("")
   })
   
-  #' Load Button Function
+  #' Load Button Function (New Cases)
   observeEvent(input$loadButtonNPred2, {
     rowname    <- isolate(input$rownameNPred2)
     ruta       <- isolate(input$archivoNPred2)
@@ -271,6 +271,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   })
   
+  #Tabla de datos de aprendizaje
   output$contentsPred <- DT::renderDataTable({
     
     datos  <- newCases$datos.aprendizaje
@@ -305,6 +306,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     })
   }, server = T)  
   
+  #Tabla de transformar datos
   tabla.trans <- function(){
     output$contentsPred2 <- DT::renderDataTable({
       datos  <- newCases$datos.aprendizaje
@@ -339,6 +341,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
   }
   
+  #Tabla de datos de prueba
   output$contentsPred3 <- DT::renderDataTable({
     datos  <- newCases$datos.prueba
     tipos  <- c(
@@ -439,6 +442,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     datos.aprendizaje.completos <<- newCases$datos.aprendizaje
   }) 
   
+  #Crea las opciones de transformar para cada variable
   selectInputTrans <- function(datos, var, idioma = "es") {
     tags$select(
       id = ns(paste0("sel", var)),
@@ -453,6 +457,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     )
   }
   
+  #Valida que los datos contengan la misma cantidad de columnas 
   validar <- function() {
     cod        <- ""
     originales <-  newCases$originales
@@ -489,6 +494,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
   }
   
+  #Actualiza la cantidad de capas ocultas (neuralnet)
   observeEvent(c(input$cant.capas.nn.pred), {
     if(!is.null(input$cant.capas.nn.pred)){
       for (i in 1:10) {
@@ -501,78 +507,12 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   })
   
-  observeEvent(newCases$datos.aprendizaje, {
-    if(!is.null(newCases$datos.aprendizaje)){
-      shinyjs::show("cargarnext", anim = TRUE, animType = "slide" )
-    }
-    else{
-      shinyjs::hide("cargarnext", anim = TRUE, animType = "fade")
-    }
-  },ignoreNULL = FALSE)
-  
-  observeEvent(newCases$datos.prueba, {
-    if(!is.null(newCases$datos.prueba)){
-      shinyjs::show("nuevosnext", anim = TRUE, animType = "slide")
-    }
-    else{
-      shinyjs::hide("nuevosnext", anim = TRUE, animType = "fade")
-    }
-  },ignoreNULL = FALSE)
-  
-  observeEvent(newCases$variable.predecir, {
-    if(!is.null(newCases$variable.predecir)){
-      shinyjs::show("modelnext", anim = TRUE, animType = "slide")
-    }
-    else{
-      shinyjs::hide("modelnext", anim = TRUE, animType = "fade")
-    }
-  },ignoreNULL = FALSE)
-  
-  observeEvent(input$cargarnext, {
-    tabla.trans()
-    shinyjs::hide("primera", anim = TRUE )
-    shinyjs::show("segundo", anim = TRUE)
-  })
-
-  observeEvent(input$transback, {
-    shinyjs::show("primera", anim = TRUE)
-    shinyjs::hide("segundo", anim = TRUE)
-  })
-  
-  observeEvent(input$transnext, {
-    shinyjs::show("tercera", anim = TRUE)
-    shinyjs::hide("segundo", anim = TRUE)
-  })
-  
-  observeEvent(input$modelback, {
-    shinyjs::show("segundo", anim = TRUE)
-    shinyjs::hide("tercera", anim = TRUE)
-  })
-  
-  observeEvent(input$modelnext, {
-    shinyjs::show("cuarta", anim = TRUE)
-    shinyjs::hide("tercera", anim = TRUE)
-  })
-  
-  observeEvent(input$nuevosback, {
-    shinyjs::hide("cuarta",  anim = TRUE)
-    shinyjs::show("tercera", anim = TRUE)
-  })
-  
-  observeEvent(input$nuevosnext, {
-    shinyjs::hide("cuarta", anim = TRUE)
-    shinyjs::show("quinta", anim = TRUE)
-  })  
-  
-  observeEvent(input$predicback, {
-    shinyjs::show("cuarta", anim = TRUE)
-    shinyjs::hide("quinta", anim = TRUE)
-  })
-  
+  #Ejecuta el modelo
   observeEvent(input$PredNuevosBttnModelo,{
     crear.modelo()
   })
   
+  #Crea el modelo
   crear.modelo <- function(){
     if(!is.null(newCases$datos.aprendizaje)){
       variable.predecir.np       <- input$sel.predic.var.nuevos
@@ -647,6 +587,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   }
   
+  #Genera la predicción
   observeEvent(input$predecirPromidat, {
     tryCatch({
       predecir.pn()
@@ -657,7 +598,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
   })  
   
-  
+  #Download Prediction Result
   output$downloaDatosPred <- downloadHandler(
     filename = function() {
       input$archivoNPred2$name
@@ -669,6 +610,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   )
   
+  #Genera la predicción
   predecir.pn <-function(){
     if(!is.null(datos.prueba.completos)){
       if(exists("modelo.nuevos") && !is.null(modelo.nuevos)){
@@ -699,6 +641,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   }
   
+  #Actualiza el texto del modelo
   actualizar.texto.modelo.pn <- function(codigo){
     updateAceEditor(session, "fieldPredNuevos", value = codigo)
     if(is.null(modelo.nuevos)){
@@ -708,6 +651,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   }
   
+  #Actualiza la tabla de predicciones
   actualizar.pred.pn <- function(codigo){
     updateAceEditor(session, "fieldCodePredPN", value = codigo)
     if(!is.null(predic.nuevos) & !is.null(newCases$datos.prueba)){
@@ -718,7 +662,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
   }
   
- actualizar.tabla.predic.np <- function(datos) {
+  #Genera la tabla de predicciones
+  actualizar.tabla.predic.np <- function(datos) {
    output$PrediTablePN <- DT::renderDataTable({
      tipos  <- c(
        tr("numerico",   isolate(updateData$idioma)),
@@ -748,11 +693,13 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
    }, server = T)
  }
  
-  verificar.datos.pn <- function(){
+ #Verifica que los datos contengan las mismas columnas
+ verificar.datos.pn <- function(){
     if(any(!(c(colnames(datos.prueba.completos),newCases$variable.predecir) %in% colnames(datos.originales.completos))))
       stop(tr("NoTamColum", updateData$idioma))
   }
   
+  #Agrega la predicción a los datos
   crear.datos.np <- function(){
     datos.aux.prueba <- datos.prueba.completos
     datos.aux.prueba[,newCases$variable.predecir]   <- predic.nuevos$prediction
@@ -760,6 +707,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     return(datos.aux.prueba)
   }
   
+  #Unifica las variables de tipo factor en training-testing
   unificar.factores <- function(){
     for(nombre in colnames(datos.prueba.completos)){
       if(class(datos.prueba.completos[,nombre]) == "factor"){
@@ -769,7 +717,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   }
   
-  # Habilitada o deshabilita la semilla RLR
+  # Habilita o deshabilita la semilla RLR
   observeEvent(input$permitir.landa.pred, {
     if (input$permitir.landa.pred) {
       shinyjs::enable("landa.pred")
@@ -778,7 +726,77 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   })
   
-  #' Update Models Opcions
+  # Wizard Opts Ind.Nuevos--------------------------------------------------------------------------------------------------
+  observeEvent(newCases$datos.aprendizaje, {
+    if(!is.null(newCases$datos.aprendizaje)){
+      shinyjs::show("cargarnext", anim = TRUE, animType = "slide" )
+    }
+    else{
+      shinyjs::hide("cargarnext", anim = TRUE, animType = "fade")
+    }
+  },ignoreNULL = FALSE)
+  
+  
+  observeEvent(newCases$datos.prueba, {
+    if(!is.null(newCases$datos.prueba)){
+      shinyjs::show("nuevosnext", anim = TRUE, animType = "slide")
+    }
+    else{
+      shinyjs::hide("nuevosnext", anim = TRUE, animType = "fade")
+    }
+  },ignoreNULL = FALSE)
+  
+  observeEvent(newCases$variable.predecir, {
+    if(!is.null(newCases$variable.predecir)){
+      shinyjs::show("modelnext", anim = TRUE, animType = "slide")
+    }
+    else{
+      shinyjs::hide("modelnext", anim = TRUE, animType = "fade")
+    }
+  },ignoreNULL = FALSE)
+  
+  observeEvent(input$cargarnext, {
+    tabla.trans()
+    shinyjs::hide("primera", anim = TRUE )
+    shinyjs::show("segundo", anim = TRUE)
+  })
+  
+  observeEvent(input$transback, {
+    shinyjs::show("primera", anim = TRUE)
+    shinyjs::hide("segundo", anim = TRUE)
+  })
+  
+  observeEvent(input$transnext, {
+    shinyjs::show("tercera", anim = TRUE)
+    shinyjs::hide("segundo", anim = TRUE)
+  })
+  
+  observeEvent(input$modelback, {
+    shinyjs::show("segundo", anim = TRUE)
+    shinyjs::hide("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$modelnext, {
+    shinyjs::show("cuarta", anim = TRUE)
+    shinyjs::hide("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$nuevosback, {
+    shinyjs::hide("cuarta",  anim = TRUE)
+    shinyjs::show("tercera", anim = TRUE)
+  })
+  
+  observeEvent(input$nuevosnext, {
+    shinyjs::hide("cuarta", anim = TRUE)
+    shinyjs::show("quinta", anim = TRUE)
+  })  
+  
+  observeEvent(input$predicback, {
+    shinyjs::show("cuarta", anim = TRUE)
+    shinyjs::hide("quinta", anim = TRUE)
+  })
+  
+  #' Update Models Options
   output$opcModelsPredN = renderUI({
     idioma  <- updateData$idioma
     modelo  <- input$selectModelsPred 

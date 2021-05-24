@@ -35,8 +35,8 @@ opc_knn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,
     tabBoxPrmdt(
       id = "BoxKnn", opciones = opc_knn,
       tabPanel(title = labelInput("generatem"), value = "tabKknModelo",
-               # conditionalPanel(condition="($('html').hasClass('shiny-busy'))",
-               #                  div(class = "loaderWrapper", div(class="loader"))),
+               conditionalPanel(condition="($('html').hasClass('shiny-busy'))",
+                                div(class = "loaderWrapper", div(class="loader"))),
                withLoader(verbatimTextOutput(ns("txtknn")), 
                           type = "html", loader = "loader4")),
       
@@ -106,7 +106,7 @@ mod_knn_server <- function(input, output, session, updateData){
   #   }
   # })
 
-  # Ejecuta el modelo, prediccion, mc e indices de knn
+  # Ejecuta el modelo, predicción, mc e indices de knn
   knn.full <- function() {
      ejecutar.knn()
      ejecutar.knn.pred()
@@ -140,33 +140,35 @@ mod_knn_server <- function(input, output, session, updateData){
     )
   }
   
-  # Genera la prediccion
+  # Genera la predicción
   ejecutar.knn.pred <- function() {
     tryCatch({ 
-      # Se corren los codigo
+      # Se corren los códigos
       exe(cod.knn.pred)
       idioma <- updateData$idioma
       kernel <- isolate(input$kernel.knn)
       pred   <- predict(exe("modelo.knn.",kernel), datos.prueba, type = "prob")
       scores[[paste0("knnl-",kernel)]] <<- pred$prediction[,2]
       
-      # Cambia la tabla con la prediccion de knn
+      # Cambia la tabla con la predicción de knn
       output$knnPrediTable <-  DT::renderDataTable(obj.predic(exe("prediccion.knn.",kernel),idioma = idioma),server = FALSE)
       nombres.modelos      <<- c(nombres.modelos, paste0("prediccion.knn.",kernel))
       updateData$roc <- !updateData$roc #graficar otra vez la curva roc
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.knn(2)
       showNotification(paste0("Error (KNN-02) : ", e), duration = 15, type = "error")
     })
   }
   
-  # Genera la matriz de confusion
+  # Genera la matriz de confusión
   ejecutar.knn.mc <- function() {
     idioma <- updateData$idioma
     kernel <- isolate(input$kernel.knn)
     if(exists(paste0("prediccion.knn.",kernel))){
-      tryCatch({ # Se corren los codigo
+      tryCatch({ 
+        # Se corren los códigos
         exe(cod.knn.mc)
         output$txtknnMC <- renderPrint(print(exe("MC.knn.",kernel)))
         
@@ -174,7 +176,8 @@ mod_knn_server <- function(input, output, session, updateData){
         output$plot_knn_mc <-  renderPlot(exe("plot.MC(MC.knn.",kernel,")"))
         nombres.modelos    <<- c(nombres.modelos, paste0("MC.knn.",kernel))
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.knn(3)
         showNotification(paste0("Error (KNN-03) : ",e), duration = 15, type = "error")
       })
@@ -186,7 +189,8 @@ mod_knn_server <- function(input, output, session, updateData){
     idioma <- updateData$idioma
     kernel <- isolate(input$kernel.knn)
     if(exists(paste0("MC.knn.",kernel))){
-      tryCatch({ # Se corren los codigo
+      tryCatch({ 
+        # Se corren los códigos
         isolate(exe(cod.knn.ind))
         
         indices.knn <- indices.generales(exe("MC.knn.",kernel))
@@ -205,14 +209,15 @@ mod_knn_server <- function(input, output, session, updateData){
 
         updateData$selector.comparativa <- actualizar.selector.comparativa()
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.knn(4)
         showNotification(paste0("Error (KNN-04) : ",e), duration = 15, type = "error")
       })
     }
   }
   
-  # Actualiza el codigo a la version por defecto
+  # Actualiza el código a la versión por defecto
   default.codigo.knn <- function(k.def = FALSE) {
     if(!is.null(datos.aprendizaje) & k.def){
       k.value <- ifelse(k.def, round(sqrt(nrow(datos.aprendizaje))), input$kmax.knn)
@@ -226,23 +231,23 @@ mod_knn_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeKnn", value = codigo)
     cod.knn.modelo <<- codigo
     
-    # # Se genera el codigo de la prediccion
-    codigo <- kkn.prediccion(kernel = kernel)
+    # Se genera el código de la prediccion
+    codigo       <- kkn.prediccion(kernel = kernel)
     updateAceEditor(session, "fieldCodeKnnPred", value = codigo)
     cod.knn.pred <<- codigo
 
-    # # Se genera el codigo de la matriz
-    codigo <- knn.MC(kernel = kernel)
+    # Se genera el código de la matriz
+    codigo       <- knn.MC(kernel = kernel)
     updateAceEditor(session, "fieldCodeKnnMC", value = codigo)
-    cod.knn.mc <<- codigo
+    cod.knn.mc   <<- codigo
 
-    # # Se genera el codigo de la indices
-    codigo <- extract.code("indices.generales")
+    # Se genera el código de la indices
+    codigo       <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeKnnIG", value = codigo)
-    cod.knn.ind <<- codigo
+    cod.knn.ind  <<- codigo
   }
 
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos según el proceso donde se genera el error
   limpia.knn <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
@@ -254,18 +259,19 @@ mod_knn_server <- function(input, output, session, updateData){
       }, {
         exe("MC.knn.",input$kernel.knn," <<- NULL")
         output$plot_knn_mc <- renderPlot(NULL)
-        output$txtknnMC <- renderPrint(invisible(NULL))
+        output$txtknnMC    <- renderPrint(invisible(NULL))
       }, {
         IndicesM[[paste0("knnl-",input$kernel.knn)]] <<- NULL
         exe("indices.knn.",input$kernel.knn," <<- NULL")
-        output$knnIndPrecTable <- shiny::renderTable(NULL)
-        output$knnIndErrTable  <- shiny::renderTable(NULL)
+        output$knnIndPrecTable <-  shiny::renderTable(NULL)
+        output$knnIndErrTable  <-  shiny::renderTable(NULL)
         output$knnPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$knnErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }
-  # Limpia los datos segun el proceso donde se genera el error
+  
+  # Limpia los datos al ejecutar el botón run
   limpia.knn.run <- function() {
         output$txtknn          <- renderPrint(invisible(""))
         output$knnPrediTable   <- DT::renderDataTable(NULL)
@@ -273,15 +279,17 @@ mod_knn_server <- function(input, output, session, updateData){
         output$txtknnMC        <- renderPrint(invisible(NULL))
         output$knnIndPrecTable <- shiny::renderTable(NULL)
         output$knnIndErrTable  <- shiny::renderTable(NULL)
-        output$knnPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$knnErrorGlob    <-  flexdashboard::renderGauge(NULL)
-}
+        output$knnPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$knnErrorGlob    <- flexdashboard::renderGauge(NULL)
+  }
+  
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.knn(1)
-    limpia.knn(2)
-    limpia.knn(3)
-    limpia.knn(4)
-    updateSelectInput(session,"kernel.knn",selected = "optimal")
+        limpia.knn(1)
+        limpia.knn(2)
+        limpia.knn(3)
+        limpia.knn(4)
+        updateSelectInput(session,"kernel.knn",selected = "optimal")
   }
   
   #PARA HACERLO CON VALORES REACTIVOS (CUANDO SE HAYA MIGRADO A GOLEM)

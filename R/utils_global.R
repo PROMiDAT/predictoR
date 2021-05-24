@@ -29,7 +29,7 @@ validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {
   return(!is.null(variable.predecir) & !is.null(datos.aprendizaje))
 }
 
-# Crea la tabla de comparacion entre prediccion y datos reales (datos de prueba)
+# Crea la tabla de comparación entre predicción y datos reales (datos de prueba)
 obj.predic <- function(predic.var = NULL, idioma){
   real <- datos.prueba[, variable.predecir]
   if(is.numeric(predic.var$prediction)) {
@@ -53,7 +53,7 @@ obj.predic <- function(predic.var = NULL, idioma){
                        options = list(dom = "frtip", pageLength = 10)))
 }
 
-# Cierra un menu segun su tabName
+# Cierra un menú según su tabName
 close.menu <- function(tabname = NA, valor = T) {
   select <- paste0("a[href^='#shiny-tab-", tabname, "']")
   if(valor){
@@ -64,8 +64,7 @@ close.menu <- function(tabname = NA, valor = T) {
   }
 }
 
-#tr("denspodlab",idioma)
-# Hace el grafico de la matriz de confusion
+# Hace el gráfico de la matriz de confusión
 plot.MC.code <- function(cm,idioma) {
   return(paste0("
 plot.MC <<- function(cm,idioma) {
@@ -112,7 +111,7 @@ plot.MC <<- function(cm,idioma) {
 }"))
 }
 
-#Codigo del calculo de los indices
+#Código del calculo de los indices
 indices.generales <- function(MC) {
   if(1 == dim(MC)[2]) {
     MC <- cbind(MC, 0)
@@ -157,17 +156,19 @@ fill.gauges <- function(indices, titulos) {
     exe(new.gauge(indices, titulos))
 }
 
-# Concatena y ejecuta un string como codigo
+# Concatena y ejecuta un string como código
 exe <- function(...){
   eval(parse(text = paste0(...)))
 }
 
+#Extrae el código de una función
 extract.code <- function(funcion) {
   code <- paste(head(exe(funcion), 100), collapse = "\n")
   code <- paste(funcion, "<-", code)
   return(code)
 }
 
+#
 as.string.c <- function(vect, .numeric = FALSE){
   if(.numeric){
     return(paste0("c(",paste0(vect, collapse = ","),")"))

@@ -11,9 +11,9 @@ cod.dt.ind    <<-  NULL
 dt.modelo  <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini"){
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit )
   maxdepth <- ifelse(!is.numeric(maxdepth) || maxdepth > 30, 15, maxdepth)
-  Código   <- paste0("modelo.dt.",split," <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje,
+  codigo   <- paste0("modelo.dt.",split," <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje,
                    control = rpart.control(minsplit = ",minsplit,", maxdepth = ", maxdepth,"),parms = list(split = '",split,"'))")
-  return(Código)
+  return(codigo)
 }
 
 #Código de la predicción de DT
@@ -40,9 +40,9 @@ dt.plot <- function(tipo){
 dt.modelo.np <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini"){
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit )
   maxdepth <- ifelse(!is.numeric(maxdepth) || maxdepth > 30, 15, maxdepth)
-  Código <- paste0("modelo.nuevos <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje.completos,
+  codigo <- paste0("modelo.nuevos <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje.completos,
                    control = rpart.control(minsplit = ",minsplit,", maxdepth = ", maxdepth,"),parms = list(split = '",split,"'))")
-  return(Código)
+  return(codigo)
 }
 
 #Código de la prediccion de DT

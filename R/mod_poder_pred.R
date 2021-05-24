@@ -104,7 +104,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     updateSelectInput(session, "sel_dens_pred", choices = nombres)
   })
   
-  
+  #Pairs Plot Output
   output$plot_pairs_poder <- renderPlot({
     tryCatch({
       variable  <- updateData$variable.predecir
@@ -135,13 +135,13 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   })
   
   
+  # Hace el gráfico de densidad de variables númericas
   output$plot_density_poder <- renderEcharts4r({
     input$run_podpred
     variable.num  <- isolate(input$sel_dens_pred)
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
-
     
     tryCatch({
 
@@ -165,7 +165,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
     })
   })
   
-  # Hace el grafico de poder predictivo categorico
+  # Hace el gráfico de poder predictivo categórico
   output$plot_dist_poder <- renderEcharts4r({
     input$run_podpred
     variable.cat  <- isolate(input$sel_pred_cat)

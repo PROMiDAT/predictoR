@@ -54,43 +54,47 @@ mod_comparacion_server <- function(input, output, session, updateData){
     
   })
 
-observeEvent(updateData$selector.comparativa, {
-    nombres <- updateData$selector.comparativa
-    shinyWidgets::updateCheckboxGroupButtons(session,"select.models",choices = sort(nombres),selected = sort(nombres),
-                                             status = "primary",checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                                                 no = icon("remove", lib = "glyphicon")))
-})
-
-observeEvent(updateData$roc, {
-    ejecutar.roc()
-})
-
-observeEvent(input$runComp, {
-    ejecutar.roc()
-})
-
-ejecutar.roc <- function(){
-  output$TablaComp <- DT::renderDataTable({
-    if (!is.null(updateData$datos.aprendizaje)) {
-      calcular.areas(input$roc.sel)
-      DT::datatable(tabla.comparativa(input$select.models, updateData$selector.comparativa, updateData$idioma),
-                    selection = "none", editable = FALSE,
-                    options = list(dom = "frtip", pageLength = 10, buttons = NULL))
-    }
-  },server = FALSE)
-  
-  #Hace el grafico de la curva roc
-  output$plot_roc <- renderEcharts4r({
-    idioma <- updateData$idioma
-    if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
-      calcular.areas(input$roc.sel)
-      e_plot_ROC(input$select.models)
-    } else {
-      showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
-      return(NULL)
-    }
+  #Cuando se crea un nuevo modelo
+  observeEvent(updateData$selector.comparativa, {
+      nombres <- updateData$selector.comparativa
+      shinyWidgets::updateCheckboxGroupButtons(session,"select.models",choices = sort(nombres),selected = sort(nombres),
+                                               status = "primary",checkIcon = list(yes = icon("ok", lib = "glyphicon"),
+                                                                                   no = icon("remove", lib = "glyphicon")))
   })
-}
+
+  #Actualiza la curva ROC
+  observeEvent(updateData$roc, {
+      ejecutar.roc()
+  })
+
+  #Actualiza la curva ROC
+  observeEvent(input$runComp, {
+      ejecutar.roc()
+  })
+
+  #Genera las áreas y gráfico de la curva ROC
+  ejecutar.roc <- function(){
+    output$TablaComp <- DT::renderDataTable({
+      if (!is.null(updateData$datos.aprendizaje)) {
+        calcular.areas(input$roc.sel)
+        DT::datatable(tabla.comparativa(input$select.models, updateData$selector.comparativa, updateData$idioma),
+                      selection = "none", editable = FALSE,
+                      options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+      }
+    },server = FALSE)
+    
+    #Hace el grafico de la curva roc
+    output$plot_roc <- renderEcharts4r({
+      idioma <- updateData$idioma
+      if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
+        calcular.areas(input$roc.sel)
+        e_plot_ROC(input$select.models)
+      } else {
+        showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
+        return(NULL)
+      }
+    })
+  }
 
 }
     

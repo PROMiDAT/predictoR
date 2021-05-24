@@ -12,8 +12,7 @@ dist.x.predecir <- function(data, variable, variable.predecir) {
   return(data)
 }
 
-
-#Grafica el pairs
+#Gráfica el pairs
 pairs.poder  <- function(datos,variable.predecir){
       vars.p <- datos[,variable.predecir]
       col    <- rainbow((length(unique(vars.p)) + 1)*2)[seq(2,(length(unique(vars.p)) + 1)*2,2)]
@@ -25,7 +24,7 @@ pairs.poder  <- function(datos,variable.predecir){
   return(r)
 }
 
-#Grafica la densidad de las variables numericas
+#Gráfica la densidad de las variables númericas
 e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${X} ${Y}"){
   label = stringr::str_interp(label,list(X=variable,Y=variable.predecir))
   datos.plot <- data.frame(
@@ -45,27 +44,7 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
                  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
 }
 
-#Hace la grafica de proporciones segun la variable predictiva
-plot.dist.cat <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
-  colores <- gg_color_hue(length(unique(datos[,var.predecir])))
-  label.size <- label.size - length(unique(datos[,variable]))
-  label.size <- ifelse(label.size < 3, 3, label.size)
-  data <- dist.x.predecir(datos, variable, var.predecir)
-  ggplot(data, aes(fct_reorder(data[[variable]], count, .desc = T), prop, fill = data[[var.predecir]])) +
-    geom_bar(stat = 'identity') +
-    geom_text(aes(label = paste0(count, ' (', scales::percent(prop), ')'), y = prop), color = 'black',
-              position = position_stack(vjust = .5), size = label.size) +
-    theme_minimal() +
-    theme(text = element_text(size=15)) +
-    scale_fill_manual(values = colores) +
-    scale_y_continuous(labels = scales::percent)+
-    coord_flip() +
-    labs(title = label, x = '', y = '') +
-    guides(fill = guide_legend(reverse=T)) +
-    theme(legend.position = 'top', legend.title = element_blank())
-}
-
+#Hace la gráfica de distribuciones según la variable predictiva
 e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
   label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
   
@@ -76,7 +55,6 @@ e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.
     "count" ,
     "prop"
   )
-  #dataplot <<- dataplot[order(dataplot$variable,dataplot$count,  decreasing = T), ]
   dataplot %>%
     group_by(variable.predecir) %>%
     e_charts(variable, stack = "grp") %>%
@@ -105,7 +83,7 @@ e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.
 
 ###############################Generar Codigo##############################################
 
-#Grafica de distribucion de la Variable a predecir
+#Gráfica de distribución de la Variable a predecir
 code.dist.varpred <- function(var) {
   paste0(
     "datos.plot <- data.frame (\n",
@@ -117,7 +95,7 @@ code.dist.varpred <- function(var) {
   )
 }
 
-#Grafica el pairs
+#Gráfica el pairs
 code.pairs.poder <- function(variable.predecir){
   return(paste0("vars.p <- datos[,'",variable.predecir,"']
                 col <- rainbow((length(unique(vars.p)) + 1)*2)[seq(2,(length(unique(vars.p)) + 1)*2,2)]

@@ -12,6 +12,7 @@ modelo.nuevos <<- NULL
 predic.nuevos <<- NULL
 
 
+#Elimina la información de newCases
 borrar.datos <- function (newCases, prueba = FALSE){
   if(!prueba){
   newCases$originales        <- NULL
@@ -22,6 +23,7 @@ borrar.datos <- function (newCases, prueba = FALSE){
   newCases$datos.prueba <- NULL
 }
 
+#Asigna los datos globales de Ind.Nuevos
 asignarDatos <- function(newCases){
   variable.predecir.np        <<- newCases$variable.predecir
   datos.originales.completos  <<- newCases$originales
@@ -29,17 +31,13 @@ asignarDatos <- function(newCases){
   datos.prueba.completos      <<- newCases$datos.prueba
 }
 
+#Cantidad de categorías de la variable a predecir 
 num.categorias.pred.np <- function(variable.predecir){
   return(length(levels(datos.aprendizaje.completos[,variable.predecir])))
 }
 
+#Elimina el modelo y la predicción
 borrar.datos.modelos.np <- function(){
   modelo.nuevos <<- NULL
   predic.nuevos <<- NULL
-}
-
-crear.datos.np <- function(variable.predecir){
-  datos.aux.prueba <- datos.prueba.completos
-  datos.aux.prueba[,variable.predecir] <- predic.nuevos
-  return(datos.aux.prueba)
 }

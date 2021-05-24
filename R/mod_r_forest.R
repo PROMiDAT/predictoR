@@ -77,6 +77,8 @@ mod_r_forest_ui <- function(id){
 #' @noRd 
 mod_r_forest_server <- function(input, output, session, updateData){
   ns <- session$ns
+  
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.rf(rf.def = TRUE)
@@ -89,7 +91,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
   #   }
   # })
 
-  # Ejecuta el modelo, prediccion, mc e indices de rf
+  # Ejecuta el modelo, predicción, mc e indices de rf
   rf.full <- function() {
     ejecutar.rf()
     ejecutar.rf.pred()
@@ -108,7 +110,8 @@ mod_r_forest_server <- function(input, output, session, updateData){
   
   # Genera el modelo
   ejecutar.rf <- function() {
-    tryCatch({ # Se corren los codigo
+    tryCatch({ 
+      # Se corren los códigos
       isolate(exe(cod.rf.modelo))
       output$txtRf <- renderPrint(print(modelo.rf))
       
@@ -119,13 +122,14 @@ mod_r_forest_server <- function(input, output, session, updateData){
       mostrar.reglas.rf(input$rules.rf.n)
       nombres.modelos <<- c(nombres.modelos, "modelo.rf")
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.rf(1)
       showNotification(paste0("Error (RF-01) : ",e), duration = 15, type = "error")
     })
   }
   
-  # Genera la prediccion
+  # Genera la predicción
   ejecutar.rf.pred <- function() {
     tryCatch({ 
       idioma <- updateData$idioma
@@ -135,14 +139,17 @@ mod_r_forest_server <- function(input, output, session, updateData){
       output$rfPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rf"),idioma = idioma), server = FALSE)
 
       nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #graficar otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.rf(2)
       showNotification(paste0("Error (RF-02) : ", e), duration = 15, type = "error")
     })
   }
 
+  #Genera la matriz de confusión
   ejecutar.rf.mc <- function() {
     idioma <- updateData$idioma
     
@@ -156,17 +163,20 @@ mod_r_forest_server <- function(input, output, session, updateData){
        
         nombres.modelos   <<- c(nombres.modelos, "MC.rf")
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.rf(3)
         showNotification(paste0("Error (RF-03) : ",e), duration = 15, type = "error")
       })
     }
   }
 
+  #Genera los Indices Generales
   ejecutar.rf.ind <- function() {
     idioma <- updateData$idioma
     if(exists("MC.rf")){
-      tryCatch({ # Se corren los codigo
+      tryCatch({ 
+        # Se corren los códigos
         isolate(exe(cod.rf.ind))
         indices.rf <<- indices.generales(exe("MC.rf"))
         
@@ -184,13 +194,15 @@ mod_r_forest_server <- function(input, output, session, updateData){
         updateData$selector.comparativa <- actualizar.selector.comparativa()
         
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.rf(4)
         showNotification(paste0("Error (RF-04) : ",e), duration = 15, type = "error")
       })
     }
   }
   
+  # Actualiza el código a la versión por defecto
   default.codigo.rf <- function(rf.def = FALSE){
     if((!is.null(datos.aprendizaje) & rf.def) | is.na(input$mtry.rf)){
       mtry.value <- ifelse(rf.def || is.na(input$mtry.rf), round(sqrt(ncol(datos.aprendizaje))), input$mtry.rf)
@@ -201,7 +213,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
       mtry.value <- input$mtry.rf
     }
     
-    # Se actualiza el codigo del modelo
+    # Se actualiza el código del modelo
     codigo <- rf.modelo(variable.pr = updateData$variable.predecir,
                         ntree = input$ntree.rf,
                         mtry = mtry.value)
@@ -209,29 +221,29 @@ mod_r_forest_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeRf", value = codigo)
     cod.rf.modelo <<- codigo
     
-    # Cambia el codigo del grafico de rf
+    # Cambia el código del gráfico de rf
     updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
     updateAceEditor(session, "fieldCodeRfPlot", value = rf.plot())
      
 
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la predicción
     codigo <- rf.prediccion()
     updateAceEditor(session, "fieldCodeRfPred", value = codigo)
     cod.rf.pred <<- codigo
 
 
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- rf.MC()
     updateAceEditor(session, "fieldCodeRfMC", value = codigo)
     cod.rf.mc <<- codigo
 
-    # Se genera el codigo de la indices
+    # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRfIG", value = codigo)
     cod.rf.ind <<- codigo
   }
   
-  # Grafico de importancia
+  # Gráfico de importancia
   plotear.rf.imp <- function() {
     tryCatch({
       output$plot_rf <- renderEcharts4r(isolate(exe(input$fieldCodeRfPlot)))
@@ -241,6 +253,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
     })
   }
   
+  # Gráfico de evolución del error
   plotear.rf.error <- function(){
     tryCatch({
       dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))
@@ -266,7 +279,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
     })
   }
   
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos según el proceso donde se genera el error
   limpia.rf <- function(capa = NULL){
     for(i in capa:4){
       switch(i, {
@@ -282,14 +295,15 @@ mod_r_forest_server <- function(input, output, session, updateData){
       }, {
         indices.rf            <<- rep(0, 10)
         IndicesM[["rfl"]]     <<- NULL
-        output$rfIndPrecTable <- shiny::renderTable(NULL)
-        output$rfIndErrTable  <- shiny::renderTable(NULL)
+        output$rfIndPrecTable <-  shiny::renderTable(NULL)
+        output$rfIndErrTable  <-  shiny::renderTable(NULL)
         output$rfPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$rfErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }
-  # Limpia los datos 
+  
+  # Limpia los datos  al ejecutar el botón run
   limpia.rf.run <- function(capa = NULL){
         output$txtRf          <- renderPrint(invisible(""))
         output$rfPrediTable   <- DT::renderDataTable(NULL)
@@ -297,15 +311,16 @@ mod_r_forest_server <- function(input, output, session, updateData){
         output$txtRfMC        <- renderPrint(invisible(NULL))
         output$rfIndPrecTable <- shiny::renderTable(NULL)
         output$rfIndErrTable  <- shiny::renderTable(NULL)
-        output$rfPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$rfErrorGlob    <-  flexdashboard::renderGauge(NULL)
+        output$rfPrecGlob     <- flexdashboard::renderGauge(NULL)
+        output$rfErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.rf(1)
-    limpia.rf(2)
-    limpia.rf(3)
-    limpia.rf(4)
+        limpia.rf(1)
+        limpia.rf(2)
+        limpia.rf(3)
+        limpia.rf(4)
   }
 }
     

@@ -1,3 +1,4 @@
+#Divide un string con "-"
 split_name <-function(name){
   nom.aux <- unlist(strsplit(name, "-"))
   ifelse(length(nom.aux) == 1,
@@ -5,6 +6,7 @@ split_name <-function(name){
          paste0(tr(nom.aux[1]),"-",nom.aux[2]))
 }
 
+#Obtiene los nombres de los indices generales de los modeloes 
 get_names_models <- function(){
   if(length(IndicesM) == 0) {
     return("---X---")
@@ -21,6 +23,7 @@ actualizar.selector.comparativa <- function(){
   return(get_names_models())
 }
 
+#Obtiene la cantidad de categorías de la variable a predecir
 num.categorias.pred <- function(){
   return(length(levels(datos.aprendizaje[,variable.predecir])))
 }
@@ -48,7 +51,7 @@ tabla.comparativa <- function(sel, nombres, idioma) {
   })
 }
 
-# Calcula las areas de la curva roc de todos los modelos
+# Cálcula las áreas de la curva roc de todos los modelos
 calcular.areas <- function(sel) {
   clase <- datos.prueba[, variable.predecir]
   if(length(unique(clase)) == 2){
@@ -70,14 +73,14 @@ calcular.areas <- function(sel) {
 
 
 
-#Calcula el area de la curva ROC
+#Cálcula el área de la curva ROC
 areaROC <- function(prediccion,real) {
   area <- pROC::roc(real, prediccion)
   return(as.numeric(area$auc))
 }
 
+#Gráfica de la curva ROC
 e_plot_ROC <- function(sel) {
-
   clase      <- datos.prueba[,variable.predecir]
   nombres.tr <- unlist(lapply(names(scores), split_name))
   SCORES     <- scores[nombres.tr %in% sel]
@@ -126,17 +129,3 @@ add.df.roc <- function(roc.data, df, nombre){
   df <- rbind(df,data.frame(x= x, y = y, nombre = nombre))
   return(df)
 }
-
-
-# 
-# var <- data.frame(x,y,modelo = "arboles")
-# var <- rbind(var,data.frame(x= x2, y = y2,modelo = "Bosques"))
-# var %>% 
-#   group_by(modelo) %>% 
-#   e_charts(x) %>% 
-#   e_line(y)
-# ar <- roc(clase, scores[[1]])
-# y <- ar$sensitivities
-# x <- ar$specificities
-# area  <- ar$auc
-# area <- as.numeric(d)

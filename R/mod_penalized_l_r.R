@@ -76,6 +76,7 @@ mod_penalized_l_r_ui <- function(id){
 mod_penalized_l_r_server <- function(input, output, session, updateData){
   ns <- session$ns
 
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     variable     <- updateData$variable.predecir
@@ -92,6 +93,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   # #   }
   # # })
   # 
+  
+  #Cuando se ejecuta el botón run
   observeEvent(input$runRlr, {
     if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
       default.codigo.rlr()
@@ -100,7 +103,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
   }, priority =  -5)
 
 
-  # Habilitada o deshabilitada la semilla
+  # Habilita o deshabilita la semilla
   observeEvent(input$permitir.landa, {
     if (input$permitir.landa) {
       shinyjs::enable("landa")
@@ -109,6 +112,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     }
   })
 
+  #Obtiene el lambda seleccionado
   get_landa_rlr <- function(){
     landa <- NULL
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
@@ -119,9 +123,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     return(landa)
   }
   
-
-  
-  # Ejecuta el modelo, prediccion, mc e indices de rlr
+  # Ejecuta el modelo, predicción, mc e indices de rlr
   rlr.full <- function(){
     ejecutar.rlr()
     ejecutar.rlr.pred()
@@ -141,13 +143,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       plot.coeff()
       nombres.modelos <<- c(nombres.modelos, paste0("modelo.rlr.",tipo))
     },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.rlr(1)
       showNotification(paste0("Error (R/L-01) : ",e), duration = 15, type = "error")
     })
   }
   
-  # Genera la prediccion
+  # Genera la predicción
   ejecutar.rlr.pred <- function() {
     tryCatch({  
       exe(cod.rlr.pred)
@@ -158,11 +161,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
       
       pred   <- predict(exe("modelo.rlr.",tipo), datos.prueba, type = "prob")
       scores[[paste0("rlr-",tipo)]] <<- pred$prediction[,2,]
-      # Cambia la tabla con la prediccion de rlr
+      # Cambia la tabla con la predicción de rlr
       output$rlrPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rlr.",tipo),idioma = idioma), server = FALSE)
       
       nombres.modelos <<- c(nombres.modelos, paste0("prediccion.rlr.",tipo))
-      updateData$roc <- !updateData$roc #graficar otra vez la curva roc
+      #Gráfica otra vez la curva roc
+      updateData$roc <- !updateData$roc 
     },
     error = function(e) { # Regresamos al estado inicial y mostramos un error
       limpia.rlr(2)
@@ -170,7 +174,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     })
   }
   
-  # Genera la matriz de confusion
+  # Genera la matriz de confusión
   ejecutar.rlr.mc <- function() {
     tipo   <- rlr.type()
     idioma <- updateData$idioma
@@ -185,7 +189,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         
         nombres.modelos <<- c(nombres.modelos, paste0("MC.rlr.",tipo))
       },
-      error = function(e){ # Regresamos al estado inicial y mostramos un error
+      error = function(e){ 
+        # Regresamos al estado inicial y mostramos un error
         limpia.rlr(3)
         showNotification(paste0("Error (RLR-03) : ",e), duration = 15, type = "error")
       })
@@ -205,7 +210,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         output$rlrPrecGlob  <-  fill.gauges(indices.rlr[[1]], tr("precG",idioma))
         output$rlrErrorGlob <-  fill.gauges(indices.rlr[[2]], tr("errG",idioma))
         
-        # Cambia la tabla con la indices de rl
+        # Cambia la tabla con la indices de rlr
         output$rlrIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rlr,"RLR", idioma = idioma)), spacing = "xs",
                                                      bordered = T, width = "100%", align = "c", digits = 2)
         output$rlrIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.rlr,"RLR")), spacing = "xs",
@@ -215,20 +220,21 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         IndicesM[[paste0("rlr-",tipo)]] <<- indices.rlr
         updateData$selector.comparativa <- actualizar.selector.comparativa()
       },
-      error = function(e) { # Regresamos al estado inicial y mostramos un error
+      error = function(e) { 
+        # Regresamos al estado inicial y mostramos un error
         limpia.rlr(4)
         showNotification(paste0("Error (R/L-04) : ",e), duration = 15, type = "error")
       })
     }
   }
   
-  # Acualiza el codigo a la version por defecto
+  # Actualiza el código a la versión por defecto
   default.codigo.rlr <- function(){
     landa <- get_landa_rlr()
     tipo  <- rlr.type()
 
 
-    # Se actualiza el codigo del modelo
+    # Se actualiza el código del modelo
     codigo <- rlr.modelo(variable.pr = variable.predecir,
                          type        = tipo,
                          input$alpha.rlr,
@@ -237,7 +243,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeRlr", value = codigo)
     cod.rlr.modelo <<- codigo
 
-    # Se genera el codigo del posible landa
+    # Se genera el código del posible lambda
     codigo <- select.landa(variable.predecir,
                            input$alpha.rlr,
                            input$switch.scale.rlr,
@@ -246,53 +252,58 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
     updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
     cod.select.landa <<- codigo
 
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la predicción
     codigo <- rlr.prediccion(tipo)
     updateAceEditor(session, "fieldCodeRlrPred", value = codigo)
     cod.rlr.pred <<- codigo
 
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- rlr.MC(tipo)
     updateAceEditor(session, "fieldCodeRlrMC", value = codigo)
     cod.rlr.mc <<- codigo
 
-    # Se genera el codigo de la indices
+    # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRlrIG", value = codigo)
     cod.rlr.ind <<- codigo
   }
   
+  #Gráfica de los Lambdas
   plot.posib.landa.rlr <- function(){
     tryCatch({  
       isolate(exe(cod.select.landa))
       isolate(tipo <- rlr.type())
       output$plot_rlr_posiblanda <- renderPlot(exe("plot(cv.glm.",tipo,")"))
      },
-    error = function(e) { # Regresamos al estado inicial y mostramos un error
+    error = function(e) { 
+      # Regresamos al estado inicial y mostramos un error
       limpia.rlr(1)
       showNotification(paste0("Error (R/L-01) : ", e), duration = 15, type = "error")
     })
   }
   
+  #Gráfica de los coeficientes Lambdas
   plot.coeff <- function(){
     tryCatch({  
       isolate(tipo   <- rlr.type())
       landa <- get_landa_rlr()
       output$plot_rlr_landa <- renderEcharts4r({
-        updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa('",tipo,"', '",input$coeff.sel,"')"))
-        e_coeff_landa(tipo, input$coeff.sel)})
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa('",tipo,"', '",input$coeff.sel,"')"))
+      e_coeff_landa(tipo, input$coeff.sel)})
     },
-    error = function(e){ # Regresamos al estado inicial y mostramos un error
+    error = function(e){ 
+      # Regresamos al estado inicial y mostramos un error
       limpia.rlr(1)
       showNotification(paste0("Error (R/L-01) : ", e), duration = 15, type = "error")
     })
   }
   
+  #Obtiene el algortimo a utilizar
   rlr.type <- function(){
     ifelse(input$alpha.rlr == 0, "ridge", "lasso")
   }
   
-  # Limpia los datos segun el proceso donde se genera el error
+  # Limpia los datos según el proceso donde se genera el error
   limpia.rlr <- function(capa = NULL){
     tipo <- rlr.type()
     for(i in capa:4){
@@ -311,18 +322,20 @@ mod_penalized_l_r_server <- function(input, output, session, updateData){
         output$txtrlrMC    <- renderPrint(invisible(""))
       },{
         indices.rlr            <<- rep(0, 10)
-        output$rlrIndPrecTable <- shiny::renderTable(NULL)
-        output$rlrIndErrTable  <- shiny::renderTable(NULL)
+        output$rlrIndPrecTable <-  shiny::renderTable(NULL)
+        output$rlrIndErrTable  <-  shiny::renderTable(NULL)
         output$rlrPrecGlob     <-  flexdashboard::renderGauge(NULL)
         output$rlrErrorGlob    <-  flexdashboard::renderGauge(NULL)
       })
     }
   }
+  
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.rlr(1)
-    limpia.rlr(2)
-    limpia.rlr(3)
-    limpia.rlr(4)
+        limpia.rlr(1)
+        limpia.rlr(2)
+        limpia.rlr(3)
+        limpia.rlr(4)
   }
 }
     

@@ -53,11 +53,10 @@ mod_l_regression_ui <- function(id){
 mod_l_regression_server <- function(input, output, session, updateData){
   ns <- session$ns
   
-  
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     limpiar()
     default.codigo.rl()
-    #rl.full()
   })
   
   # observeEvent(updateData$idioma, {
@@ -67,6 +66,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
   #   }
   # })
 
+  #Cuando se ejecuta el botón run
   observeEvent(input$runRl, {
     idioma <- updateData$idioma
     if (length(levels(datos[, variable.predecir])) == 2) {
@@ -84,30 +84,30 @@ mod_l_regression_server <- function(input, output, session, updateData){
     }
   }, priority =  -5)
 
-    
+  # Actualiza el código a la versión por defecto
   default.codigo.rl <- function() {
-    # Se actualiza el codigo del modelo
+    # Se actualiza el código del modelo
     codigo <- rl.modelo(updateData$variable.predecir)
     updateAceEditor(session, "fieldCodeRl", value = codigo)
     cod.rl.modelo <<- codigo
     
-    # Se genera el codigo de la prediccion
+    # Se genera el código de la prediccion
     codigo <- rl.prediccion()
     updateAceEditor(session, "fieldCodeRlPred", value = codigo)
     cod.rl.pred <<- codigo
 
-    # Se genera el codigo de la matriz
+    # Se genera el código de la matriz
     codigo <- rl.MC()
     updateAceEditor(session, "fieldCodeRlMC", value = codigo)
     cod.rl.mc <<- codigo
 
-    # Se genera el codigo de la indices
+    # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRlIG", value = codigo)
     cod.rl.ind <<- codigo
   }
   
- 
+  # Ejecuta el modelo, predicción, mc e indices de rl
   rl.full <- function() {
     if (length(levels(datos[, variable.predecir])) == 2) {
        ejecutar.rl()
@@ -117,6 +117,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     }
   }
   
+  #Genera el modelo
   ejecutar.rl <- function() {
     tryCatch({
       exe(cod.rl.modelo)
@@ -129,6 +130,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     })
   }
   
+  #Genera la predicción
   ejecutar.rl.pred <- function() {
     idioma <- updateData$idioma
     
@@ -140,7 +142,8 @@ mod_l_regression_server <- function(input, output, session, updateData){
       output$rlPrediTable <- DT::renderDataTable(obj.predic(prediccion.rl, idioma = idioma), server = FALSE)
  
       nombres.modelos <<- c(nombres.modelos, "prediccion.rl")
-      updateData$roc  <- !updateData$roc #graficar otra vez la curva roc
+      #gráfica otra vez la curva roc
+      updateData$roc  <- !updateData$roc 
     },
     error = function(e) { 
       limpia.rl(2)
@@ -148,6 +151,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     })
   }
   
+  #Genera la matriz de confusión
   ejecutar.rl.mc <- function() {
     if(exists("prediccion.rl")){
       idioma <- updateData$idioma
@@ -168,6 +172,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     }
   }
   
+  #Genera los índices generales
   ejecutar.rl.ind <- function(){
     if(exists("MC.rl")){
       idioma <- updateData$idioma
@@ -187,9 +192,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
         nombres.modelos  <<- c(nombres.modelos, "indices.rl")
         IndicesM[["rl"]] <<- indices.rl
         updateData$selector.comparativa <- actualizar.selector.comparativa()
-        
-        #actualizar.selector.comparativa()
-      },
+        },
       error = function(e) { 
         limpia.rl(4)
         showNotification(paste0("Error (RL-04) : ",e), duration = 15, type = "error")
@@ -197,6 +200,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     }
   }
   
+  # Limpia los datos según el proceso donde se genera el error
   limpia.rl <- function(capa = NULL) {
     for (i in capa:4) {
       switch(i, {
@@ -221,6 +225,7 @@ mod_l_regression_server <- function(input, output, session, updateData){
     }
   }
   
+  # Limpia los datos al ejecutar el botón run
   limpia.rl.run <- function() {
         output$txtrl          <- renderPrint(invisible(""))
         output$rlPrediTable   <- DT::renderDataTable(NULL)
@@ -232,11 +237,12 @@ mod_l_regression_server <- function(input, output, session, updateData){
         output$rlErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
+  # Limpia todos los datos
   limpiar <- function(){
-    limpia.rl(1)
-    limpia.rl(2)
-    limpia.rl(3)
-    limpia.rl(4)
+        limpia.rl(1)
+        limpia.rl(2)
+        limpia.rl(3)
+        limpia.rl(4)
   }
 }
     

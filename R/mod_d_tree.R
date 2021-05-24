@@ -191,7 +191,7 @@ mod_d_tree_server <- function(input, output, session, updateData){
     }
   }
   
-  # Actualiza el código a la version por defecto
+  # Actualiza el código a la versión por defecto
   default.codigo.dt <- function() {
     
     tipo   <- isolate(input$split.dt)
