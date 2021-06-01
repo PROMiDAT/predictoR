@@ -19,13 +19,12 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
   paste0("x <- model.matrix(",variable.pr,"~., datos.aprendizaje)[, -1]\n",
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",
          "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')\n",
-         "plot(cv.glm)")
+         "e_posib_lambda(cv.glm.",type,")")
 }
 
 #Crea el gráfico de posibles lambda para rlr
 #e_posib_lambda(exe("modelo.rlr.",tipo), exe("cv.glm.",tipo))
 e_posib_lambda <- function(cv.glm){
-  cv.glm <- cv.glm.lasso
   x  <- log(cv.glm$lambda)
   y  <- cv.glm$cvm
   x1 <- x[cv.glm$index[[1]]]
@@ -69,35 +68,24 @@ e_coeff_landa <- function(modelo, category, lambda = NULL) {
     aux <- paste0(aux, "e_line(serie = ",predictoras[i],", bind = ",nombres[n],") %>%\n ")
     n <- n +1
   }
-  plot <- paste0("plot.rlr.coeff %>% \n",
+  plot.coef <- paste0("plot.rlr.coeff %>% \n",
                  "e_charts(x = x) %>% \n",
                  aux,
+                 "e_mark_line(data = list(xAxis = log(",lambda,"))) %>% \n",
                  "e_axis_labels(
                     x = 'Log Lambda',
                     y = 'Coefficients: Response ",category,"') %>%  \n",
                  "e_legend(show = FALSE)%>%  \n",
                  "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() "
   )
-  plot <- exe(plot)
-  plot  %>% 
+  plot.coef <- exe(plot.coef)
+  plot.coef  %>% 
     e_labels(position = 'left',formatter = htmlwidgets::JS("
                                         function(params){
                                         if(params.dataIndex==0){
                                         return(params.name)
                                         }else
                                         {return('')}}"))
+  plotttt <<- plot.coef
+  
 }
-# Códigos de RLR Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo RLR
-rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
-  return(paste0("modelo.nuevos <<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
-}
-
-#Código de la prediccion de rlr
-rlr.prediccion.np <- function() {
-  return(paste0("datos.prueba.aux <<- datos.prueba.completos\n",
-                "datos.prueba.aux[['",variable.predecir.np,"']]<- as.factor(levels(datos.aprendizaje.completos[['",variable.predecir.np,"']]))\n",
-                "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.aux, type = 'class')"))
-}
-

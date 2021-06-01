@@ -45,7 +45,7 @@ mod_boosting_ui <- function(id){
         ))),
       conditionalPanel(
         "input['boosting_ui_1-BoxB'] != 'tabBModelo' && input['boosting_ui_1-BoxB'] != 'tabBRules'",
-        tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
           codigo
         )))
     )

@@ -91,18 +91,3 @@ e_rf_error <- function(dataplot) {
                  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() 
   exe(paste0("plot.err %>%  ", aux))
 }
-
-# Códigos de RF Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo RF
-rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
-  ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
-  Código <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
-                   " ntree =",ntree,",mtry =",mtry,")")
-  return(Código)
-}
-
-#Código de la predicción de rf
-rf.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
-}

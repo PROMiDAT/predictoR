@@ -44,7 +44,7 @@ opc_knn <- fluidRow(conditionalPanel(
           codigo.knn.run))),
   conditionalPanel(
     "input['knn_ui_1-BoxKnn'] != 'tabKknModelo'",
-    tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+    tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
       codigo.knn))))
 
   tagList(

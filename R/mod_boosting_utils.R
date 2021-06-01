@@ -2,10 +2,10 @@
 
 #Crea el modelo BOOSTING
 boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minsplit = 1){
-  iter <- ifelse(!is.numeric(iter), 50, iter)
-  nu <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
+  iter     <- ifelse(!is.numeric(iter), 50, iter)
+  maxdepth <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
-  codigo <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje, mfinal = ",iter,",
+  codigo   <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje, mfinal = ",iter,",
                    control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))")
   return(codigo)
 }
@@ -67,19 +67,3 @@ rules.boosting <- function(i){
   return(paste0("rules(modelo.boosting$trees[[",i,"]])"))
 }
 
-# Códigos de BOOSTING Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Código del modelo de boosting
-boosting.modelo.np <- function(variable.pr = NULL, iter = 50, maxdepth = 1,  minsplit = 1){
-  iter <- ifelse(!is.numeric(iter), 50, iter)
-  nu <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
-  minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
-  codigo <- paste0("modelo.nuevos <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje.completos, mfinal = ",iter,",
-                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))")
-  return(codigo)
-}
-
-#Código de la prediccion de boosting
-boosting.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
-}

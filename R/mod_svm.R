@@ -47,7 +47,7 @@ mod_svm_ui <- function(id){
       ))),
     conditionalPanel(
       "input['svm_ui_1-BoxSvm']   != 'tabSvmModelo' && input['svm_ui_1-BoxSvm']  != 'tabSvmPlot'",
-      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.svm
       )))
   )

@@ -29,20 +29,3 @@ nn.plot <- function(){
          "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t",
          "dimension=15, radius = 0.2, fontsize = 10)")
 }
-
-# Códigos de NN Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo NN
-nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
-  capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
-  stepmax   <- ifelse(1000>stepmax, 1000, stepmax)
-  threshold <- ifelse(0.01>threshold, 0.01, threshold)
-  
-  return(paste0("modelo.nuevos <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje.completos, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
-                "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
-}
-
-#Código de la prediccion de nn
-nn.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')\n"))
-}

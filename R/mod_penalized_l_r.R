@@ -21,12 +21,12 @@ mod_penalized_l_r_ui <- function(id){
                                         fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
                                                                     choices =  "", width = "100%")))))
   
-  codigo.rlr.run<- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo'",
+  codigo.rlr.run<- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
+                                         codigo.monokai(ns("fieldCodeRlrLanda"), height = "10vh")),
+                        conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo'",
                                        codigo.monokai(ns("fieldCodeRlr"), height = "10vh")))
   
-  codigo.rlr  <- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
-                                       codigo.monokai(ns("fieldCodeRlrLanda"), height = "10vh")),
-                      conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPosibLanda'",
+  codigo.rlr  <- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPosibLanda'",
                                        codigo.monokai(ns("fieldCodeRlrPosibLanda"), height = "10vh")),
                       conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPred'",
                                        codigo.monokai(ns("fieldCodeRlrPred"), height = "10vh")),
@@ -48,7 +48,7 @@ mod_penalized_l_r_ui <- function(id){
                      col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
             fluidRow(col_6(id = ns("colManualLanda"),br(),
                            numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
-                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"))))),
+                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico") )))),
           conditionalPanel(
             "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
@@ -58,7 +58,7 @@ mod_penalized_l_r_ui <- function(id){
       ))),
     conditionalPanel(
       "input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrModelo' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrLanda'",
-      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.rlr
       )))
   )
@@ -70,7 +70,7 @@ mod_penalized_l_r_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("posibLanda"),value = "tabRlrPosibLanda",
-               withLoader(plotOutput(ns('plot_rlr_posiblanda'), height = "55vh"), 
+               withLoader(echarts4rOutput(ns('plot_rlr_posiblanda'), height = "55vh"), 
                type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("gcoeff"),value = "tabRlrLanda",
@@ -101,6 +101,7 @@ mod_penalized_l_r_ui <- function(id){
 mod_penalized_l_r_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
+  cv            <- rv(cv.glm = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
@@ -127,6 +128,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     mc     <- confusion.matrix(test, pred)
     isolate(modelos$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
+    x         <- model.matrix(as.formula(var), train)[, -1]
+    y         <- train[,updateData$variable.predecir]
+    cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
+    
     print(modelo)
   })
   
@@ -219,17 +224,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   }
   
   #Gráfica de los Lambdas
-  output$plot_rlr_posiblanda <- renderPlot({
-    train  <- updateData$datos.aprendizaje
-    var    <- paste0(updateData$variable.predecir, "~.")
-    scales <- isolate(input$switch.scale.rlr)
-    alpha  <- isolate(input$alpha.rlr)
+  output$plot_rlr_posiblanda <- renderEcharts4r({
+
     tryCatch({  
-      x      <- model.matrix(as.formula(var), train)[, -1]
-      y      <- train[,updateData$variable.predecir]
-      cv.glm <<- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
-      
-      plot(cv.glm)
+      e_posib_lambda(cv$cv.glm)
     },
     error = function(e) { 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")
@@ -241,12 +239,13 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Gráfica de los coeficientes Lambdas
   output$plot_rlr_landa <- renderEcharts4r({
     tryCatch({  
-      landa <- get_landa_rlr()
-      tipo  <- rlr.type()
-      coeff <- input$coeff.sel
-      modelo<- modelos$rlr[[nombre.modelo$x]]$modelo
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"')"))
-      e_coeff_landa(modelo, coeff)
+      lambda <- get_landa_rlr()
+      lambda <- ifelse(is.null(lambda),cv$cv.glm$lambda.min, lambda)
+      tipo   <- rlr.type()
+      coeff  <- input$coeff.sel
+      modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
+      e_coeff_landa(modelo, coeff, lambda)
     },
     error = function(e){ 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")

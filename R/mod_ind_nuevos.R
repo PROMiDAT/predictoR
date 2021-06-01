@@ -19,11 +19,6 @@ mod_ind_nuevos_ui <- function(id){
                              withLoader(DT::dataTableOutput(ns('contentsPred2'))), 
                              type = "html", loader = "loader4")  
   
-  muestra.datos.pred4 <- box(title = labelInput("data"), status = "primary", width = 12, 
-                             solidHeader = TRUE, collapsible = TRUE,
-                             withLoader(DT::dataTableOutput(ns('contentsPred24'))), 
-                             type = "html", loader = "loader4")  
-  
   muestra.datos.pred3 <- box(title = labelInput("data"), status = "primary", width = 12, 
                              solidHeader = TRUE, collapsible = TRUE,
                              withLoader(DT::dataTableOutput(ns('contentsPred3'))), 
@@ -183,13 +178,15 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   
   #' Load Button Function
   observeEvent(input$loadButtonNPred, {
+    cont       <<- 1
     rowname    <- isolate(input$rownameNPred)
     ruta       <- isolate(input$archivoNPred)
     sep        <- isolate(input$sepNPred)
     dec        <- isolate(input$decNPred)
     encabezado <- isolate(input$headerNPred)
     deleteNA   <- isolate(input$deleteNAnPred)
-
+    borrar.datos(newCases)
+    
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
       newCases$variable.predecir <- NULL
@@ -205,6 +202,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       } else {
         newCases$datos.aprendizaje <- newCases$originales
         newCases$datos.prueba <- NULL
+        
         tabla.trans()
       }
     }, error = function(e) {
@@ -213,10 +211,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       borrar.datos(newCases)
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
-    asignarDatos(newCases)
-    borrar.datos.modelos.np()
-    actualizar.texto.modelo.pn("")
-    actualizar.pred.pn("")
   })
   
   #' Load Button Function (New Cases)
@@ -227,39 +221,40 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     dec        <- isolate(input$decNPred2)
     encabezado <- isolate(input$headerNPred2)
     deleteNA   <- isolate(input$deleteNAnPred2)
-    if(!is.null(newCases$variable.predecir)){
+    variable   <- newCases$variable.predecir
+    originales <- newCases$originales
+
+    if(!is.null(variable)){
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
       
-
-      newCases$datos.prueba <- carga.datos.np(rowname, 
+      test                  <- carga.datos.np(rowname, 
                                               ruta$datapath, 
                                               sep, 
                                               dec, 
                                               encabezado)
-      asignarDatos(newCases)
-      verificar.datos.pn()
       
-      datos.prueba.completos[,newCases$variable.predecir] <<- NULL
-      datos.prueba.completos <<- accion.NAs(datos.prueba.completos, deleteNA)
-      datos.prueba.completos[,newCases$variable.predecir] <<- NA
+      #Verifica que los datos contengan las mismas columnas
+      if(any(!(c(colnames(test),variable) %in% colnames(originales))))
+        stop(tr("NoTamColum", updateData$idioma))
+      
+      test[,variable]       <- NULL
+      test                  <- accion.NAs(test, deleteNA)
+      test[,variable]       <- NA
+      newCases$datos.prueba <- test
+      newCases$datos.prueba[,variable] <- NA
+      
       validar()
       unificar.factores()
       
-      newCases$datos.prueba <- datos.prueba.completos
-      
-      if(ncol(newCases$datos.prueba) <= 1) {
+      if(ncol(test) <= 1) {
         showNotification(
           "ERROR: Check Separators", duration = 10, type = "error")
         borrar.datos(newCases,  prueba = TRUE)
         
-      } else {
-        newCases$datos <- newCases$datos.prueba
-      }
+      } 
     }, error = function(e) {
       borrar.datos(newCases,  prueba = TRUE)
-      datos.prueba.completos <<- NULL
-      predic.nuevos <<- NULL
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
   }
@@ -279,9 +274,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       tr("numerico",   isolate(updateData$idioma)),
       tr("categorico", isolate(updateData$idioma))
     )
-    if(is.null(datos)){
-      output$txtPredNuevos <- renderPrint(invisible(NULL))
-    }
 
     tryCatch({
       nombre.columnas <- c("ID", colnames(datos))
@@ -310,7 +302,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   tabla.trans <- function(){
     output$contentsPred2 <- DT::renderDataTable({
       datos  <- newCases$datos.aprendizaje
-      datata <<- datos
       tipos  <- c(
         tr("numerico",   isolate(updateData$idioma)),
         tr("categorico", isolate(updateData$idioma))
@@ -409,10 +400,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     cod = ""
     borrar.datos(newCases,  prueba = TRUE)
     newCases$variable.predecir <- NULL
-    borrar.datos.modelos.np()
-    datos.prueba.completos <<- NULL
-    actualizar.pred.pn("")
-    actualizar.texto.modelo.pn("")
+    newCases$modelo            <- NULL
+    newCases$m.seleccionado    <- NULL
     
     for (var in colnames(datos)) {
       if(!input[[paste0("del", var)]]) {
@@ -439,7 +428,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
     }
     newCases$datos.aprendizaje  <- datos
-    datos.aprendizaje.completos <<- newCases$datos.aprendizaje
   }) 
   
   #Crea las opciones de transformar para cada variable
@@ -461,7 +449,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   validar <- function() {
     cod        <- ""
     originales <-  newCases$originales
-    datos      <- datos.prueba.completos
+    datos      <-  newCases$datos.prueba
     
     tryCatch(
       
@@ -490,12 +478,11 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
     }
     )
-    datos.prueba.completos <<- datos 
-    
+    newCases$datos.prueba <- datos
   }
   
   #Actualiza la cantidad de capas ocultas (neuralnet)
-  observeEvent(c(input$cant.capas.nn.pred), {
+  observeEvent(input$cant.capas.nn.pred, {
     if(!is.null(input$cant.capas.nn.pred)){
       for (i in 1:10) {
         if(i <= input$cant.capas.nn.pred) {
@@ -506,97 +493,162 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       }
     }
   })
-  
-  #Ejecuta el modelo
-  observeEvent(input$PredNuevosBttnModelo,{
-    crear.modelo()
-  })
-  
-  #Crea el modelo
-  crear.modelo <- function(){
-    if(!is.null(newCases$datos.aprendizaje)){
-      variable.predecir.np       <- input$sel.predic.var.nuevos
-      newCases$variable.predecir <- input$sel.predic.var.nuevos
-      codigo <- switch (input$selectModelsPred ,
-                        knn   = kkn.modelo.np(variable.pr = newCases$variable.predecir,
-                                              scale = input$switch.scale.knn.pred,
-                                              kmax = input$kmax.knn.pred,
-                                              kernel = input$kernel.knn.pred),
-                        dt    = dt.modelo.np(variable.pr = input$sel.predic.var.nuevos,
-                                             minsplit = input$minsplit.dt.pred,
-                                             maxdepth = input$maxdepth.dt.pred,
-                                             split = input$split.dt.pred),
-                        rf    = rf.modelo.np(variable.pr = input$sel.predic.var.nuevos,
-                                             ntree = input$ntree.rf.pred,
-                                             mtry = input$mtry.rf.pred),
-                        svm   = svm.modelo.np(variable.pr =input$sel.predic.var.nuevos,
-                                              scale = input$switch.scale.svm.pred,
-                                              kernel = input$kernel.svm.pred),
-                        bayes = bayes.modelo.np(variable.pr=input$sel.predic.var.nuevos),
-                        xgb   = xgb.modelo.np(variable.pr=input$sel.predic.var.nuevos,
-                                              booster = input$boosterXgb.pred,
-                                              max.depth = input$maxdepthXgb.pred,
-                                              n.rounds = input$nroundsXgb.pred),
-                        rl    = rl.modelo.np(variable.pr=input$sel.predic.var.nuevos),
-                        nn    = nn.modelo.np(variable.pr=input$sel.predic.var.nuevos,
-                                             input$threshold.nn.pred,
-                                             input$stepmax.nn.pred,
-                                             input$cant.capas.nn.pred,
-                                             input$nn.cap.pred.1,input$nn.cap.pred.2,
-                                             input$nn.cap.pred.3,input$nn.cap.pred.4,
-                                             input$nn.cap.pred.5,input$nn.cap.pred.6,
-                                             input$nn.cap.pred.7,input$nn.cap.pred.8,
-                                             input$nn.cap.pred.9,input$nn.cap.pred.10),
-                        rlr    = rlr.modelo.np(variable.pr = input$sel.predic.var.nuevos,
-                                               input$alpha.rlr.pred,
-                                               input$switch.scale.rlr.pred),
-                        ada    = boosting.modelo.np(variable.pr = input$sel.predic.var.nuevos,
-                                                    iter        = input$iter.boosting.pred,
-                                                    maxdepth    = input$maxdepth.boosting.pred,
-                                                    minsplit    = input$minsplit.boosting.pred)
-      )
-      borrar.datos.modelos.np()
-      borrar.datos(newCases,  prueba = TRUE)
-      actualizar.pred.pn("")
-      modelo.seleccionado.pn  <<- input$selectModelsPred
-      datos.prueba.completos      <<- NULL
-      
-      tryCatch({
-        if(input$selectModelsPred == "rl")
-          if(num.categorias.pred.np(newCases$variable.predecir) != 2)
-            stop(tr("limitModel", updateData$idioma), call. = FALSE)
-        
-        exe(codigo)
-        actualizar.texto.modelo.pn(codigo)
-      },
-      error =  function(e){
-        showNotification(paste0(e), duration = 10, type = "error")
-      },
-      warning = function(w){
-        if(input$selectModelsPred == "nn"){
-          showNotification(paste0(tr("nnWar", updateData$idioma)," (NN-01) : ",w), duration = 20, type = "warning")
-        }
-        if(input$selectModelsPred == "rl"){
-          exe(codigo)
-          actualizar.texto.modelo.pn(codigo) 
 
-        }
-      })
-    }else{
-      showNotification(paste0(tr("nodata", updateData$idioma)), duration = 20, type = "error")
-    }
-  }
-  
-  #Genera la predicción
-  observeEvent(input$predecirPromidat, {
-    tryCatch({
-      predecir.pn()
-    },
-    error =  function(e){
-      showNotification(paste0("Error :", tr("ErrorDatosPN", updateData$idioma)), duration = 10, type = "error")
-    })
+  #Actualiza el texto del modelo
+  output$txtPredNuevos <- renderPrint({
+    input$PredNuevosBttnModelo
+    train                      <- newCases$datos.aprendizaje
+    variable                   <- isolate(input$sel.predic.var.nuevos)
+    m.seleccionado             <- isolate(input$selectModelsPred)
+    newCases$datos.prueba      <- NULL
+    newCases$prediccion        <- NULL
+    newCases$modelo            <- NULL
+    newCases$variable.predecir <- variable
+    newCases$m.seleccionado    <- m.seleccionado
+    codigo                     <- ""
+    if(m.seleccionado == "rl")
+      if(length(levels(train[,variable])) != 2)
+        stop(tr("limitModel", updateData$idioma), call. = FALSE)
     
-  })  
+    tryCatch({
+      var    <- paste0(variable, "~.")
+      codigo <- switch (m.seleccionado ,
+                        knn   = {
+                          k.value<- isolate(input$kmax.knn.pred)
+                          scales <- isolate(input$switch.scale.knn.pred)
+                          kernel <- isolate(input$kernel.knn.pred)
+                          isolate(modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ))
+                          updateAceEditor(session, "fieldPredNuevos", value = kkn.modelo.np(variable.pr = variable,
+                                                                                            scale = scales,
+                                                                                            kmax = k.value,
+                                                                                            kernel = kernel))
+                          isolate(modelo)
+                        },
+                        dt    = {
+                          tipo    <-isolate(input$split.dt.pred)
+                          minsplit<-isolate(input$minsplit.dt.pred)
+                          maxdepth<-isolate(input$maxdepth.dt.pred)
+                          isolate(modelo  <- traineR::train.rpart(as.formula(var), data = train,
+                                                         control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo)))
+                          updateAceEditor(session, "fieldPredNuevos", value = dt.modelo.np(variable.pr = variable,
+                                                                                           minsplit = minsplit,
+                                                                                           maxdepth = maxdepth,
+                                                                                           split = tipo))
+                          isolate(modelo)
+                        },
+                        rf    = {
+                          mtry   <- isolate(input$mtry.rf.pred)
+                          ntree  <- isolate(input$ntree.rf.pred)
+                          isolate(modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE))
+                          updateAceEditor(session, "fieldPredNuevos", value = rf.modelo.np(variable.pr = variable,
+                                                                                           ntree = ntree,
+                                                                                           mtry  = mtry))
+                          isolate(modelo)
+                        },
+                        svm   = {
+                          scales <- isolate(input$switch.scale.svm.pred)
+                          k      <- isolate(input$kernel.svm.pred)
+                          isolate(modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k))
+                          updateAceEditor(session, "fieldPredNuevos", value = svm.modelo.np(variable.pr =variable,
+                                                                                            scale  = scales,
+                                                                                            kernel = k))
+                          isolate(modelo)
+                        },
+                        bayes = {
+                          isolate(modelo <- traineR::train.bayes(as.formula(var), data = train))
+                          updateAceEditor(session, "fieldPredNuevos", value = bayes.modelo.np(variable.pr=variable))
+                          isolate(modelo)
+                          
+                        },
+                        xgb   = {
+                          tipo     <- isolate(input$boosterXgb.pred)
+                          max.depth<- isolate(input$maxdepthXgb.pred)
+                          n.rounds <- isolate(input$nroundsXgb.pred)
+                          isolate(modelo   <- traineR::train.xgboost(as.formula(var), data = train, booster = tipo, 
+                                                           max_depth = max.depth, nrounds = n.rounds))
+                          updateAceEditor(session, "fieldPredNuevos", value = xgb.modelo.np(variable.pr=variable,
+                                                                                            booster   = tipo,
+                                                                                            max.depth = max.depth,
+                                                                                            n.rounds  = n.rounds))
+                          isolate(modelo)
+                        },
+                        rl    = {
+                          isolate(modelo <- traineR::train.glmnet(as.formula(var), data = train))
+                          updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
+                          isolate(modelo)
+                          
+                          },
+                        nn    = {
+                          threshold  <- isolate(input$threshold.nn.pred)
+                          stepmax    <- isolate(input$stepmax.nn.pred)
+                          capas.np   <- c(isolate(input$nn.cap.pred.1),isolate(input$nn.cap.pred.2),
+                                          isolate(input$nn.cap.pred.3),isolate(input$nn.cap.pred.4),
+                                          isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
+                                          isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
+                                          isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10))
+                          cant.capas <- isolate(input$cant.capas.nn.pred)
+                          capas.np   <<- as.vector(as.numeric(capas.np[1:cant.capas]))
+                          
+                          isolate(modelo     <- traineR::train.neuralnet(
+                            formula   = as.formula(var),
+                            data      = train,
+                            threshold = threshold,
+                            stepmax   = stepmax,
+                            hidden    = capas.np))
+                          updateAceEditor(session, "fieldPredNuevos", value = nn.modelo.np(variable.pr=variable,
+                                                                                           threshold,
+                                                                                           stepmax,
+                                                                                           cant.capas,
+                                                                                           isolate(input$nn.cap.pred.1),isolate(input$nn.cap.pred.2),
+                                                                                           isolate(input$nn.cap.pred.3),isolate(input$nn.cap.pred.4),
+                                                                                           isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
+                                                                                           isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
+                                                                                           isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10)))
+                          isolate(modelo)
+                        },
+                        rlr    = {
+                          scales <- isolate(input$switch.scale.rlr.pred)
+                          alpha  <- isolate(input$alpha.rlr.pred)
+                          isolate(modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' ))
+                          updateAceEditor(session, "fieldPredNuevos", value = rlr.modelo.np(variable.pr = variable,
+                                                                                            alpha,
+                                                                                            scales))
+                          isolate(modelo)
+                        },
+                        ada    = {
+                          iter   <- isolate(input$iter.boosting.pred)
+                          maxdepth<-isolate(input$maxdepth.boosting.pred)
+                          minsplit<-isolate(input$minsplit.boosting.pred)
+                          isolate(modelo <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
+                                                          control = rpart.control(minsplit =minsplit, maxdepth = maxdepth)))
+                          updateAceEditor(session, "fieldPredNuevos", value = boosting.modelo.np(variable.pr = variable,
+                                                                                                 iter        = iter,
+                                                                                                 maxdepth    = maxdepth,
+                                                                                                 minsplit    = minsplit))
+                          isolate(modelo)
+                        }
+      )
+      newCases$modelo      <- codigo
+      print(codigo)
+      
+    }, error = function(e) {
+      if(cont !=1)
+      showNotification(paste0("ERROR al generar el modelo: ", e), type = "error")
+      cont <<- cont + 1
+      return(invisible(""))
+    },
+    warning = function(w){
+      if(m.seleccionado == "nn"){
+        showNotification(paste0(tr("nnWar", updateData$idioma)," (NN-01) : ",w), duration = 20, type = "warning")
+        return(invisible(""))
+        
+      }        
+      if(input$selectModelsPred == "rl"){
+        print(codigo)
+
+      }
+    })
+  })
   
   #Download Prediction Result
   output$downloaDatosPred <- downloadHandler(
@@ -604,115 +656,77 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       input$archivoNPred2$name
     },
     content = function(file) {
-      if(!is.null(predic.nuevos)){
+      if(!is.null(newCases$prediccion$prediction)){
         write.csv(crear.datos.np(), file, row.names = input$rownameNPred2)
       }
     }
   )
   
-  #Genera la predicción
-  predecir.pn <-function(){
-    if(!is.null(datos.prueba.completos)){
-      if(exists("modelo.nuevos") && !is.null(modelo.nuevos)){
-        codigo <- switch(modelo.seleccionado.pn,
-                         knn   = kkn.prediccion.np(),
-                         dt    = dt.prediccion.np(),
-                         rf    = rf.prediccion.np(),
-                         ada   = boosting.prediccion.np(),
-                         svm   = svm.prediccion.np(),
-                         bayes = bayes.prediccion.np(),
-                         xgb   = xgb.prediccion.np(),
-                         nn    = nn.prediccion.np(),
-                         rl    = rl.prediccion.np(),
-                         rlr   = rlr.prediccion.np())
-        
-        tryCatch({
-          exe(codigo)
-          actualizar.pred.pn(codigo)
-        },
-        error =  function(e){
-          showNotification(paste0("Error :", e), duration = 10, type = "error")
-        })
-      }else{
-        showNotification(paste0("Error :", tr("ErrorModelo", updateData$idioma)), duration = 10, type = "error")
-      }
-    }else{
-      showNotification(paste0("Error :", tr("ErrorDatosPN", updateData$idioma)), duration = 10, type = "error")
-    }
-  }
-  
-  #Actualiza el texto del modelo
-  actualizar.texto.modelo.pn <- function(codigo){
-    updateAceEditor(session, "fieldPredNuevos", value = codigo)
-    if(is.null(modelo.nuevos)){
-      output$txtPredNuevos <- renderPrint(invisible(NULL))
-    }else{
-      output$txtPredNuevos <- renderPrint(print(modelo.nuevos))
-    }
-  }
-  
-  #Actualiza la tabla de predicciones
-  actualizar.pred.pn <- function(codigo){
-    updateAceEditor(session, "fieldCodePredPN", value = codigo)
-    if(!is.null(predic.nuevos) & !is.null(newCases$datos.prueba)){
-      datos.aux.prueba <- crear.datos.np()
-      actualizar.tabla.predic.np(datos.aux.prueba)
-      }else{
-      actualizar.tabla.predic.np(data.frame())
-      }
-  }
-  
   #Genera la tabla de predicciones
-  actualizar.tabla.predic.np <- function(datos) {
-   output$PrediTablePN <- DT::renderDataTable({
-     tipos  <- c(
-       tr("numerico",   isolate(updateData$idioma)),
-       tr("categorico", isolate(updateData$idioma))
-     )
-     tryCatch({
-       nombre.columnas <- c("ID", colnames(datos))
-       tipo.columnas <- sapply(colnames(datos), function(i)
-         ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-                paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-                paste0("<span data-id='categorico'>", tipos[2], "</span>")))
-       sketch = htmltools::withTags(table(
-         tableHeader(nombre.columnas),
-         tags$tfoot(
-           tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
-             tags$th(shiny::HTML(i))))
-         )
-       ))
-       DT::datatable(
-         datos, selection = 'none', editable = TRUE,  container = sketch,
-         options = list(dom = 'frtip', scrollY = "40vh")
-       )
-     }, error = function(e) {
-       showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
-       return(NULL)
-     })
-   }, server = T)
- }
- 
- #Verifica que los datos contengan las mismas columnas
- verificar.datos.pn <- function(){
-    if(any(!(c(colnames(datos.prueba.completos),newCases$variable.predecir) %in% colnames(datos.originales.completos))))
-      stop(tr("NoTamColum", updateData$idioma))
-  }
-  
+  prediccion <- function(){
+  output$PrediTablePN <- DT::renderDataTable({
+    input$predecirPromidat
+    test <- newCases$datos.prueba
+    train<- newCases$datos.aprendizaje
+    model<- newCases$modelo
+    sel  <- newCases$m.seleccionado
+    vari <- newCases$variable.predecir
+    tipos  <- c(
+        tr("numerico",   isolate(updateData$idioma)),
+        tr("categorico", isolate(updateData$idioma))
+    )
+      tryCatch({
+        if(sel != "rlr" && sel != "xgb"){
+          pred                <- predict(model, test, type = 'class')
+        }else{
+          test.aux        <- test
+          test.aux[[vari]]<- as.factor(levels(train[[vari]]))
+          pred            <- predict(model, test.aux, type = 'class')
+        }
+        datos               <- test
+        datos[,vari]        <- pred$prediction
+        newCases$prediccion <- pred
+        updateAceEditor(session, "fieldCodePredPN", value = "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')")
+        nombre.columnas <- c("ID", colnames(datos))
+        tipo.columnas <- sapply(colnames(datos), function(i)
+          ifelse(class(datos[,i]) %in% c("numeric", "integer"),
+                 paste0("<span data-id='numerico'>", tipos[1], "</span>"),
+                 paste0("<span data-id='categorico'>", tipos[2], "</span>")))
+        sketch = htmltools::withTags(table(
+          tableHeader(nombre.columnas),
+          tags$tfoot(
+            tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
+              tags$th(shiny::HTML(i))))
+          )
+        ))
+        DT::datatable(
+          datos, selection = 'none', editable = TRUE,  container = sketch,
+          options = list(dom = 'frtip', scrollY = "40vh")
+        )
+      }, error = function(e) {
+        showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
+        return(NULL)
+      })
+    }, server = T)}
+
+
+
   #Agrega la predicción a los datos
   crear.datos.np <- function(){
-    datos.aux.prueba <- datos.prueba.completos
-    datos.aux.prueba[,newCases$variable.predecir]   <- predic.nuevos$prediction
+    datos.aux.prueba <- newCases$datos.prueba
+    datos.aux.prueba[,newCases$variable.predecir]   <- newCases$prediccion$prediction
     
     return(datos.aux.prueba)
   }
   
   #Unifica las variables de tipo factor en training-testing
   unificar.factores <- function(){
-    for(nombre in colnames(datos.prueba.completos)){
-      if(class(datos.prueba.completos[,nombre]) == "factor"){
-        levels(datos.prueba.completos[,nombre]) <<- unique(c(levels(datos.prueba.completos[,nombre]),
-                                                             levels(datos.aprendizaje.completos[,nombre])))
+    prueba      <- newCases$datos.prueba
+    aprendizaje <- newCases$datos.aprendizaje
+    for(nombre in colnames(prueba)){
+      if(class(prueba[,nombre]) == "factor"){
+        levels(prueba[,nombre]) <- unique(c(levels(prueba[,nombre]),
+                                                             levels(aprendizaje[,nombre])))
       }
     }
   }
@@ -746,8 +760,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }
   },ignoreNULL = FALSE)
   
-  observeEvent(newCases$variable.predecir, {
-    if(!is.null(newCases$variable.predecir)){
+  observeEvent(newCases$modelo, {
+    if(!is.null(newCases$modelo)){
       shinyjs::show("modelnext", anim = TRUE, animType = "slide")
     }
     else{
@@ -787,6 +801,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   })
   
   observeEvent(input$nuevosnext, {
+    prediccion()
     shinyjs::hide("cuarta", anim = TRUE)
     shinyjs::show("quinta", anim = TRUE)
   })  
@@ -795,9 +810,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     shinyjs::show("cuarta", anim = TRUE)
     shinyjs::hide("quinta", anim = TRUE)
   })
-  
   #' Update Models Options
   output$opcModelsPredN = renderUI({
+    datos   <- newCases$datos.aprendizaje
     idioma  <- updateData$idioma
     modelo  <- input$selectModelsPred 
     

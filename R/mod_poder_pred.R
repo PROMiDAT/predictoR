@@ -12,7 +12,7 @@ mod_poder_pred_ui <- function(id){
   opc_podpred <- fluidRow(
     conditionalPanel(
     "input.BoxPodPred == 'tabDistpred' || input.BoxPodPred == 'tabPares'",
-    tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+    tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
     list(
       conditionalPanel(
         "input.BoxPodPred == 'tabDistpred'",

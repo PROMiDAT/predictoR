@@ -31,18 +31,3 @@ e_xgb_varImp <- function(booster = "gbtree"){
          
   )
 }
-
-# Códigos de XGBOOSTING Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo
-xgb.modelo.np <- function(variable.pr = "", booster = "gbtree", max.depth = 6, n.rounds = 60){
-  return(paste0("modelo.nuevos <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje.completos, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")"))
-}
-
-#Código de la predicción de xgb
-xgb.prediccion.np <- function() {
-  return(paste0("datos.prueba.aux <<- datos.prueba.completos\n",
-                "datos.prueba.aux[['",variable.predecir.np,"']]<- as.factor(levels(datos.aprendizaje.completos[['",variable.predecir.np,"']]))\n",
-                "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.aux, type = 'class')"))
-}
-

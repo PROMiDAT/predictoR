@@ -44,7 +44,7 @@ mod_r_forest_ui <- function(id){
       ))),
     conditionalPanel(
       "input['r_forest_ui_1-BoxRf'] != 'tabRfModelo' && input['r_forest_ui_1-BoxRf'] != 'tabRfRules'",
-      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.rf
       )))
   )

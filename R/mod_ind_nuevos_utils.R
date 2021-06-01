@@ -1,16 +1,4 @@
 # -------------------  Prediccion Nuevos
-datos.originales.completos  <<- NULL
-datos.aprendizaje.completos <<- NULL
-datos.prueba.completos      <<- NULL
-variable.predecir.np        <<- NULL
-
-modelo.seleccionado.pn <<- NULL
-contadorPN    <<- 0
-code.trans.pn <<- ""
-
-modelo.nuevos <<- NULL
-predic.nuevos <<- NULL
-
 
 #Elimina la información de newCases
 borrar.datos <- function (newCases, prueba = FALSE){
@@ -18,26 +6,82 @@ borrar.datos <- function (newCases, prueba = FALSE){
   newCases$originales        <- NULL
   newCases$datos.aprendizaje <- NULL
   newCases$variable.predecir <- NULL
+  newCases$modelo            <- NULL
+  newCases$m.seleccionado    <- NULL
   }
-  newCases$datos        <- NULL
-  newCases$datos.prueba <- NULL
+  newCases$prediccion        <- NULL
+  newCases$datos.prueba      <- NULL
 }
 
-#Asigna los datos globales de Ind.Nuevos
-asignarDatos <- function(newCases){
-  variable.predecir.np        <<- newCases$variable.predecir
-  datos.originales.completos  <<- newCases$originales
-  datos.aprendizaje.completos <<- newCases$datos.aprendizaje
-  datos.prueba.completos      <<- newCases$datos.prueba
+# Códigos de Modelos Ind.Nuevos--------------------------------------------------------------------------------------------------
+
+# BAYES  
+bayes.modelo.np <- function(variable.pr = ""){
+  return(paste0("modelo.nuevos <<- train.bayes(",variable.pr,"~., data = datos.aprendizaje.completos)"))
 }
 
-#Cantidad de categorías de la variable a predecir 
-num.categorias.pred.np <- function(variable.predecir){
-  return(length(levels(datos.aprendizaje.completos[,variable.predecir])))
+# BOOSTING  
+boosting.modelo.np <- function(variable.pr = NULL, iter = 50, maxdepth = 1,  minsplit = 1){
+  iter     <- ifelse(!is.numeric(iter), 50, iter)
+  maxdepth <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
+  minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
+  codigo   <- paste0("modelo.nuevos <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje.completos, mfinal = ",iter,",
+                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))")
+  return(codigo)
 }
 
-#Elimina el modelo y la predicción
-borrar.datos.modelos.np <- function(){
-  modelo.nuevos <<- NULL
-  predic.nuevos <<- NULL
+# DT
+dt.modelo.np <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini"){
+  minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit )
+  maxdepth <- ifelse(!is.numeric(maxdepth) || maxdepth > 30, 15, maxdepth)
+  codigo   <- paste0("modelo.nuevos <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje.completos,
+                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ", maxdepth,"),parms = list(split = '",split,"'))")
+  return(codigo)
 }
+
+# KNN  
+kkn.modelo.np <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
+  kmax <- ifelse(!is.numeric(kmax), round(sqrt(nrow(datos.aprendizaje.completos))), kmax)
+  return(paste0("modelo.nuevos <<- traineR::train.knn(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
+}
+
+# RL  
+rl.modelo.np <- function(variable.pr = ""){
+  return(paste0("modelo.nuevos <<- traineR::train.glm(",variable.pr,"~., data = datos.aprendizaje.completos)"))
+}
+
+# NN
+nn.modelo.np <- function(variable.pr = "",threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
+  capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
+  stepmax   <- ifelse(1000>stepmax, 1000, stepmax)
+  threshold <- ifelse(0.01>threshold, 0.01, threshold)
+  
+  return(paste0("modelo.nuevos <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje.completos, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+                "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
+}
+
+# RLR
+rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
+  return(paste0("modelo.nuevos <<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje.completos, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
+}
+
+# RF
+rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
+  ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
+  Código <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
+                   " ntree =",ntree,",mtry =",mtry,")")
+  return(Código)
+}
+
+# SVM
+svm.modelo.np <- function(variable.pr = NULL, scale = TRUE, kernel = "linear"){
+  return(paste0("modelo.nuevos <<- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kernel = '",kernel,"')"))
+}
+
+
+# XGBOOSTING
+xgb.modelo.np <- function(variable.pr = "", booster = "gbtree", max.depth = 6, n.rounds = 60){
+  return(paste0("modelo.nuevos <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje.completos, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")"))
+}
+
+

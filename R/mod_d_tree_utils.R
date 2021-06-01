@@ -26,19 +26,3 @@ dt.plot <- function(tipo){
                 fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
                 box.col = gg_color_hue(",num,")[modelo.dt.",tipo,"$frame$yval])"))
 }
-
-#Códigos de DT Ind-Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo DT
-dt.modelo.np <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini"){
-  minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit )
-  maxdepth <- ifelse(!is.numeric(maxdepth) || maxdepth > 30, 15, maxdepth)
-  codigo <- paste0("modelo.nuevos <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje.completos,
-                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ", maxdepth,"),parms = list(split = '",split,"'))")
-  return(codigo)
-}
-
-#Código de la prediccion de DT
-dt.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type='class')"))
-}

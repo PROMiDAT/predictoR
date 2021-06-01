@@ -31,16 +31,3 @@ svm.plot <- function(variables, resto, kernel = "linear"){
   color <- as.string.c(gg_color_hue(color))
   return(paste0(s,"plot(modelo.svm.temp, datos, ",variables[1],"~",variables[2],", slice = ",l,", col = ",color,")"))
 }
-
-# Códigos de SVM Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo SVM
-svm.modelo.np <- function(variable.pr = NULL, scale = TRUE, kernel = "linear"){
-  return(paste0("modelo.nuevos <<- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kernel = '",kernel,"')"))
-}
-
-#Código de la prediccion de svm
-svm.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos , datos.prueba.completos[,-which(colnames(datos.prueba.completos) == '",variable.predecir.np,"')], type = 'class')"))
-}
-

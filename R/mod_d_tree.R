@@ -34,7 +34,7 @@ mod_d_tree_ui <- function(id){
                           codigo.dt.run))),
                       conditionalPanel(
                         "input['d_tree_ui_1-BoxDt']   != 'tabDtModelo'",
-                        tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+                        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
                           codigo.dt))))
   
   tagList(

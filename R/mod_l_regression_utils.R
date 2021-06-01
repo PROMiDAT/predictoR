@@ -15,14 +15,3 @@ rl.MC <- function(){
   return(paste0("MC.rl <<- confusion.matrix(datos.prueba, prediccion.rl)","\n"))
 }
 
-# Códigos de RL Ind.Nuevos--------------------------------------------------------------------------------------------------
-
-#Crea el modelo RL
-rl.modelo.np <- function(variable.pr = ""){
-  return(paste0("modelo.nuevos <<- traineR::train.glm(",variable.pr,"~., data = datos.aprendizaje.completos)"))
-}
-
-#Código de la prediccion de rl
-rl.prediccion.np <- function() {
-  return(paste0("predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
-}

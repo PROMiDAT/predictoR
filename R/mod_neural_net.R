@@ -52,7 +52,7 @@ mod_neural_net_ui <- function(id){
       codigo.nn.run))),
     conditionalPanel(
       "input['neural_net_ui_1-BoxNn']   != 'tabNnModelo'",
-      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.nn))))
   
   tagList(

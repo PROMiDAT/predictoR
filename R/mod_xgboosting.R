@@ -39,7 +39,7 @@ mod_xgboosting_ui <- function(id){
       codigo.xgb.run))),
     conditionalPanel(
       "input['xgboosting_ui_1-BoxXgb']  != 'tabXgbModelo'",
-      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.xgb))))
   
   tagList(

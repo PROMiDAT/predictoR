@@ -115,6 +115,7 @@ window.addEventListener("load", function(event) {
 
     //Botones de Wizard
   $("#ind_nuevos_ui_1-nuevosnext").on('click',function(e) {$("#ind_nuevos_ui_1-predecirPromidat").click()});
+  $("#ind_nuevos_ui_1-transButton").on('click',function(e) {$("#ind_nuevos_ui_1-PredNuevosBttnModelo").click()});
   //$("#ind_nuevos_ui_1-cargarnext").on('click',function(e) {$("#ind_nuevos_ui_1-transButton").click()});
 
   /* Los modelos se vuelven ejecutar al ser seleccionados una vez se haga una segmentacion diferente
