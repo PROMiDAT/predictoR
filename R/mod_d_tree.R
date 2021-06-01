@@ -9,30 +9,37 @@
 #' @importFrom shiny NS tagList 
 mod_d_tree_ui <- function(id){
   ns <- NS(id)
-  opciones.dt <- list(options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
-                      fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
-                               col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
-                      fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
-                                                  choices =  list("gini" = "gini", "Entropía" = "information")))))
   
-  codigo.dt <- list(conditionalPanel("input.BoxDt == 'tabDtModelo'",
-                                     codigo.monokai(ns("fieldCodeDt"),height = "10vh")),
-                    conditionalPanel("input.BoxDt == 'tabDtPlot'",
+  codigo.dt <- list(conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtPlot'",
                                      codigo.monokai(ns("fieldCodeDtPlot"),height = "10vh")),
-                    conditionalPanel("input.BoxDt == 'tabDtPred'",
+                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtPred'",
                                      codigo.monokai(ns("fieldCodeDtPred"),height = "10vh")),
-                    conditionalPanel("input.BoxDt == 'tabDtMC'",
+                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtMC'",
                                      codigo.monokai(ns("fieldCodeDtMC"),height = "10vh")),
-                    conditionalPanel("input.BoxDt == 'tabDtIndex'",
+                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtIndex'",
                                      codigo.monokai(ns("fieldCodeDtIG"),height = "10vh")),
-                    conditionalPanel("input.BoxDt == 'tabDtReglas'",
-                                     codigo.monokai(ns("fieldCodeDtRule"),height = "10vh")))
+                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtReglas'",
+                                     codigo.monokai(ns("fieldCodeDtRule"),height = "10vh")))  
+  codigo.dt.run<- list(conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtModelo'",
+                                     codigo.monokai(ns("fieldCodeDt"),height = "10vh")))
   
-  opc_dt <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 60),
-                         tabs.content = list(opciones.dt, codigo.dt))
+  opc_dt <- fluidRow(conditionalPanel(
+                        "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo'",
+                        tabsOptions(heights = c(70, 30), tabs.content = list(
+                          list(options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
+                               fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
+                                        col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
+                               fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
+                                                           choices =  list("gini" = "gini", "Entropía" = "information"))))),
+                          codigo.dt.run))),
+                      conditionalPanel(
+                        "input['d_tree_ui_1-BoxDt']   != 'tabDtModelo'",
+                        tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+                          codigo.dt))))
+  
   tagList(
     tabBoxPrmdt(
-      id = "BoxDt", opciones = opc_dt,
+      id = ns("BoxDt"), opciones = opc_dt,
       tabPanel(title = labelInput("generatem"), value = "tabDtModelo",
                withLoader(verbatimTextOutput(ns("txtDt")), 
                           type = "html", loader = "loader4")),
@@ -66,210 +73,124 @@ mod_d_tree_ui <- function(id){
 #' d_tree Server Function
 #'
 #' @noRd 
-mod_d_tree_server <- function(input, output, session, updateData){
+mod_d_tree_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
+  nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    limpiar()
+    updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
     default.codigo.dt()
   })
-  
-  # observeEvent(updateData$idioma, {
-  #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  #     ejecutar.dt.mc()
-  #     ejecutar.dt.ind()
-  #   }
-  # })
 
-
-  # Cuando se genera el modelo knn
-  observeEvent(input$runDt, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-      limpia.dt.run()
-      default.codigo.dt()
-      dt.full()
-    }
-  }, priority =  -5)
   
-  # Ejecuta el modelo, predicción, mc e indices de dt
-  dt.full <- function() {
-    ejecutar.dt()
-    ejecutar.dt.pred()
-    ejecutar.dt.mc()
-    ejecutar.dt.ind()
-  }
+  output$txtDt <- renderPrint({
+    input$runDt
+    default.codigo.dt()
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
+    var    <- paste0(updateData$variable.predecir, "~.")
+    tipo   <- isolate(input$split.dt)
+    minsplit<-isolate(input$minsplit.dt)
+    maxdepth<-isolate(input$maxdepth.dt)
+    nombre <- paste0("modelo.dt.",tipo)
+    modelo <- traineR::train.rpart(as.formula(var), data = train,
+                                   control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
+    pred   <- predict(modelo , test, type = 'class')
+    mc     <- confusion.matrix(test, pred)
+    isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    nombre.modelo$x <- nombre
+    print(modelo)
+  })
   
-  # Genera el modelo
-  ejecutar.dt <- function() {
-    tryCatch({ 
-      isolate(exe(cod.dt.modelo))
-      
-      tipo         <- isolate(input$split.dt)
-      output$txtDt <- renderPrint(print(exe("modelo.dt.", tipo)))
-      plotear.arbol()
-      mostrar.reglas.dt()
-      nombres.modelos <<- c(nombres.modelos, paste0("modelo.dt.", tipo))
-    },
-    error = function(e) { 
-      # Regresamos al estado inicial y mostramos un error
-      limpia.dt(1)
-      showNotification(paste0("Error (DT-01) : ",e), duration = 15, type = "error")
-    })
-  }
+  output$dtPrediTable <- DT::renderDataTable({
+    idioma <- updateData$idioma
+    obj.predic(modelos$dt[[nombre.modelo$x]]$pred,idioma = idioma)
+    
+  },server = FALSE)
+  
+  output$txtDtMC    <- renderPrint({
+    print(modelos$dt[[nombre.modelo$x]]$mc)
+  })
+  
+  output$plot_dt_mc <- renderPlot({
+    idioma <- updateData$idioma
+    exe(plot.MC.code(idioma = idioma))
+    plot.MC(modelos$dt[[nombre.modelo$x]]$mc)
+  })
+  
+  output$dtIndPrecTable <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
+    
+    xtable(indices.prec.table(indices.dt,"dt", idioma = idioma))
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
-  # Genera la predicción
-  ejecutar.dt.pred <- function() {
-    tryCatch({ 
-      isolate(exe(cod.dt.pred))
+  output$dtIndErrTable  <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
+    output$dtPrecGlob  <-  fill.gauges(indices.dt[[1]], tr("precG",idioma))
+    output$dtErrorGlob <-  fill.gauges(indices.dt[[2]], tr("errG",idioma))
+    xtable(indices.error.table(indices.dt,"dt"))
+    
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  #Plotear el árbol
+  output$plot_dt <- renderPlot({
+    tryCatch({
       tipo   <- isolate(input$split.dt)
-      idioma <- updateData$idioma
-      pred   <- exe("predict(modelo.dt.",tipo,", datos.prueba, type = 'prob')")
-      scores[[paste0("dtl-", tipo)]] <<- pred$prediction[,2]
-      output$dtPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.dt.",tipo),idioma = idioma),server = FALSE)
-      
-      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.dt.",tipo))
-      #gráfica otra vez la curva roc
-      updateData$roc  <- !updateData$roc 
+      datos  <- updateData$datos
+      var    <- updateData$variable.predecir
+      num    <- length(levels(datos[,var]))
+      modelo <- modelos$dt[[nombre.modelo$x]]$modelo
+      updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
+      prp(modelo, type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
+          fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
+          box.col = gg_color_hue(num)[modelo$frame$yval], roundint=FALSE)
     },
-    error = function(e) { 
-      limpia.dt(2)
-      showNotification(paste0("Error (DT-02) : ",e), duration = 15, type = "error")
+    error = function(e){
+      output$plot_dt <- renderPlot(NULL)
     })
-  }
+    
+  })
   
-  # Genera la matriz de confusión
-  ejecutar.dt.mc <- function() {
-    idioma <- updateData$idioma
-    tipo   <- isolate(input$split.dt)
-    if(exists(paste0("prediccion.dt.",tipo))){
-      tryCatch({ 
-        isolate(exe(cod.dt.mc))
-        output$txtDtMC <- renderPrint(print(exe("MC.dt.",tipo)))
-        
-        exe(plot.MC.code(idioma = idioma))
-        output$plot_dt_mc <- renderPlot(isolate(exe("plot.MC(MC.dt.",tipo,")")))
-        nombres.modelos   <<- c(nombres.modelos, paste0("MC.dt.",tipo))
-      },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.dt(3)
-        showNotification(paste0("Error (DT-03) : ", e), duration = 15, type = "error")
-      })
-    }
-  }
-  
-  # Genera los indices
-  ejecutar.dt.ind <- function() {
-    idioma <- updateData$idioma
-    tipo   <- isolate(input$split.dt)
-    if(exists(paste0("MC.dt.",tipo))){
-      tryCatch({ 
-        isolate(exe(cod.dt.ind))
-        indices.dt <<- indices.generales(exe("MC.dt.",tipo))
-        eval(parse(text = paste0("indices.dt.",tipo, "<<- indices.dt")))
-   
-        output$dtPrecGlob  <-  fill.gauges(indices.dt[[1]], tr("precG",idioma))
-        output$dtErrorGlob <-  fill.gauges(indices.dt[[2]], tr("errG",idioma))
-
-        # Cambia la tabla con los indices de dt
-        output$dtIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.dt,"Árboles de Decisión", idioma = idioma)), spacing = "xs",
-                                                    bordered = T, width = "100%", align = "c", digits = 2)
-        output$dtIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.dt,"Árboles de Decisión")), spacing = "xs",
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
-        
-        IndicesM[[paste0("dtl-",tipo)]] <<- indices.dt
-        updateData$selector.comparativa <- actualizar.selector.comparativa()
-        
-      },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.dt(4)
-        showNotification(paste0("Error (DT-04) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
+  #Mostrar Reglas
+  output$rulesDt <- renderPrint({
+    tipo           <- isolate(input$split.dt)
+    updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",tipo,")"))
+    rattle::asRules(modelos$dt[[nombre.modelo$x]]$modelo)
+  })
   
   # Actualiza el código a la versión por defecto
   default.codigo.dt <- function() {
     
     tipo   <- isolate(input$split.dt)
     codigo <- dt.modelo(variable.pr = updateData$variable.predecir,
-                        minsplit = input$minsplit.dt,
-                        maxdepth = input$maxdepth.dt,
+                        minsplit = isolate(input$minsplit.dt),
+                        maxdepth = isolate(input$maxdepth.dt),
                         split = tipo)
     
     updateAceEditor(session, "fieldCodeDt", value = codigo)
-    cod.dt.modelo <<- codigo
-    
+
     # Cambia el código del gráfico del árbol
     updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
     
     # Se genera el código de la predicción
     codigo <- dt.prediccion(tipo)
     updateAceEditor(session, "fieldCodeDtPred", value = codigo)
-    cod.dt.pred <<- codigo
-    
+
     # Se genera el código de la matriz
     codigo <- dt.MC(tipo)
     updateAceEditor(session, "fieldCodeDtMC", value = codigo)
-    cod.dt.mc <<- codigo
 
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeDtIG", value = codigo)
-    cod.dt.ind <<- codigo
   }
-  
-  
-  #Plotear el árbol
-  plotear.arbol <- function(){
-    tryCatch({
-      tipo           <- isolate(input$split.dt)
-      output$plot_dt <- renderPlot(isolate(exe(input$fieldCodeDtPlot)))
-      cod            <- ifelse(input$fieldCodeDtPlot == "", dt.plot(tipo), input$fieldCodeDtPlot)
-    },
-    error = function(e){
-      output$plot_dt <- renderPlot(NULL)
-    })
-  }
-  
-  #Mostrar Reglas
-  mostrar.reglas.dt <- function(){
-    tipo           <- isolate(input$split.dt)
-    output$rulesDt <- renderPrint(rattle::asRules(exe("modelo.dt.",tipo)))
-    updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",tipo,")"))
-    
-  }
-  
-  # Limpia los datos según el proceso donde se genera el error
-  limpia.dt <- function(capa = NULL) {
-    for (i in capa:4) {
-      switch(i, {
-        modelo.dt      <<- NULL
-        output$txtDt   <- renderPrint(invisible(""))
-        output$plot_dt <- renderPlot(NULL)
-      }, {
-        prediccion.dt       <<- NULL
-        output$dtPrediTable <-  DT::renderDataTable(NULL)
-      }, {
-        MC.dt             <<- NULL
-        output$plot_dt_mc <-  renderPlot(NULL)
-        output$txtDtMC    <-  renderPrint(invisible(NULL))
-      }, {
-        indices.dt <<- rep(0, 10)
-        IndicesM[[paste0("dtl-",input$split.dt)]] <<- NULL
-        output$dtIndPrecTable <-  shiny::renderTable(NULL)
-        output$dtIndErrTable  <-  shiny::renderTable(NULL)
-        output$dtPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$dtErrorGlob    <-  flexdashboard::renderGauge(NULL)
-      })
-    }
-  }  
-  
+
   # Limpia los datos al ejecutar el botón run
-  limpia.dt.run <- function(capa = NULL) {
+  limpia.dt <- function() {
         output$txtDt          <- renderPrint(invisible(""))
         output$plot_dt        <- renderPlot(NULL)
         output$dtPrediTable   <- DT::renderDataTable(NULL)
@@ -281,13 +202,6 @@ mod_d_tree_server <- function(input, output, session, updateData){
         output$dtErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
-  # Limpia todos los datos
-  limpiar <- function(){
-        limpia.dt(1)
-        limpia.dt(2)
-        limpia.dt(3)
-        limpia.dt(4)
-  }
 }
     
 ## To be copied in the UI

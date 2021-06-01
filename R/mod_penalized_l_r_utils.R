@@ -1,12 +1,3 @@
-# -------------------  RLR
-
-cod.rlr.modelo   <<-  NULL
-cod.rlr.pred     <<-  NULL
-cod.rlr.mc       <<-  NULL
-cod.rlr.ind      <<-  NULL
-cod.select.landa <<-  NULL
-
-
 # Pagina de RLR -------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo RLR
@@ -27,7 +18,8 @@ rlr.MC <- function(type = "ridge"){
 select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "ridge"){
   paste0("x <- model.matrix(",variable.pr,"~., datos.aprendizaje)[, -1]\n",
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",
-         "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')")
+         "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')\n",
+         "plot(cv.glm)")
 }
 
 #Crea el gráfico de posibles lambda para rlr
@@ -35,45 +27,34 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
 e_posib_lambda <- function(cv.glm){
   cv.glm <- cv.glm.lasso
   x  <- log(cv.glm$lambda)
-  y  <-cv.glm$cvm
+  y  <- cv.glm$cvm
   x1 <- x[cv.glm$index[[1]]]
   x2 <- x[cv.glm$index[[2]]]
   upper <- cv.glm$cvup
   lower <- cv.glm$cvlo
   name  <- cv.glm$name[[1]]
-  data.lambda <- data.frame(x, y, y2, upper, lower, name)
+  data.lambda <- data.frame(x, y, upper, lower, name)
   plot <- data.lambda %>%
     e_charts(x) %>%
     e_scatter(y, symbol_size = 7) %>%
-    e_error_bar(lower, upper)%>%
+    e_error_bar(lower, upper) %>%
+    e_mark_line(data = list(xAxis = x1)) %>%
+    e_mark_line(data = list(xAxis = x2)) %>%
     e_axis_labels(
       x = 'Log(λ)',
       y = name)%>%
     e_x_axis(
       formatter = e_axis_formatter(digits = 1))  %>% 
     e_legend(FALSE) %>% 
-    e_mark_line(data = list(
-      list(xAxis = "min", yAxis = "min"), 
-      list(xAxis = "max", yAxis = "max")
-    )) %>% 
     e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+  plot$x$opts$xAxis[[1]]$type <- "value"
   plot
 }
-# 
-# avg <- list(
-#   name = "AVG",
-#   type = "avg"
-# )
-# 
-# min <- list(
-#   name = "Min",
-#   type = "min"
-# )
 
 #Gráfico de coeficientes lambda RLR
-e_coeff_landa <- function(type, category) {
-  exe(paste0("plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo.rlr.",type,"$beta$",category,"))))\n",
-             "plot.rlr.coeff <<- cbind(x = log(modelo.rlr.",type,"$lambda), plot.rlr.coeff)\n"))
+e_coeff_landa <- function(modelo, category, lambda = NULL) {
+  plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo$beta[[category]]))))
+  plot.rlr.coeff <<- cbind(x = log(modelo$lambda), plot.rlr.coeff)
   plot.rlr.coeff <<- plot.rlr.coeff[order(plot.rlr.coeff$x),]
   predictoras    <-  colnames(plot.rlr.coeff)
   
@@ -106,8 +87,6 @@ e_coeff_landa <- function(type, category) {
                                         }else
                                         {return('')}}"))
 }
-
-
 # Códigos de RLR Ind.Nuevos--------------------------------------------------------------------------------------------------
 
 #Crea el modelo RLR

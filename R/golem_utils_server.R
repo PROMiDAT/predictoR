@@ -98,32 +98,6 @@ cambiar.labels <- function() {
   return(x)
 }
 
-# Grafica un error de datos faltantes
-error.variables <- function(num = T,idioma) {
-  if(num){
-    error.plot(tr("errornum",idioma))
-  } else {
-    error.plot(tr("errorcat",idioma))
-  }
-}
-
-error.plot <- function(msg) {
-  res <- ggplot(data.frame(x = c(2, 2.5, 3), y = c(2 ,3 ,2))) +
-    geom_polygon(mapping=aes(x=x, y=y), col="gold", fill="gold", alpha=0.3) +
-    annotate("rect", xmin = 2.47, xmax = 2.53, ymin = 2.4, ymax = 2.8) +
-    annotate("rect", xmin = 2.47, xmax = 2.53, ymin = 2.25, ymax = 2.35) +
-    annotate("text", x = 2.5, y = 2.1, label = paste0("bold('", msg, "')"),
-             size = 8, parse = T) +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      axis.title = element_blank(), axis.ticks = element_blank(),
-      axis.text = element_blank()
-    )
-  return(res)
-}
-
-
-
 # # Función para generar diccionario.
 crear.traslation <- function() {
    library(plyr)

@@ -9,14 +9,14 @@
 #' @importFrom shiny NS tagList 
 mod_bayes_ui <- function(id){
   ns <- NS(id)
-  codigo.bayes <- list(tags$div(style = "display:none;", options.run(ns("runBayes"))), tags$hr(style = "display:none;",),
-                       conditionalPanel("input.BoxBayes == 'tabBayesModelo'",
+  codigo.bayes <- list(tags$div(options.run(ns("runBayes"))), tags$hr(style = "display:none;",),
+                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
                                         codigo.monokai(ns("fieldCodeBayes"), height = "10vh")),
-                       conditionalPanel("input.BoxBayes == 'tabBayesPred'",
+                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesPred'",
                                         codigo.monokai(ns("fieldCodeBayesPred"), height = "10vh")),
-                       conditionalPanel("input.BoxBayes == 'tabBayesMC'",
+                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesMC'",
                                         codigo.monokai(ns("fieldCodeBayesMC"), height = "10vh")),
-                       conditionalPanel("input.BoxBayes == 'tabBayesIndex'",
+                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesIndex'",
                                         codigo.monokai(ns("fieldCodeBayesIG"), height = "10vh")))
   
   opc_bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
@@ -24,7 +24,7 @@ mod_bayes_ui <- function(id){
   
   tagList(
     tabBoxPrmdt(
-      id = "BoxBayes", opciones = opc_bayes,
+      id = ns("BoxBayes"), opciones = opc_bayes,
       tabPanel(title = labelInput("generatem"), value = "tabBayesModelo",
                withLoader(verbatimTextOutput(ns("txtbayes")), 
                           type = "html", loader = "loader4")),
@@ -50,173 +50,82 @@ mod_bayes_ui <- function(id){
 #' bayes Server Function
 #'
 #' @noRd 
-mod_bayes_server <- function(input, output, session, updateData){
+mod_bayes_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
-
+  nombre.modelo <- rv(x = NULL)
+  
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    limpiar()
+    updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
     default.codigo.bayes()
   })
 
-  # observeEvent(updateData$idioma, {
-  #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  #     ejecutar.bayes.mc()
-  #     ejecutar.bayes.ind()
-  #   }
-  # })
-  # 
+  output$txtbayes <- renderPrint({
+    input$runBayes
+    default.codigo.bayes()
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
+    var    <- paste0(updateData$variable.predecir, "~.")
+    nombre <- paste0("modelo.bayes")
+    modelo <- traineR::train.bayes(as.formula(var), data = train)
+    pred   <- predict(modelo , test, type = 'class')
+    mc     <- confusion.matrix(test, pred)
+    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    nombre.modelo$x <- nombre
+    print(modelo)
+  })
   
-  #Cuando se ejecuta el botón 
-  observeEvent(input$runBayes, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-      limpia.bayes.run()
-      default.codigo.bayes()
-      bayes.full()
-    }
-  }, priority =  -5)
+  output$bayesPrediTable <- DT::renderDataTable({
+    idioma <- updateData$idioma
+    obj.predic(modelos$bayes[[nombre.modelo$x]]$pred,idioma = idioma)
+    
+  },server = FALSE)
   
-
+  output$txtbayesMC    <- renderPrint({
+    print(modelos$bayes[[nombre.modelo$x]]$mc)
+  })
+  
+  output$plot_bayes_mc <- renderPlot({
+    idioma <- updateData$idioma
+    exe(plot.MC.code(idioma = idioma))
+    plot.MC(modelos$bayes[[nombre.modelo$x]]$mc)
+  })
+  
+  output$bayesIndPrecTable <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
+    
+    xtable(indices.prec.table(indices.bayes,"bayes", idioma = idioma))
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  output$bayesIndErrTable  <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
+    output$bayesPrecGlob  <-  fill.gauges(indices.bayes[[1]], tr("precG",idioma))
+    output$bayesErrorGlob <-  fill.gauges(indices.bayes[[2]], tr("errG",idioma))
+    xtable(indices.error.table(indices.bayes,"bayes"))
+    
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
   #Código por defecto de bayes
   default.codigo.bayes <- function() {
 
     #Modelo
     codigo <- bayes.modelo(updateData$variable.predecir)
     updateAceEditor(session, "fieldCodeBayes", value = codigo)
-    cod.bayes.modelo <<- codigo
-    
+
     #Predicción
     codigo <- bayes.prediccion()
     updateAceEditor(session, "fieldCodeBayesPred", value = codigo)
-    cod.bayes.pred <<- codigo
 
     #Matríz de Confusión
     codigo <- bayes.MC()
     updateAceEditor(session, "fieldCodeBayesMC", value = codigo)
-    cod.bayes.mc <<- codigo
 
     #Indices generales
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
-    cod.bayes.ind <<- codigo
-  }
-
-  
-  #Ejecuta el modelo, predicción, mc e indices de bayes
-  bayes.full <- function() {
-     ejecutar.bayes()
-     ejecutar.bayes.pred()
-     ejecutar.bayes.mc()
-     ejecutar.bayes.ind()
-  }
-  
-  # Genera el modelo
-  ejecutar.bayes <- function() {
-    tryCatch({
-      exe(cod.bayes.modelo)
-      output$txtbayes <- renderPrint(exe("modelo.bayes"))
- 
-      nombres.modelos <<- c(nombres.modelos, "modelo.bayes")
-    },
-    error = function(e) { 
-      # Regresamos al estado inicial y mostramos un error
-      limpia.bayes(1)
-      showNotification(paste0("Error (BAYES-01) : ", e), duration = 15, type = "error")
-    })
-  }
-  
-  # Genera la predicción
-  ejecutar.bayes.pred <- function() {
-    tryCatch({ 
-      idioma <- updateData$idioma
-      
-      exe(cod.bayes.pred)
-      pred <- predict(modelo.bayes, datos.prueba, type = "prob")
-      scores[["Bayes"]] <<- pred$prediction[,2]
-      
-      output$bayesPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.bayes"),idioma = idioma), server = FALSE)
- 
-      nombres.modelos <<- c(nombres.modelos, "prediccion.bayes")
-      #graficar otra vez la curva roc
-      updateData$roc  <- !updateData$roc 
-    },
-    error = function(e) { 
-      limpia.bayes(2)
-      showNotification(paste0("Error (BAYES-02) : ", e), duration = 15, type = "error")
-    })
-  }
-  
-  # Genera la mc
-  ejecutar.bayes.mc <- function() {
-    if(exists("prediccion.bayes")){
-      tryCatch({ 
-        idioma <- updateData$idioma
-        
-        exe(cod.bayes.mc)
-        output$txtbayesMC <- renderPrint(print(exe("MC.bayes")))
-        
-        exe(plot.MC.code(idioma = idioma))
-        output$plot_bayes_mc <- renderPlot(exe("plot.MC(MC.bayes)"))
-
-        nombres.modelos <<- c(nombres.modelos, "MC.bayes")
-      },
-      error = function(e) { 
-        limpia.bayes(3)
-        showNotification(paste0("Error (BAYES-03) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
-  
-  # Genera los índices
-  ejecutar.bayes.ind <- function(){
-    if(exists("MC.bayes")){
-      tryCatch({ 
-        idioma <- updateData$idioma
-        
-        isolate(exe(cod.bayes.ind))
-        indices.bayes <<- indices.generales(exe("MC.bayes"))
-
-        output$bayesPrecGlob  <-  fill.gauges(indices.bayes[[1]], tr("precG",idioma))
-        output$bayesErrorGlob <-  fill.gauges(indices.bayes[[2]], tr("errG",idioma))
-        
-        output$bayesIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.bayes,"BAYES", idioma = idioma)), spacing = "xs",
-                                                       bordered = T, width = "100%", align = "c", digits = 2)
-        output$bayesIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.bayes,"BAYES")), spacing = "xs",
-                                                      bordered = T, width = "100%", align = "c", digits = 2)
-        nombres.modelos     <<- c(nombres.modelos, "indices.bayes")
-        IndicesM[["Bayes"]] <<- indices.bayes
-        updateData$selector.comparativa <- actualizar.selector.comparativa()
-        },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.bayes(4)
-        showNotification(paste0("Error (BAYES-04) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
-  
-  # Limpia los datos segun el proceso donde se genera el error
-  limpia.bayes <- function(capa = NULL) {
-    for (i in capa:4) {
-      switch(i, {
-        modelo.bayes    <<- NULL
-        output$txtbayes <- renderPrint(invisible(""))
-      }, {
-        prediccion.bayes       <<- NULL
-        output$bayesPrediTable <- DT::renderDataTable(NULL)
-      }, {
-        MC.bayes             <<- NULL
-        output$plot_bayes_mc <- renderPlot(NULL)
-        output$txtbayesMC    <- renderPrint(invisible(NULL))
-      }, {
-        indices.bayes            <<- NULL
-        IndicesM[["Bayes"]]      <<- indices.bayes
-        output$bayesIndPrecTable <-  shiny::renderTable(NULL)
-        output$bayesIndErrTable  <-  shiny::renderTable(NULL)
-        output$bayesPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$bayesErrorGlob    <-  flexdashboard::renderGauge(NULL)
-      })
-    }
   }
   
   # Limpia los datos al ejecutar el botón run
@@ -230,14 +139,7 @@ mod_bayes_server <- function(input, output, session, updateData){
         output$bayesPrecGlob     <- flexdashboard::renderGauge(NULL)
         output$bayesErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
-  
-  # Limpia todos los datos
-  limpiar <- function(){
-        limpia.bayes(1)
-        limpia.bayes(2)
-        limpia.bayes(3)
-        limpia.bayes(4)
-  }
+
 }
     
 ## To be copied in the UI

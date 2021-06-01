@@ -1,10 +1,3 @@
-# -------------------  RL
-
-cod.rl.modelo <<-  NULL
-cod.rl.pred   <<-  NULL
-cod.rl.mc     <<-  NULL
-cod.rl.ind    <<-  NULL
-
 # Códigos de  RL --------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo RL

@@ -1,10 +1,3 @@
-# -------------------  BAYES
-
-cod.bayes.modelo <<-  NULL
-cod.bayes.pred   <<-  NULL
-cod.bayes.mc     <<-  NULL
-cod.bayes.ind    <<-  NULL
-
 # Códigos de BAYES ---------------------------------------------------------------------------------------------------------
 
 #Crea el modelo Bayes

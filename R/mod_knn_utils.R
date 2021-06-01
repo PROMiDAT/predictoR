@@ -1,12 +1,3 @@
-
-# -------------------  KNN
-
-cod.knn.modelo <<-  NULL
-cod.knn.pred   <<-  NULL
-cod.knn.mc     <<-  NULL
-cod.knn.ind    <<-  NULL
-
-
 # Códigos de KNN --------------------------------------------------------------------------------------------------------
 
 #Crea el modelo KNN

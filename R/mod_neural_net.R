@@ -9,7 +9,10 @@
 #' @importFrom shiny NS tagList 
 mod_neural_net_ui <- function(id){
   ns <- NS(id)
-  opciones.nn <- list(options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
+  opciones.nn <- list(
+        conditionalPanel("input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
+                     options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
+
                       fluidRow(col_6(numericInput(ns("threshold.nn"),labelInput("threshold"),
                                                    min = 0, step = 0.01, value = 0.05)),
                                col_6(numericInput(ns("stepmax.nn"),labelInput("stepmax"),
@@ -18,25 +21,43 @@ mod_neural_net_ui <- function(id){
                                                   label = labelInput("selectCapas"), value = 2))),
                       fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
                                                                                                 min = 1, step = 1, value = 2),
-                                                                                   class = "mini-numeric-select")))))
+                                                                                   class = "mini-numeric-select"))))))
   
-  codigo.nn <- list(conditionalPanel("input.BoxNn == 'tabNnModelo'",
-                                     codigo.monokai(ns("fieldCodeNn"), height = "10vh")),
-                    conditionalPanel("input.BoxNn == 'tabNnPlot'",
+  codigo.nn <- list(conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnPlot'",
                                      codigo.monokai(ns("fieldCodeNnPlot"), height = "10vh")),
-                    conditionalPanel("input.BoxNn == 'tabNnPred'",
+                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnPred'",
                                      codigo.monokai(ns("fieldCodeNnPred"), height = "10vh")),
-                    conditionalPanel("input.BoxNn == 'tabNnMC'",
+                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnMC'",
                                      codigo.monokai(ns("fieldCodeNnMC"), height = "10vh")),
-                    conditionalPanel("input.BoxNn == 'tabNnIndex'",
+                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnIndex'",
                                      codigo.monokai(ns("fieldCodeNnIG"), height = "10vh")))
   
-  opc_nn <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(75,100), heights = c(95, 95),
-                         tabs.content = list(opciones.nn, codigo.nn))
+  codigo.nn.run <- list(conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnModelo'",
+                                     codigo.monokai(ns("fieldCodeNn"), height = "10vh")))
+  opc_nn <- fluidRow(
+    conditionalPanel(
+    "input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
+    tabsOptions(heights = c(70, 30), tabs.content = list(
+      list(options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
+           
+           fluidRow(col_6(numericInput(ns("threshold.nn"),labelInput("threshold"),
+                                       min = 0, step = 0.01, value = 0.05)),
+                    col_6(numericInput(ns("stepmax.nn"),labelInput("stepmax"),
+                                       min = 100, step = 100, value = 5000))),
+           fluidRow(col_12(sliderInput(inputId = ns("cant.capas.nn"), min = 1, max = 10,
+                                       label = labelInput("selectCapas"), value = 2))),
+           fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
+                                                                                               min = 1, step = 1, value = 2),
+                                                                                  class = "mini-numeric-select"))))),
+      codigo.nn.run))),
+    conditionalPanel(
+      "input['neural_net_ui_1-BoxNn']   != 'tabNnModelo'",
+      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+        codigo.nn))))
   
   tagList(
     tabBoxPrmdt(
-      id = "BoxNn", opciones = opc_nn,
+      id = ns("BoxNn"), opciones = opc_nn,
       tabPanel(title = labelInput("generatem"), value = "tabNnModelo",
                withLoader(verbatimTextOutput(ns("txtnn")), 
                           type = "html", loader = "loader4")),
@@ -66,8 +87,16 @@ mod_neural_net_ui <- function(id){
 #' neural_net Server Function
 #'
 #' @noRd 
-mod_neural_net_server <- function(input, output, session, updateData){
+mod_neural_net_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
+  nombre.modelo <- rv(x = NULL)
+  
+  #Cuando se generan los datos de prueba y aprendizaje
+  observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
+    default.codigo.nn()
+  })
+
   
   #Actualiza la cantidad de capas ocultas
   observeEvent(c(input$cant.capas.nn, updateData$datos.aprendizaje), {
@@ -82,43 +111,105 @@ mod_neural_net_server <- function(input, output, session, updateData){
     }
   })
   
-  #Cuando se generan los datos de prueba y aprendizaje
-  observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    limpiar()
+  output$txtnn <- renderPrint({
+    input$runNn
     default.codigo.nn()
+    train      <- updateData$datos.aprendizaje
+    test       <- updateData$datos.prueba
+    form       <- paste0(updateData$variable.predecir, "~.")
+    nombre     <- paste0("modelo.nn")
+    idioma     <- updateData$idioma
+    threshold  <- isolate(input$threshold.nn)
+    stepmax    <- isolate(input$stepmax.nn)
+    tryCatch({
+      capas      <- c(isolate(input$nn.cap.1),isolate(input$nn.cap.2),
+                      isolate(input$nn.cap.3),isolate(input$nn.cap.4),
+                      isolate(input$nn.cap.5),isolate(input$nn.cap.6),
+                      isolate(input$nn.cap.7),isolate(input$nn.cap.8),
+                      isolate(input$nn.cap.9),isolate(input$nn.cap.10))
+      cant.capas <- isolate(input$cant.capas.nn)
+      capas      <<- as.vector(as.numeric(capas[1:cant.capas]))
+      
+      modelo     <- traineR::train.neuralnet(
+        formula   = as.formula(form),
+        data      = train,
+        threshold = threshold,
+        stepmax   = stepmax,
+        hidden    = capas)
+      
+      pred   <- predict(modelo , test, type = 'class')
+      mc     <- confusion.matrix(test, pred)
+      isolate(modelos$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+      nombre.modelo$x <- nombre
+      print(modelo)
+      
+    },
+    error = function(e) {
+      showNotification(paste0("Error (NN) : ",e), duration = 15, type = "error")
+      return(invisible(""))
+    },
+    warning = function(w){
+      showNotification(paste0(tr("nnWar", idioma)," (NN) : ",w), duration = 10, type = "warning")
+      return(invisible(""))
+    })
+
+
   })
   
-  # observeEvent(updateData$idioma, {
-  #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  #     ejecutar.nn.mc()
-  #     ejecutar.nn.ind()
-  #   }
-  # })
+  output$nnPrediTable <- DT::renderDataTable({
+    idioma <- updateData$idioma
+    obj.predic(modelos$nn[[nombre.modelo$x]]$pred,idioma = idioma)
+    
+  },server = FALSE)
+  
+  output$txtnnMC    <- renderPrint({
+    print(modelos$nn[[nombre.modelo$x]]$mc)
+  })
+  
+  output$plot_nn_mc <- renderPlot({
+    idioma <- updateData$idioma
+    tryCatch({  
+      exe(plot.MC.code(idioma = idioma))
+      plot.MC(modelos$nn[[nombre.modelo$x]]$mc)
+    },
+    error = function(e) { 
+      showNotification(paste0("Error (NN) : ", e), duration = 15, type = "error")
+      return(NULL)
+    })
 
-  #Cuando se ejecuta el botón run
-  observeEvent(input$runNn, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { 
-        limpia.nn.run()
-        default.codigo.nn()
-        nn.full()
-    }
-  }, priority =  -5)
-
+  })
+  
+  output$nnIndPrecTable <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
+    
+    xtable(indices.prec.table(indices.nn,"nn", idioma = idioma))
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  output$nnIndErrTable  <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
+    output$nnPrecGlob  <-  fill.gauges(indices.nn[[1]], tr("precG",idioma))
+    output$nnErrorGlob <-  fill.gauges(indices.nn[[2]], tr("errG",idioma))
+    xtable(indices.error.table(indices.nn,"nn"))
+    
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
   # Actualiza el código a la versión por defecto
   default.codigo.nn <- function(){
     #Modelo
     codigo <- nn.modelo(updateData$variable.predecir,
-                        input$threshold.nn,
-                        input$stepmax.nn,
-                        input$cant.capas.nn,
-                        input$nn.cap.1,input$nn.cap.2,
-                        input$nn.cap.3,input$nn.cap.4,
-                        input$nn.cap.5,input$nn.cap.6,
-                        input$nn.cap.7,input$nn.cap.8,
-                        input$nn.cap.9,input$nn.cap.10)
+                        isolate(input$threshold.nn),
+                        isolate(input$stepmax.nn),
+                        isolate(input$cant.capas.nn),
+                        isolate(input$nn.cap.1),isolate(input$nn.cap.2),
+                        isolate(input$nn.cap.3),isolate(input$nn.cap.4),
+                        isolate(input$nn.cap.5),isolate(input$nn.cap.6),
+                        isolate(input$nn.cap.7),isolate(input$nn.cap.8),
+                        isolate(input$nn.cap.9),isolate(input$nn.cap.10))
 
     updateAceEditor(session, "fieldCodeNn", value = codigo)
-    cod.nn.modelo <<- codigo
 
     #Neuralnet PLot
     updateAceEditor(session, "fieldCodeNnPlot", value = nn.plot())
@@ -126,120 +217,18 @@ mod_neural_net_server <- function(input, output, session, updateData){
     #Predicción
     codigo <- nn.prediccion()
     updateAceEditor(session, "fieldCodeNnPred", value = codigo)
-    cod.nn.pred <<- codigo
 
     #Matriz de Confusión
     codigo <- nn.MC()
     updateAceEditor(session, "fieldCodeNnMC", value = codigo)
-    cod.nn.mc <<- codigo
 
     #Indices Generales
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeNnIG", value = codigo)
-    cod.nn.ind <<- codigo
-  }
-  
-  # Ejecuta el modelo, predicción, mc e indices de nn
-  nn.full <- function() {
-     ejecutar.nn()
-     if(NN_EXECUTION){
-        ejecutar.nn.pred()
-        ejecutar.nn.mc()
-        ejecutar.nn.ind()
-     }
-  }
-  
-  #Genera el modelo
-  ejecutar.nn <- function() {
-    idioma <- updateData$idioma
-    tryCatch({ 
-      isolate(exe(cod.nn.modelo))
-      output$txtnn <- renderPrint(print(modelo.nn))
-      plotear.red()
-      nombres.modelos <<- c(nombres.modelos,"modelo.nn")
-      NN_EXECUTION <<- TRUE
-    },
-    error = function(e) { 
-      limpia.nn(1)
-      showNotification(paste0("Error (NN-01) : ",e), duration = 15, type = "error")
-    },
-    warning = function(w){
-      limpia.nn(1)
-      NN_EXECUTION <<- FALSE
-      showNotification(paste0(tr("nnWar", idioma)," (NN-01) : ",w), duration = 10, type = "warning")
-    })
-  }
-  
-  #Genera la predicción
-  ejecutar.nn.pred <- function() {
-    idioma <- updateData$idioma
-    tryCatch({ 
-      isolate(exe(cod.nn.pred))
-      pred   <- predict(exe("modelo.nn"), datos.prueba, type = "prob")
-      scores[["nn"]] <<- pred$prediction[,2]
-
-      output$nnPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.nn"),idioma = idioma),server = FALSE)
-      
-       
-      nombres.modelos <<- c(nombres.modelos,"prediccion.nn")
-      #gráfica otra vez la curva roc
-      updateData$roc  <- !updateData$roc 
-      
-    },
-    error = function(e) { 
-      limpia.nn(2)
-      showNotification(paste0("Error (NN-02) : ",e), duration = 15, type = "error")
-    })
-  }
-  
-  #Matriz de Confusión
-  ejecutar.nn.mc <- function() {
-    idioma <- updateData$idioma
-    if(exists("prediccion.nn")){
-      
-      tryCatch({ 
-        exe(cod.nn.mc)
-        output$txtnnMC    <- renderPrint(print(exe("MC.nn")))
-        exe(plot.MC.code(idioma = idioma))
-        output$plot_nn_mc <- renderPlot(exe("plot.MC(MC.nn)"))
-         
-        nombres.modelos <<- c(nombres.modelos, "MC.nn")
-      },
-      error = function(e){ 
-        limpia.nn(3)
-        showNotification(paste0("Error (NN-03) : ", e), duration = 15, type = "error")
-      })
-    }
-  }
-  
-  #Indices Generales
-  ejecutar.nn.ind <- function() {
-    idioma <- updateData$idioma
-    if(exists("MC.nn")){
-      tryCatch({ 
-        isolate(exe(cod.nn.ind))
-        indices.nn <<- indices.generales(exe("MC.nn"))
-        
-        output$nnPrecGlob  <-  fill.gauges(indices.nn[[1]], tr("precG",idioma))
-        output$nnErrorGlob <-  fill.gauges(indices.nn[[2]], tr("errG",idioma))
-        
-        output$nnIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.nn,"Redes Neuronales", idioma = idioma)), spacing = "xs",
-                                                    bordered = T, width = "100%", align = "c", digits = 2)
-        output$nnIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.nn,"Redes Neuronales")), spacing = "xs",
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
-        
-        IndicesM[["nn"]] <<- indices.nn
-        updateData$selector.comparativa <- actualizar.selector.comparativa()
-      },
-      error = function(e) { 
-        limpia.nn(4)
-        showNotification(paste0("Error (NN-04) : ",e), duration = 15, type = "error")
-      })
-    }
   }
   
   #Genera el gráfico de la red neuronal
-  plotear.red <- function(){
+  output$plot_nn <- renderPlot({
     idioma <- updateData$idioma
     tryCatch({
       capas <- c(input$nn.cap.1, input$nn.cap.2,
@@ -247,49 +236,27 @@ mod_neural_net_server <- function(input, output, session, updateData){
                  input$nn.cap.5, input$nn.cap.6,
                  input$nn.cap.7, input$nn.cap.8,
                  input$nn.cap.9, input$nn.cap.10)
-      
-      capas <- capas[1:input$cant.capas.nn]
-      if(input$cant.capas.nn * sum(capas) <= 1500 & ncol(modelo.nn$covariate) <= 20){
-        output$plot_nn <- renderPlot(isolate(exe(input$fieldCodeNnPlot)))
+      cant  <- isolate(input$cant.capas.nn)
+      capas <- capas[1:cant]
+      modelo <- modelos$nn[[nombre.modelo$x]]$modelo
+      if(cant * sum(capas) <= 1500 & ncol(modelo$covariate) <= 20){
+
         cod <- ifelse(input$fieldCodeNnPlot == "", nn.plot(), input$fieldCodeNnPlot)
+        plot(modelo,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,
+        information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',
+         dimension=15, radius = 0.2, fontsize = 10)
       }else{
         showNotification(tr("bigPlot",idioma), duration = 10, type = "message")
-        output$plot_nn <- renderPlot(NULL)
+        return(NULL)
       }
     },
     error = function(e){
-      output$plot_nn <- renderPlot(NULL)
+      return(NULL)
     })
-  }
+  })
   
-  # Limpia los datos según el proceso donde se genera el error
-  limpia.nn <- function(capa = NULL) {
-    for (i in capa:4) {
-      switch(i, {
-        modelo.nn      <<- NULL
-        output$txtnn   <- renderPrint(invisible(""))
-        output$plot_nn <- renderPlot(NULL)
-      }, {
-        prediccion.nn       <<- NULL
-        output$nnPrediTable <- DT::renderDataTable(NULL)
-      }, {
-        MC.nn             <<- NULL
-        output$plot_nn_mc <- renderPlot(NULL)
-        output$txtNnMC    <- renderPrint(invisible(NULL))
-      }, {
-        indices.nn            <<- rep(0, 10)
-        IndicesM[["nn"]]      <<- NULL
-        output$nnIndPrecTable <- shiny::renderTable(NULL)
-        output$nnIndErrTable  <- shiny::renderTable(NULL)
-        output$nnPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$nnErrorGlob    <-  flexdashboard::renderGauge(NULL)
-      })
-    }
-  }
-  
-  # Limpia los datos al ejecutar el botón run
-  limpia.nn.run <- function() {
-        output$txtnn          <- renderPrint(invisible(""))
+  # Limpia los datos 
+  limpia.nn <- function() {
         output$plot_nn        <- renderPlot(NULL)
         output$nnPrediTable   <- DT::renderDataTable(NULL)
         output$plot_nn_mc     <- renderPlot(NULL)
@@ -298,14 +265,6 @@ mod_neural_net_server <- function(input, output, session, updateData){
         output$nnIndErrTable  <- shiny::renderTable(NULL)
         output$nnPrecGlob     <- flexdashboard::renderGauge(NULL)
         output$nnErrorGlob    <- flexdashboard::renderGauge(NULL)
-  }
-  
-  # Limpia todos los datos
-  limpiar <- function(){
-        limpia.nn(1)
-        limpia.nn(2)
-        limpia.nn(3)
-        limpia.nn(4)
   }
   
 }

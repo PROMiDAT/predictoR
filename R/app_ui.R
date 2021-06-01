@@ -6,7 +6,6 @@
 #' @import dplyr
 #' @import rlang
 #' @import traineR 
-#' @import ggplot2
 #' @import shinyAce
 #' @import echarts4r
 #' @import htmltools
@@ -14,7 +13,6 @@
 #' @import shinydashboardPlus
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
-#' @importFrom forcats fct_reorder
 #' @importFrom shinyWidgets switchInput checkboxGroupButtons radioGroupButtons
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
 #' @importFrom DT tableHeader formatStyle

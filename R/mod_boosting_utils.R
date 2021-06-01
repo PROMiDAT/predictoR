@@ -1,10 +1,3 @@
-# -------------------      BOOSTING
-
-cod.b.modelo <<-  NULL
-cod.b.pred   <<-  NULL
-cod.b.mc     <<-  NULL
-cod.b.ind    <<-  NULL
-
 # Códigos de BOOSTING --------------------------------------------------------------------------------------------------------
 
 #Crea el modelo BOOSTING

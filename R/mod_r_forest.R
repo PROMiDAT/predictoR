@@ -5,39 +5,54 @@
 #' @param id,input,output,session Internal parameters for {shiny}.
 #'
 #' @noRd 
-#'
+#' 
 #' @importFrom shiny NS tagList 
 mod_r_forest_ui <- function(id){
   ns <- NS(id)
-  opciones.rf <- list(options.run(ns("runRf")), tags$hr(style = "margin-top: 0px;"),
-                      conditionalPanel("input.BoxRf != 'tabRfRules'",
-                                       fluidRow(col_6(numericInput(ns("ntree.rf"), labelInput("numTree"), 20, width = "100%", min = 0)),
-                                                col_6(numericInput(ns("mtry.rf"),labelInput("numVars"),1, width = "100%", min = 1)))),
-                      conditionalPanel("input.BoxRf == 'tabRfRules'",
-                                       numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
   
-  codigo.rf  <- list(conditionalPanel("input.BoxRf == 'tabRfModelo'",
-                                      codigo.monokai(ns("fieldCodeRf"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRferror'",
+  codigo.rf  <- list(conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRferror'",
                                       codigo.monokai(ns("fieldCodeRfPlotError"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRfImp'",
+                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfImp'",
                                       codigo.monokai(ns("fieldCodeRfPlot"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRfPred'",
+                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfPred'",
                                       codigo.monokai(ns("fieldCodeRfPred"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRfMC'",
+                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfMC'",
                                       codigo.monokai(ns("fieldCodeRfMC"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRfIndex'",
-                                      codigo.monokai(ns("fieldCodeRfIG"), height = "10vh")),
-                     conditionalPanel("input.BoxRf == 'tabRfRules'",
+                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfIndex'",
+                                      codigo.monokai(ns("fieldCodeRfIG"), height = "10vh")))
+  
+  codigo.rf.run  <- list(conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfModelo'",
+                                      codigo.monokai(ns("fieldCodeRf"), height = "10vh")),
+                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
                                       codigo.monokai(ns("fieldCodeRfRules"), height = "10vh")))
   
-  opc_rf  <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(65, 95),
-                          tabs.content = list(opciones.rf, codigo.rf))
+  opc_rf  <-     fluidRow(
+    conditionalPanel(
+      "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo' || input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
+      tabsOptions(heights = c(70, 30), tabs.content = list(
+        list(
+          conditionalPanel(
+            "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo'",
+            options.run(ns("runRf")), tags$hr(style = "margin-top: 0px;"),
+            fluidRow(col_6(numericInput(ns("ntree.rf"), labelInput("numTree"), 20, width = "100%", min = 0)),
+                     col_6(numericInput(ns("mtry.rf"),labelInput("numVars"),1, width = "100%", min = 1)))),
+          conditionalPanel(
+            "input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1))),
+        codigo.rf.run
+      ))),
+    conditionalPanel(
+      "input['r_forest_ui_1-BoxRf'] != 'tabRfModelo' && input['r_forest_ui_1-BoxRf'] != 'tabRfRules'",
+      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+        codigo.rf
+      )))
+  )
   
 
   tagList(
     tabBoxPrmdt(
-      id = "BoxRf",opciones = opc_rf,
+      id = ns("BoxRf"),opciones = opc_rf,
       tabPanel(title = labelInput("generatem"),value = "tabRfModelo",
                withLoader(verbatimTextOutput(ns("txtRf")),
                           type = "html", loader = "loader4")),
@@ -47,7 +62,7 @@ mod_r_forest_ui <- function(id){
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("varImp"), value = "tabRfImp",
-               withLoader(echarts4rOutput(ns('plot_rf'), height = "55vh"),
+               withLoader(echarts4rOutput(ns('plot_rf_importance'), height = "55vh"),
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabRfPred",
@@ -75,236 +90,157 @@ mod_r_forest_ui <- function(id){
 #' r_forest Server Function
 #'
 #' @noRd 
-mod_r_forest_server <- function(input, output, session, updateData){
+mod_r_forest_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
+  nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    limpiar()
     default.codigo.rf(rf.def = TRUE)
+    updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
+  })
+  
+  output$txtRf <- renderPrint({
+    input$runRf
+    default.codigo.rf()
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
+    var    <- paste0(updateData$variable.predecir, "~.")
+    mtry   <- isolate(input$mtry.rf)
+    ntree  <- isolate(input$ntree.rf)
+    nombre <- paste0("modelo.rf")
+    
+    modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE)
+    pred   <- predict(modelo , test, type = 'class')
+    mc     <- confusion.matrix(test, pred)
+    isolate(modelos$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    nombre.modelo$x <- nombre
+    print(modelo)
+  })
+  
+  output$rfPrediTable <- DT::renderDataTable({
+    idioma <- updateData$idioma
+    obj.predic(modelos$rf[[nombre.modelo$x]]$pred,idioma = idioma)
+    
+  },server = FALSE)
+  
+  output$txtRfMC    <- renderPrint({
+    print(modelos$rf[[nombre.modelo$x]]$mc)
+  })
+  
+  output$plot_rf_mc <- renderPlot({
+    idioma <- updateData$idioma
+    exe(plot.MC.code(idioma = idioma))
+    plot.MC(modelos$rf[[nombre.modelo$x]]$mc)
+  })
+  
+  output$rfIndPrecTable <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
+    
+    xtable(indices.prec.table(indices.rf,"rf", idioma = idioma))
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  output$rfIndErrTable  <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
+    output$rfPrecGlob  <-  fill.gauges(indices.rf[[1]], tr("precG",idioma))
+    output$rfErrorGlob <-  fill.gauges(indices.rf[[2]], tr("errG",idioma))
+    xtable(indices.error.table(indices.rf,"rf"))
+    
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  #Mostrar Reglas
+  output$rulesRf <- renderPrint({
+    idioma <- updateData$idioma
+    n      <- input$rules.rf.n
+    modelo <- modelos$rf[[nombre.modelo$x]]$modelo
+    modelo$call$data <- updateData$datos.aprendizaje
+    tryCatch({
+      updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
+      rattle::printRandomForests(modelo, n)
+    },error = function(e){
+      ifelse(idioma == "es",
+             stop("No se pueden mostrar las reglas para el árbol seleccionado"),
+             stop("Cannot display rules for selected tree"))
+    })
+  })
+  
+  
+  # Gráfico de importancia
+  output$plot_rf_importance <- renderEcharts4r({
+    tryCatch({
+      updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
+      aux <- data.frame(modelos$rf[[nombre.modelo$x]]$modelo$importance)
+      aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)
+      aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
+      aux$label <- row.names(aux)
+      
+      aux %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>% 
+        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% 
+        e_flip_coords() %>%
+        e_y_axis(inverse = TRUE) 
+    }, error = function(e) {
+      return(NULL)
+    })
+    
+  })
+  
+  # Gráfico de evolución del error
+  output$plot_error_rf <- renderEcharts4r({
+    tryCatch({
+      modelo    <- modelos$rf[[nombre.modelo$x]]$modelo
+      dataplot  <- data.frame(x = c(1:length(modelo$err.rate[,1])),cbind(modelo$err.rate))
+      updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
+      e_rf_error(dataplot)
+      
+    }, error = function(e){
+      return(NULL)
+    })
   })
 
-  # observeEvent(updateData$idioma, {
-  #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  #     ejecutar.rf.mc()
-  #     ejecutar.rf.ind()
-  #   }
-  # })
-
-  # Ejecuta el modelo, predicción, mc e indices de rf
-  rf.full <- function() {
-    ejecutar.rf()
-    ejecutar.rf.pred()
-    ejecutar.rf.mc()
-    ejecutar.rf.ind()
-  }
-
-  # Cuando se genera el modelo rf
-  observeEvent(input$runRf, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-      limpia.rf.run()
-      default.codigo.rf()
-      rf.full()
-    }
-  }, priority =  -5)
-  
-  # Genera el modelo
-  ejecutar.rf <- function() {
-    tryCatch({ 
-      # Se corren los códigos
-      isolate(exe(cod.rf.modelo))
-      output$txtRf <- renderPrint(print(modelo.rf))
-      
-      plotear.rf.imp()
-      plotear.rf.error()
-      updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
-      
-      mostrar.reglas.rf(input$rules.rf.n)
-      nombres.modelos <<- c(nombres.modelos, "modelo.rf")
-    },
-    error = function(e) { 
-      # Regresamos al estado inicial y mostramos un error
-      limpia.rf(1)
-      showNotification(paste0("Error (RF-01) : ",e), duration = 15, type = "error")
-    })
-  }
-  
-  # Genera la predicción
-  ejecutar.rf.pred <- function() {
-    tryCatch({ 
-      idioma <- updateData$idioma
-      exe(cod.rf.pred)
-      pred   <-  predict(exe("modelo.rf"), datos.prueba, type = "prob")
-      scores[["rfl"]]     <<- pred$prediction[,2]
-      output$rfPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.rf"),idioma = idioma), server = FALSE)
-
-      nombres.modelos <<- c(nombres.modelos, "prediccion.rf")
-      #graficar otra vez la curva roc
-      updateData$roc  <- !updateData$roc 
-    },
-    error = function(e) { 
-      # Regresamos al estado inicial y mostramos un error
-      limpia.rf(2)
-      showNotification(paste0("Error (RF-02) : ", e), duration = 15, type = "error")
-    })
-  }
-
-  #Genera la matriz de confusión
-  ejecutar.rf.mc <- function() {
-    idioma <- updateData$idioma
-    
-    if(exists("prediccion.rf")){
-      tryCatch({ 
-        exe(cod.rf.mc)
-        output$txtRfMC    <- renderPrint(print(exe("MC.rf")))
-        
-        exe(plot.MC.code(idioma = idioma))
-        output$plot_rf_mc <- renderPlot(isolate(exe("plot.MC(MC.rf)")))
-       
-        nombres.modelos   <<- c(nombres.modelos, "MC.rf")
-      },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.rf(3)
-        showNotification(paste0("Error (RF-03) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
-
-  #Genera los Indices Generales
-  ejecutar.rf.ind <- function() {
-    idioma <- updateData$idioma
-    if(exists("MC.rf")){
-      tryCatch({ 
-        # Se corren los códigos
-        isolate(exe(cod.rf.ind))
-        indices.rf <<- indices.generales(exe("MC.rf"))
-        
-        output$rfPrecGlob  <-  fill.gauges(indices.rf[[1]], tr("precG",idioma))
-        output$rfErrorGlob <-  fill.gauges(indices.rf[[2]], tr("errG",idioma))
-        
-        
-        output$rfIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.rf,"Bosques Aleatorios", idioma = idioma)), spacing = "xs",
-                                                    bordered = T, width = "100%", align = "c", digits = 2)
-        output$rfIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.rf,"Bosques Aleatorios")), spacing = "xs",
-                                                   bordered = T, width = "100%", align = "c", digits = 2)
-        
-        nombres.modelos   <<- c(nombres.modelos, "indices.rf")
-        IndicesM[["rfl"]] <<- indices.rf
-        updateData$selector.comparativa <- actualizar.selector.comparativa()
-        
-      },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.rf(4)
-        showNotification(paste0("Error (RF-04) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
-  
   # Actualiza el código a la versión por defecto
   default.codigo.rf <- function(rf.def = FALSE){
-    if((!is.null(datos.aprendizaje) & rf.def) | is.na(input$mtry.rf)){
-      mtry.value <- ifelse(rf.def || is.na(input$mtry.rf), round(sqrt(ncol(datos.aprendizaje))), input$mtry.rf)
-      if(!is.na(input$mtry.rf)){
+    mtry <- isolate(input$mtry.rf)
+    if((!is.null(datos.aprendizaje) & rf.def) | is.na(mtry)){
+      mtry.value <- ifelse(rf.def || is.na(mtry), round(sqrt(ncol(datos.aprendizaje))), mtry)
+      if(!is.na(mtry)){
         updateNumericInput(session,"mtry.rf",value = mtry.value)
       }
     }else{
-      mtry.value <- input$mtry.rf
+      mtry.value <- mtry
     }
     
     # Se actualiza el código del modelo
     codigo <- rf.modelo(variable.pr = updateData$variable.predecir,
-                        ntree = input$ntree.rf,
+                        ntree = isolate(input$ntree.rf),
                         mtry = mtry.value)
     
     updateAceEditor(session, "fieldCodeRf", value = codigo)
-    cod.rf.modelo <<- codigo
-    
+
     # Cambia el código del gráfico de rf
     updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
-    updateAceEditor(session, "fieldCodeRfPlot", value = rf.plot())
+    updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
      
 
     # Se genera el código de la predicción
     codigo <- rf.prediccion()
     updateAceEditor(session, "fieldCodeRfPred", value = codigo)
-    cod.rf.pred <<- codigo
 
 
     # Se genera el código de la matriz
     codigo <- rf.MC()
     updateAceEditor(session, "fieldCodeRfMC", value = codigo)
-    cod.rf.mc <<- codigo
 
     # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRfIG", value = codigo)
-    cod.rf.ind <<- codigo
   }
-  
-  # Gráfico de importancia
-  plotear.rf.imp <- function() {
-    tryCatch({
-      output$plot_rf <- renderEcharts4r(isolate(exe(input$fieldCodeRfPlot)))
-      cod            <- ifelse(input$fieldCodeRfPlot == "", rf.plot(), input$fieldCodeRfPlot)
-    }, error = function(e) {
-      output$plot_rf <- renderEcharts4r(NULL)
-    })
-  }
-  
-  # Gráfico de evolución del error
-  plotear.rf.error <- function(){
-    tryCatch({
-      dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))
-      output$plot_error_rf <- renderEcharts4r(e_rf_error(dataplot))
-      cod                  <- ifelse(input$fieldCodeRfPlotError == "", plot.rf.error(),input$fieldCodeRfPlotError)
-    }, error = function(e){
-      limpia.rf(1)
-    })
-  }
-  
-  #Mostrar Reglas
-  mostrar.reglas.rf <- function(n){
-    idioma <- updateData$idioma
-    output$rulesRf <- renderPrint({
-      tryCatch({
-        updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
-        rattle::printRandomForests(modelo.rf, n)
-      },error = function(e){
-        ifelse(idioma == "es",
-               stop("No se pueden mostrar las reglas para el árbol seleccionado"), 
-               stop("Cannot display rules for selected tree"))
-        })
-    })
-  }
-  
-  # Limpia los datos según el proceso donde se genera el error
+
+  # Limpia los datos 
   limpia.rf <- function(capa = NULL){
-    for(i in capa:4){
-      switch(i, {
-        modelo.rf    <<- NULL
-        output$txtRf <- renderPrint(invisible(""))
-      }, {
-        prediccion.rf       <<- NULL
-        output$rfPrediTable <- DT::renderDataTable(NULL)
-      }, {
-        MC.rf             <<- NULL
-        output$plot_rf_mc <- renderPlot(NULL)
-        output$txtRfMC    <- renderPrint(invisible(NULL))
-      }, {
-        indices.rf            <<- rep(0, 10)
-        IndicesM[["rfl"]]     <<- NULL
-        output$rfIndPrecTable <-  shiny::renderTable(NULL)
-        output$rfIndErrTable  <-  shiny::renderTable(NULL)
-        output$rfPrecGlob     <-  flexdashboard::renderGauge(NULL)
-        output$rfErrorGlob    <-  flexdashboard::renderGauge(NULL)
-      })
-    }
-  }
-  
-  # Limpia los datos  al ejecutar el botón run
-  limpia.rf.run <- function(capa = NULL){
         output$txtRf          <- renderPrint(invisible(""))
         output$rfPrediTable   <- DT::renderDataTable(NULL)
         output$plot_rf_mc     <- renderPlot(NULL)
@@ -314,14 +250,7 @@ mod_r_forest_server <- function(input, output, session, updateData){
         output$rfPrecGlob     <- flexdashboard::renderGauge(NULL)
         output$rfErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
-  
-  # Limpia todos los datos
-  limpiar <- function(){
-        limpia.rf(1)
-        limpia.rf(2)
-        limpia.rf(3)
-        limpia.rf(4)
-  }
+
 }
     
 ## To be copied in the UI

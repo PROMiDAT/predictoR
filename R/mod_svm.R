@@ -9,33 +9,51 @@
 #' @importFrom shiny NS tagList 
 mod_svm_ui <- function(id){
   ns <- NS(id)
-  opciones.svm <- list(options.run(ns("runSvm")), tags$hr(style = "margin-top: 0px;"),
-                       conditionalPanel("input.BoxSvm != 'tabSvmPlot'",
-                                        fluidRow(col_6(
-                                                       radioSwitch(ns("switch.scale.svm"), "escal", c("si", "no"))),
-                                                 col_6(
-                                                        selectInput(inputId = ns("kernel.svm"), label = labelInput("selkernel"), selected = "radial",
-                                                                    choices =  c("linear", "polynomial", "radial", "sigmoid"))))),
-                       conditionalPanel("input.BoxSvm == 'tabSvmPlot'",
-                                        selectizeInput(ns("select_var_svm_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
-                                                       options = list(maxItems = 2, placeholder = ""), width = "100%")))
-  
-  codigo.svm <- list(conditionalPanel("input.BoxSvm == 'tabSvmModelo'",
+  codigo.svm <- list(conditionalPanel("input['svm_ui_1-BoxSvm'] == 'tabSvmModelo'",
                                       codigo.monokai(ns("fieldCodeSvm"),height = "10vh")),
-                     conditionalPanel("input.BoxSvm == 'tabSvmPlot'",
+                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
                                       codigo.monokai(ns("fieldCodeSvmPlot"),height = "10vh")),
-                     conditionalPanel("input.BoxSvm == 'tabSvmPred'",
+                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPred'",
                                       codigo.monokai(ns("fieldCodeSvmPred"),height = "10vh")),
-                     conditionalPanel("input.BoxSvm == 'tabSvmMC'",
+                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmMC'",
                                       codigo.monokai(ns("fieldCodeSvmMC"),height = "10vh")),
-                     conditionalPanel("input.BoxSvm == 'tabSvmIndex'",
+                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmIndex'",
                                       codigo.monokai(ns("fieldCodeSvmIG"),height = "10vh")))
   
-  opc_svm <- tabsOptions(botones = list(icon("gear"),icon("code")), widths = c(50,100), heights = c(60, 60),
-                          tabs.content = list(opciones.svm, codigo.svm))
+  codigo.svm.run <- list(conditionalPanel("input['svm_ui_1-BoxSvm'] == 'tabSvmModelo'",
+                                      codigo.monokai(ns("fieldCodeSvm"),height = "10vh")),
+                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
+                                      codigo.monokai(ns("fieldCodeSvmPlot"),height = "10vh")))
+  
+  opc_svm <-     fluidRow(
+    conditionalPanel(
+      "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
+      tabsOptions(heights = c(70, 30), tabs.content = list(
+        list(
+          conditionalPanel(
+            "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo'",
+            options.run(ns("runSvm")), tags$hr(style = "margin-top: 0px;"),
+            fluidRow(col_6(
+              radioSwitch(ns("switch.scale.svm"), "escal", c("si", "no"))),
+              col_6(
+                selectInput(inputId = ns("kernel.svm"), label = labelInput("selkernel"), selected = "radial",
+                            choices =  c("linear", "polynomial", "radial", "sigmoid"))))),
+          conditionalPanel(
+            "input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            selectizeInput(ns("select_var_svm_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
+                           options = list(maxItems = 2, placeholder = ""), width = "100%"))),
+        codigo.svm.run
+      ))),
+    conditionalPanel(
+      "input['svm_ui_1-BoxSvm']   != 'tabSvmModelo' && input['svm_ui_1-BoxSvm']  != 'tabSvmPlot'",
+      tabsOptions(botones = list(icon("terminal")), widths = 100,heights = 55, tabs.content = list(
+        codigo.svm
+      )))
+  )
   tagList(
     tabBoxPrmdt(
-      id = "BoxSvm", opciones = opc_svm,
+      id = ns("BoxSvm"), opciones = opc_svm,
       tabPanel(title = labelInput("generatem"), value = "tabSvmModelo",
                withLoader(verbatimTextOutput(ns("txtSvm")), 
                           type = "html", loader = "loader4")),
@@ -65,257 +83,133 @@ mod_svm_ui <- function(id){
 #' svm Server Function
 #'
 #' @noRd 
-mod_svm_server <- function(input, output, session, updateData){
+mod_svm_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   
-  #Cuando se generan los datos de prueba y aprendizaje
+  nombre.modelo <- rv(x = NULL)
+  
+  #When load tarining-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
-    limpiar()
+    updateTabsetPanel(session, "BoxSvm",selected = "tabSvmModelo")
     default.codigo.svm()
-
   })
-  # 
-  # observeEvent(updateData$idioma, {
-  #   if(!is.null(updateData$datos.aprendizaje) & !is.null(updateData$datos.prueba)){
-  #     kernel <- isolate(input$kernel.svm)
-  #     if(exists(paste0("prediccion.svm.",kernel))){
-  #     ejecutar.svm.mc()
-  #     ejecutar.svm.ind()
-  #     updateData$selector.comparativa <- actualizar.selector.comparativa()
-  #     }
-  #   }
-  # })
 
-
-  # Cuando se genera el modelo knn
-  observeEvent(input$runSvm, {
-    if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-      limpia.svm.run()
-      default.codigo.svm()
-      svm.full()
-    }
-  }, priority =  -5)
-  
-  # Ejecuta el modelo, predicción, mc e indices de SVM
-  svm.full <- function() {
-     ejecutar.svm()
-     ejecutar.svm.pred()
-     ejecutar.svm.mc()
-     ejecutar.svm.ind()
-  }
-  
-  #Genera el modelo
-  ejecutar.svm <- function() {
-    tryCatch({ 
-      isolate(exe(cod.svm.modelo))
-      kernel <- isolate(input$kernel.svm)
-      output$txtSvm <- renderPrint(exe("print(modelo.svm.",kernel,")"))
-      
-      updateAceEditor(session, "fieldCodeSvm", value = cod.svm.modelo)
-      
-      nombres.modelos <<- c(nombres.modelos, paste0("modelo.svm.",kernel))
-    },
-    error = function(e) { 
-      limpia.svm(1)
-      showNotification(paste0("Error (SVM-01) : ",e), duration = 15, type = "error")
+  #Genera el modelo, prediccón y matriz de confusión
+  output$txtSvm <- renderPrint({
+    input$runSvm
+    default.codigo.svm()
+    tryCatch({
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
+    var    <- paste0(updateData$variable.predecir, "~.")
+    scales <- isolate(input$switch.scale.svm)
+    k      <- isolate(input$kernel.svm)
+    nombre <- paste0("modelo.svm.",k)
+    modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
+    pred   <- predict(modelo , test, type = 'class')
+    mc     <- confusion.matrix(test, pred)
+    isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    nombre.modelo$x <- nombre
+    print(modelo)
+    },error = function(e){
+      return(invisible(""))
     })
-  }
+  })
   
-  #Genera la predicción
-  ejecutar.svm.pred <- function() {
-    tryCatch({ 
-      isolate(exe(cod.svm.pred))
-      kernel <- isolate(input$kernel.svm)
-      idioma <- updateData$idioma
-      pred   <- predict(exe("modelo.svm.",kernel), datos.prueba, type = "prob")
-      scores[[paste0("svml-",kernel)]] <<- pred$prediction[,2]
-      
-      output$svmPrediTable <- DT::renderDataTable(obj.predic(exe("prediccion.svm.",kernel),idioma = idioma),server = FALSE)
-
-      nombres.modelos <<- c(nombres.modelos, paste0("prediccion.svm.",kernel))
-      
-      #Gráfica otra vez la curva roc
-      updateData$roc <- !updateData$roc 
-    },
-    error = function(e) { 
-      limpia.svm(2)
-      showNotification(paste0("Error (SVM-02) : ",e), duration = 15, type = "error")
-    })
-  }
-
-  #Genera la matriz de confusión
-  ejecutar.svm.mc <- function(){
-    kernel <- isolate(input$kernel.svm)
+  #' Update predict table
+  output$svmPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
+    modelosc <<- as.list(modelos)
+      
+    obj.predic(modelos$svm[[nombre.modelo$x]]$pred,idioma = idioma)
     
-    if(exists(paste0("prediccion.svm.",kernel))){
-      tryCatch({ 
-        
-        exe(cod.svm.mc)
-        output$txtSvmMC <- renderPrint(exe("print(MC.svm.",kernel,")"))
-        exe(plot.MC.code(idioma = idioma))
-        output$plot_svm_mc <- renderPlot(exe("plot.MC(MC.svm.",kernel,")"))
-        
-        nombres.modelos   <<- c(nombres.modelos, paste0("MC.svm.",kernel))
-      },
-      error = function(e) { 
-        limpia.svm(3)
-        showNotification(paste0("Error (SVM-03) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
+    },server = FALSE)
   
-  # Genera los indices
-  ejecutar.svm.ind <- function(){
+  #' Update confusion matrix text
+  output$txtSvmMC    <- renderPrint({
+    print(modelos$svm[[nombre.modelo$x]]$mc)
+  })
+  
+  #' Update confusion matrix plot
+  output$plot_svm_mc <- renderPlot({
     idioma <- updateData$idioma
-    kernel <- isolate(input$kernel.svm)
-    
-    if(exists(paste0("MC.svm.",kernel))){
-      tryCatch({ 
-        isolate(exe(cod.svm.ind))
-        indices.svm <- indices.generales(exe("MC.svm.",kernel))
-
-        eval(parse(text =paste0("indices.svm.",kernel, "<<- indices.svm")))
-        
-        output$svmPrecGlob  <-  fill.gauges(indices.svm[[1]], tr("precG",idioma))
-        output$svmErrorGlob <-  fill.gauges(indices.svm[[2]], tr("errG",idioma))
-
-        # Cambia la tabla con la indices de svm
-        output$svmIndPrecTable <- shiny::renderTable(xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma)), spacing = "xs",
-                                                     bordered = T, width = "100%", align = "c", digits = 2)
-        
-        output$svmIndErrTable  <- shiny::renderTable(xtable(indices.error.table(indices.svm,"SVM")), spacing = "xs",
-                                                    bordered = T, width = "100%", align = "c", digits = 2)
-        
-        nombres.modelos <<- c(nombres.modelos, paste0("indices.svm.",kernel))
-        IndicesM[[paste0("svml-",kernel)]] <<- indices.svm
-        updateData$selector.comparativa    <- actualizar.selector.comparativa()
-      },
-      error = function(e) { 
-        # Regresamos al estado inicial y mostramos un error
-        limpia.svm(4)
-        showNotification(paste0("Error (SVM-04) : ",e), duration = 15, type = "error")
-      })
-    }
-  }
+    exe(plot.MC.code(idioma = idioma))
+    plot.MC(modelos$svm[[nombre.modelo$x]]$mc)
+  })
   
-  # Actualiza el código a la versión por defecto
+  #' Update indexes table
+  output$svmIndPrecTable <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
+    
+    xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma))
+    }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  #' Update error table
+  output$svmIndErrTable  <- shiny::renderTable({
+    idioma <- updateData$idioma
+    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
+    output$svmPrecGlob  <-  fill.gauges(indices.svm[[1]], tr("precG",idioma))
+    output$svmErrorGlob <-  fill.gauges(indices.svm[[2]], tr("errG",idioma))
+    xtable(indices.error.table(indices.svm,"SVM"))
+  
+    }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  #' Update default code
   default.codigo.svm <- function() {
     kernel <- isolate(input$kernel.svm)
     # Se actualiza el código del modelo
     codigo <- svm.modelo(variable.pr = updateData$variable.predecir,
-                         scale = input$switch.scale.svm,
+                         scale = isolate(input$switch.scale.svm),
                          kernel = kernel)
     
     updateAceEditor(session, "fieldCodeSvm", value = codigo)
-    cod.svm.modelo <<- codigo
-    
+
     # Se genera el código de la predicción
     codigo <- svm.prediccion(kernel)
     updateAceEditor(session, "fieldCodeSvmPred", value = codigo)
-    cod.svm.pred <<- codigo
-    
+
     # Se genera el código de la matriz
     codigo <- svm.MC(kernel)
     updateAceEditor(session, "fieldCodeSvmMC", value = codigo)
-    cod.svm.mc <<- codigo
-    
+
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
-    cod.svm.ind <<- codigo
-    
+
   }
   
-  #Hace el gráfico de svm
+  #' Update SVM plot
   output$plot_svm <- renderPlot({
     tryCatch({
-      datos <- updateData$datos
-      codigo <- updatePlot$svm.graf
-      
-      if(!is.null(codigo) & codigo != ""){
-        exe(codigo)
+      idioma    <- updateData$idioma
+      train     <- updateData$datos.aprendizaje
+      datos     <- isolate(updateData$datos)
+      variable  <- isolate(updateData$variable.predecir)
+      variables <- input$select_var_svm_plot
+      var       <- paste0(isolate(updateData$variable.predecir), "~",paste(variables, collapse = "+") )
+      var2      <- paste(variables, collapse = "~") 
+      k         <- isolate(input$kernel.svm)
+      updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(variables, colnames(datos[, -which(colnames(datos) == variable)]), k))
+      if (length(variables) == 2){
+      modelo.svm.temp <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
+      slices <- lapply(1:(ncol(datos)-1),function(i) i)
+      names(slices) <- colnames(datos[, -which(colnames(datos) == variable)])
+      plot(modelo.svm.temp, datos, as.formula(var2), slice = slices)
       }else{
-        if(!(ncol(var.numericas(datos)) >= 2)){
-          error.variables(T)
-        }else{
-          return(NULL)
-        }
-      }},error = function(e){
+        return(NULL)
+
+      }
+      },error = function(e){
+        showNotification(e,
+                         duration = 10,
+                         type = "error")
         return(NULL)
       })
   })
-  
-  #Cuando se ejecuta el botón run
-  observeEvent(c(input$runSvm),{
-    variable.predecir <- updateData$variable.predecir
-    datos <- updateData$datos
-    
-    if (length(input$select_var_svm_plot) == 2){
-      variables <<- input$select_var_svm_plot
-      v <- colnames(datos)
-      v <- v[v != variable.predecir]
-      v <<- v[!(v %in% input$select_var_svm_plot)]
-      if(length(v) == 0){
-        v <<- input$select_var_svm_plot
-      }
-      isolate(kernel <- input$kernel.svm)
-      updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(input$select_var_svm_plot, v, kernel))
-    }else{
-      updatePlot$svm.graf <- NULL
-    }
-  })
-  
-  # Cuando cambia el código del gráfico de clasificación svm
-  observeEvent(c(input$fieldCodeSvmPlot),{
-    updatePlot$svm.graf <- input$fieldCodeSvmPlot
-  })
-  
-  # Limpia los datos según el proceso donde se genera el error
-  limpia.svm <- function(capa = NULL){
-    for(i in capa:4){
-      switch(i, {
-        exe("modelo.svm.",input$kernel.svm,"<<- NULL")
-        output$txtSvm <- renderPrint(invisible(""))
-      }, {
-        exe("prediccion.svm.",input$kernel.svm,"<<- NULL")
-        output$svmPrediTable <- DT::renderDataTable(NULL)
-      }, {
-        exe("MC.svm.",input$kernel.svm,"<<- NULL")
-        output$txtSvmMC    <- renderPrint(invisible(""))
-        output$plot_svm_mc <- renderPlot(NULL)
-      }, {
-        IndicesM[[paste0("svml-",input$kernel.svm)]] <<- NULL
-        exe("indices.svm.",input$kernel.svm,"<<- NULL")
-        output$svmIndPrecTable <- shiny::renderTable(NULL)
-        output$svmIndErrTable  <- shiny::renderTable(NULL)
-        output$svmPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$svmErrorGlob    <- flexdashboard::renderGauge(NULL)
-      })
-    }
-  }
-  
-  # Limpia los datos al momento de ejecutar run
-  limpia.svm.run <- function(){
-        output$txtSvm           <- renderPrint(invisible(""))
-        output$svmPrediTable    <- DT::renderDataTable(NULL)
-        output$txtSvmMC         <- renderPrint(invisible(""))
-        output$plot_svm_mc      <- renderPlot(NULL)
-        output$svmIndPrecTable  <- shiny::renderTable(NULL)
-        output$svmIndErrTable   <- shiny::renderTable(NULL)
-        output$svmPrecGlob      <- flexdashboard::renderGauge(NULL)
-        output$svmErrorGlob     <- flexdashboard::renderGauge(NULL)
-}
-  
-  # Limpia todos los datos
-  limpiar <- function(){
-        limpia.svm(1)
-        limpia.svm(2)
-        limpia.svm(3)
-        limpia.svm(4)
-  }
 }
     
 ## To be copied in the UI

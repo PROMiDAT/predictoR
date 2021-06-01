@@ -26,22 +26,33 @@ app_server <- function( input, output, session ) {
   onStop(function() stopApp())
   
   ##################################  Variables  ##############################
-  updateData <- rv(datos = NULL, 
-                   originales = NULL, 
-                   idioma = NULL,
-                   datos.prueba = NULL, 
+  updateData <- rv(datos                = NULL, 
+                   originales           = NULL, 
+                   idioma               = NULL,
+                   datos.prueba         = NULL, 
                    selector.comparativa = NULL,
-                   roc = FALSE,
-                   datos.aprendizaje = NULL,
-                   variable.predecir = NULL)
+                   roc                  = FALSE,
+                   datos.aprendizaje    = NULL,
+                   variable.predecir    = NULL)
   
-  newCases <- rv(datos = NULL, 
-                 originales = NULL, 
-                 datos.prueba = NULL, 
+  newCases <- rv(originales        = NULL, 
+                 datos.prueba      = NULL, 
                  datos.aprendizaje = NULL,
+                 m.seleccionado    = NULL,
+                 modelo            = NULL,
+                 prediccion        = NULL,
                  variable.predecir = NULL)
   
-  
+  modelos <- rv(svm      = list(),
+                knn      = list(),
+                bayes    = list(),
+                rl       = list(),
+                rlr      = list(),
+                xgb      = list(),
+                boosting = list(),
+                rf       = list(),
+                nn       = list(),
+                dt       = list())
   ###################################  Update  ################################
   #' Update on Language
   observeEvent(input$idioma, {
@@ -95,19 +106,19 @@ app_server <- function( input, output, session ) {
   callModule(mod_poder_pred_server,     "poder_pred_ui_1",     updateData)
   
   #Aprendizaje Supervisado
-  callModule(mod_knn_server,            "knn_ui_1",            updateData)
-  callModule(mod_svm_server,            "svm_ui_1",            updateData)
-  callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData)
-  callModule(mod_r_forest_server,       "r_forest_ui_1",       updateData)
-  callModule(mod_xgboosting_server,     "xgboosting_ui_1",     updateData)
-  callModule(mod_boosting_server,       "boosting_ui_1",       updateData)
-  callModule(mod_bayes_server,          "bayes_ui_1",          updateData)
-  callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData)
-  callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData)
-  callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData)
+  callModule(mod_knn_server,            "knn_ui_1",            updateData, modelos)
+  callModule(mod_svm_server,            "svm_ui_1",            updateData, modelos)
+  callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData, modelos)
+  callModule(mod_r_forest_server,       "r_forest_ui_1",       updateData, modelos)
+  callModule(mod_xgboosting_server,     "xgboosting_ui_1",     updateData, modelos)
+  callModule(mod_boosting_server,       "boosting_ui_1",       updateData, modelos)
+  callModule(mod_bayes_server,          "bayes_ui_1",          updateData, modelos)
+  callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData, modelos)
+  callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData, modelos)
+  callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData, modelos)
   
   #Comparacion de Modelos
-  callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData)
+  callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos)
   
   #Prediccion de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases)

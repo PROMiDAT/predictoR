@@ -36,7 +36,7 @@ mod_comparacion_ui <- function(id){
     
 #' comparacion Server Function
 
-mod_comparacion_server <- function(input, output, session, updateData){
+mod_comparacion_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   #' Update on load testing data
   observeEvent(updateData$datos.prueba, {

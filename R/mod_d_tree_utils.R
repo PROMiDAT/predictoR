@@ -1,10 +1,3 @@
-# -------------------  DT
-
-cod.dt.modelo <<-  NULL
-cod.dt.pred   <<-  NULL
-cod.dt.mc     <<-  NULL
-cod.dt.ind    <<-  NULL
-
 # Pagina de DT --------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo DT

@@ -1,11 +1,3 @@
-# -------------------  GX BOOSTING
-
-cod.xgb.modelo <<-  NULL
-cod.xgb.pred   <<-  NULL
-cod.xgb.mc     <<-  NULL
-cod.xgb.ind    <<-  NULL
-
-
 # Códigos de GX BOOSTING ---------------------------------------------------------------------------------------------------
 
 #Crea el modelo

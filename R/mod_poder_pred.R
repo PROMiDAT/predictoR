@@ -24,14 +24,14 @@ mod_poder_pred_ui <- function(id){
   conditionalPanel(
     "input.BoxPodPred == 'tabDistpredcat' || input.BoxPodPred == 'tabDenspred'",
     tabsOptions(heights = c(70, 30), tabs.content = list(
-      list(options.run(ns("run_podpred")), tags$hr(style = "margin-top: 0px;"),
+      list(options.base(), tags$hr(style = "margin-top: 0px;"),
            conditionalPanel(
              "input.BoxPodPred == 'tabDistpredcat'",
-             selectInput(inputId = ns("sel_pred_cat"), label = NULL, choices = "")
+             selectInput(label = labelInput("selvar"), inputId = ns("sel_pred_cat"), choices = "")
            ),
            conditionalPanel(
              "input.BoxPodPred == 'tabDenspred'",
-             selectInput(inputId = ns("sel_dens_pred"), label = NULL, choices = "")
+             selectInput(label = labelInput("selvar"), inputId = ns("sel_dens_pred"), choices = "")
            )),
       list(
         conditionalPanel(
@@ -121,7 +121,10 @@ mod_poder_pred_server <- function(input, output, session, updateData){
            
          }
        }else{
-         res <- error.variables(T,idioma)
+         showNotification(paste0(tr("errornum",idioma)),
+                          duration = 10,
+                          type = "message")
+         res <- NULL
        }
       return(res)
       
@@ -137,8 +140,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   
   # Hace el gráfico de densidad de variables númericas
   output$plot_density_poder <- renderEcharts4r({
-    input$run_podpred
-    variable.num  <- isolate(input$sel_dens_pred)
+    variable.num  <- input$sel_dens_pred
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
@@ -154,8 +156,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
         showNotification(paste0(tr("errornum",idioma)),
                          duration = 10,
                          type = "message")
-        res <- error.variables(T,idioma)
-        return(res)
+        return(NULL)
       }
     }, error = function(e) {
       showNotification(paste0("Error en Poder Predictivo: ", e),
@@ -167,8 +168,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   
   # Hace el gráfico de poder predictivo categórico
   output$plot_dist_poder <- renderEcharts4r({
-    input$run_podpred
-    variable.cat  <- isolate(input$sel_pred_cat)
+    variable.cat  <- input$sel_pred_cat
     idioma        <- updateData$idioma
     variable.pred <- updateData$variable.predecir
     datos         <- updateData$datos
@@ -184,8 +184,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
         showNotification(paste0(tr("errorcat",idioma)),
                          duration = 10,
                          type = "message")
-        res <- error.variables(F,idioma)
-        return(res)
+        return(NULL)
       }
     }, error = function(e) {
       showNotification(paste0("Error en Poder Predictivo: ", e),

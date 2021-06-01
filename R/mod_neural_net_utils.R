@@ -1,9 +1,4 @@
 # -------------------  NN
-
-cod.nn.modelo <<-  NULL
-cod.nn.pred   <<-  NULL
-cod.nn.mc     <<-  NULL
-cod.nn.ind    <<-  NULL
 NN_EXECUTION  <<-  TRUE
 
 # Códigos de NN ---------------------------------------------------------------------------------------------------------

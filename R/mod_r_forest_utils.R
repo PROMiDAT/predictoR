@@ -27,7 +27,7 @@ rf.MC <- function(){
 }
 
 #Código del gráfico de importancia de variables
-rf.plot <- function() {
+rf.importance.plot <- function() {
   return(paste0(
     "aux <- data.frame(modelo.rf$importance)\n",
     "aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)\n",
@@ -54,18 +54,42 @@ e_rf_error <- function(dataplot) {
     aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
   }
   plot <- paste0("dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))\n",
-         "dataplot %>% \n",       
-         "e_charts(x = x) %>% \n",
-         "e_line(serie = OOB) %>% \n",
-         aux,
-         "e_legend(orient = 'vertical',
+                 "dataplot %>% \n",       
+                 "e_charts(x = x) %>% \n",
+                 "e_line(serie = OOB) %>% \n",
+                 aux,
+                 "e_legend(orient = 'vertical',
              right = '20', top = '10%') %>% \n",
-         "e_axis_labels(
+                 "e_axis_labels(
             x = 'Trees',
             y = 'Error') %>%  \n",
-         "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
+                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
   )
   exe(plot)
+}
+
+#Gráfico de evolución del error
+e_rf_error <- function(dataplot) {
+  categorias   <- colnames(dataplot[,-c(1,2)])
+  aux <- ''
+  for (i in 1:length(categorias)) {
+    if(i == length(categorias)){
+      aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) \n ")
+    }else{
+      aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
+      
+    }
+  }
+  plot.err <<- dataplot %>%        
+                 e_charts(x = x) %>%
+                 e_line(serie = OOB) %>% 
+                 e_legend(orient = 'vertical',
+                    right = '20', top = '10%') %>% 
+                 e_axis_labels(
+                    x = 'Trees',
+                    y = 'Error') %>%  
+                 e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() 
+  exe(paste0("plot.err %>%  ", aux))
 }
 
 # Códigos de RF Ind.Nuevos--------------------------------------------------------------------------------------------------

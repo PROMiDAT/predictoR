@@ -1,15 +1,8 @@
-# -------------------  SVM
-
-cod.svm.modelo <<-  NULL
-cod.svm.pred   <<-  NULL
-cod.svm.mc     <<-  NULL
-cod.svm.ind    <<-  NULL
-
 # Códigos de SVM -------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo SVM
 svm.modelo <- function(variable.pr = NULL, scale = TRUE, kernel = "linear"){
-  return(paste0("modelo.svm.",kernel," <<- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kernel = '",kernel,"')"))
+  return(paste0("modelo.svm.",kernel," <- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kernel = '",kernel,"')"))
 }
 
 #Código de la predicción de svm

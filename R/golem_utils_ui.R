@@ -395,6 +395,13 @@ options.run <- function(runid) {
       icon("play"), tags$a(labelInput("ejecutar"), style = "color:white")))
 }
 
+options.base <- function(){
+  tags$div(
+    style = "display: inline-block; width: 100%", 
+    shiny::h4(labelInput("opciones"), 
+              style = "float: left;margin-bottom: 0px;margin-top: 0px;"))
+}
+
 tabBoxPrmdt <- function (..., id = NULL, title = NULL, opciones = NULL) {
   content <- shiny::tabsetPanel(..., id = id, selected = NULL)
   content$attribs$class <- "nav-tabs-custom"
