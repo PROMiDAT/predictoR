@@ -45,7 +45,7 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
 }
 
 #Hace la gráfica de distribuciones según la variable predictiva
-e_categorico_dist <- function(datos,variable, var.predecir, colores = NA, label.size = 9.5, label = "${X} ${Y}"){
+e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"){
   label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
   
   dataplot <-  dist.x.predecir(datos, variable, var.predecir)

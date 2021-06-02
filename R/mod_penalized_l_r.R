@@ -113,8 +113,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     default.codigo.rlr()
   })
   
+  # Genera el texto del modelo, predicción y mc de RLR
   output$txtRlr <- renderPrint({
     input$runRlr
+    tryCatch({
     default.codigo.rlr()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
@@ -122,46 +124,55 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     scales <- isolate(input$switch.scale.rlr)
     tipo   <- rlr.type()
     alpha  <- isolate(input$alpha.rlr)
-    nombre <- paste0("modelo.rlr.",tipo)
+    nombre <- paste0("rlr-",tipo)
     modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
     
     print(modelo)
+  },error = function(e){
+    return(invisible(""))
+  })
   })
   
+  #Tabla de la predicción
   output$rlrPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$rlr[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$rlr[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtrlrMC    <- renderPrint({
-    print(modelos$rlr[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_rlr_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$rlr[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
   })
   
+  #Tabla de Indices por Categoría 
   output$rlrIndPrecTable <- shiny::renderTable({
     idioma      <- updateData$idioma
-    indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
+    indices.rlr <- indices.generales(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rlr,"rlr", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$rlrIndErrTable  <- shiny::renderTable({
     idioma      <- updateData$idioma
-    indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
+    indices.rlr <- indices.generales(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$rlrPrecGlob  <-  fill.gauges(indices.rlr[[1]], tr("precG",idioma))
     output$rlrErrorGlob <-  fill.gauges(indices.rlr[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.rlr,"rlr"))
@@ -190,7 +201,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   # Actualiza el código a la versión por defecto
   default.codigo.rlr <- function(){
-    landa <- get_landa_rlr()
     tipo  <- rlr.type()
 
 
@@ -240,26 +250,23 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   output$plot_rlr_landa <- renderEcharts4r({
     tryCatch({  
       lambda <- get_landa_rlr()
-      lambda <- ifelse(is.null(lambda),cv$cv.glm$lambda.min, lambda)
       tipo   <- rlr.type()
+      cv.glm <- cv$cv.glm
       coeff  <- input$coeff.sel
-      modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
-      e_coeff_landa(modelo, coeff, lambda)
+      modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,", cv.glm.",tipo,")"))
+      e_coeff_landa(modelo, coeff, log(lambda), cv.glm)
     },
     error = function(e){ 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")
     })
+  })
 
-    })
-
-  
   #Obtiene el algortimo a utilizar
   rlr.type <- function(){
     ifelse(isolate(input$alpha.rlr) == 0, "ridge", "lasso")
   }
   
- 
   # Limpia los datos al ejecutar el botón run
   limpia.rlr <- function() {
     output$txtDt          <- renderPrint(invisible(""))

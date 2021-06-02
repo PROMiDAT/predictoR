@@ -100,51 +100,62 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
     updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
   })
   
+  # Genera el texto del modelo, predicción y mc de RF
   output$txtRf <- renderPrint({
     input$runRf
+    tryCatch({
     default.codigo.rf()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
     mtry   <- isolate(input$mtry.rf)
     ntree  <- isolate(input$ntree.rf)
-    nombre <- paste0("modelo.rf")
+    nombre <- paste0("rfl")
     
     modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE)
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
+    },error = function(e){
+      return(invisible(""))
+    })
   })
   
+  #Tabla de la predicción
   output$rfPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$rf[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$rf[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtRfMC    <- renderPrint({
-    print(modelos$rf[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$rf[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_rf_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$rf[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$rf[[nombre.modelo$x]]$mc)
   })
   
+  #Tabla de Indices por Categoría 
   output$rfIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
+    indices.rf <- indices.generales(modelos$mdls$rf[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rf,"rf", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$rfIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
+    indices.rf <- indices.generales(modelos$mdls$rf[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$rfPrecGlob  <-  fill.gauges(indices.rf[[1]], tr("precG",idioma))
     output$rfErrorGlob <-  fill.gauges(indices.rf[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.rf,"rf"))
@@ -156,7 +167,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   output$rulesRf <- renderPrint({
     idioma <- updateData$idioma
     n      <- input$rules.rf.n
-    modelo <- modelos$rf[[nombre.modelo$x]]$modelo
+    modelo <- modelos$mdls$rf[[nombre.modelo$x]]$modelo
     modelo$call$data <- updateData$datos.aprendizaje
     tryCatch({
       updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
@@ -173,7 +184,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   output$plot_rf_importance <- renderEcharts4r({
     tryCatch({
       updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
-      aux <- data.frame(modelos$rf[[nombre.modelo$x]]$modelo$importance)
+      aux <- data.frame(modelos$mdls$rf[[nombre.modelo$x]]$modelo$importance)
       aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)
       aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
       aux$label <- row.names(aux)
@@ -191,7 +202,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   # Gráfico de evolución del error
   output$plot_error_rf <- renderEcharts4r({
     tryCatch({
-      modelo    <- modelos$rf[[nombre.modelo$x]]$modelo
+      modelo    <- modelos$mdls$rf[[nombre.modelo$x]]$modelo
       dataplot  <- data.frame(x = c(1:length(modelo$err.rate[,1])),cbind(modelo$err.rate))
       updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
       e_rf_error(dataplot)

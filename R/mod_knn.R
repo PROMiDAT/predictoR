@@ -79,14 +79,17 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
+  
+  #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    #limpiar()
     updateTabsetPanel(session, "BoxKnn",selected = "tabKknModelo")
     default.codigo.knn(k.def = TRUE)
   })
   
+  # Genera el texto del modelo, predicción y mc de knn
   output$txtknn <- renderPrint({
     input$runKnn
+    tryCatch({
     default.codigo.knn()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
@@ -94,45 +97,53 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     scales <- isolate(input$switch.scale.knn)
     kernel <- isolate(input$kernel.knn)
     k.value<- isolate(input$kmax.knn)
-    nombre <- paste0("modelo.knn.",kernel)
+    nombre <- paste0("knnl-",kernel)
     modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ) 
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
+    },error = function(e){
+      return(invisible(""))
+    })
   })
   
-  
+  #Tabla de la predicción
   output$knnPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$knn[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$knn[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
   
+  #Texto de la Matríz de Confusión
   output$txtknnMC    <- renderPrint({
-    print(modelos$knn[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$knn[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_knn_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$knn[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$knn[[nombre.modelo$x]]$mc)
   })
   
   
+  #Tabla de Indices por Categoría 
   output$knnIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.knn <- indices.generales(modelos$knn[[nombre.modelo$x]]$mc)
+    indices.knn <- indices.generales(modelos$mdls$knn[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.knn,"KNN", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$knnIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.knn <- indices.generales(modelos$knn[[nombre.modelo$x]]$mc)
+    indices.knn <- indices.generales(modelos$mdls$knn[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$knnPrecGlob  <-  fill.gauges(indices.knn[[1]], tr("precG",idioma))
     output$knnErrorGlob <-  fill.gauges(indices.knn[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.knn,"KNN"))

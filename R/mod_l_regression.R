@@ -59,67 +59,70 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     updateTabsetPanel(session, "BoxRl",selected = "tabRlModelo")
     default.codigo.rl()
   })
-# 
-#   #Cuando se ejecuta el botón run
-#   observeEvent(input$runRl, {
-#     idioma <- updateData$idioma
-#     if (length(levels(datos[, variable.predecir])) == 2) {
-#       if (validar.datos(variable.predecir = updateData$variable.predecir,datos.aprendizaje = updateData$datos.aprendizaje)) { # Si se tiene los datos entonces :
-#         # limpia.rl.run()
-#         # rl.full()
-#       }
-#     }else{
-#       if (isFALSE(getOption("shiny.testmode")) || is.null(getOption("shiny.testmode"))) {
-#         showModal(modalDialog(
-#           title = "Regresión Logística", tr("limitModel", idioma),
-#           footer = modalButton("Cerrar"), easyClose = T
-#         ))
-#       }
-#     }
-#   }, priority =  -5)
 
+  # Genera el texto del modelo, predicción y mc de rl
   output$txtrl <- renderPrint({
     input$runRl
+    
+    if (length(levels(updateData$datos[, updateData$variable.predecir])) != 2) {
+      if (isFALSE(getOption("shiny.testmode")) || is.null(getOption("shiny.testmode"))) {
+        showModal(modalDialog(
+          title = "Regresión Logística", tr("limitModel"),
+          footer = modalButton("Cerrar"), easyClose = T
+        ))
+        return(invisible(""))
+      }
+    }
+    tryCatch({
     default.codigo.rl()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
-    nombre <- paste0("modelo.rl")
+    nombre <- paste0("rl")
     modelo <- traineR::train.glmnet(as.formula(var), data = train)
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
+    }, error = function(e) {
+      return(invisible(""))
+    })
   })
   
+  #Tabla de la predicción
   output$rlPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$rl[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$rl[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtrlMC    <- renderPrint({
-    print(modelos$rl[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$rl[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_rl_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$rl[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$rl[[nombre.modelo$x]]$mc)
   })
   
+  #Tabla de Indices por Categoría 
   output$rlIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
+    indices.rl <- indices.generales(modelos$mdls$rl[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rl,"rl", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$rlIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
+    indices.rl <- indices.generales(modelos$mdls$rl[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$rlPrecGlob  <-  fill.gauges(indices.rl[[1]], tr("precG",idioma))
     output$rlErrorGlob <-  fill.gauges(indices.rl[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.rl,"rl"))

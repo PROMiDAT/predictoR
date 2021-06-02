@@ -94,7 +94,7 @@ mod_carga_datos_ui <- function(id){
 #'
 #' @keywords internal
 
-mod_carga_datos_server <- function(input, output, session,  updateData){
+mod_carga_datos_server <- function(input, output, session,  updateData, modelos){
   ns <- session$ns
   
   selectInputTrans <- function(datos, var, idioma = "es") {
@@ -142,6 +142,16 @@ mod_carga_datos_server <- function(input, output, session,  updateData){
   
   #' Load Button Function
   observeEvent(input$loadButton, {
+    modelos$mdls <-   list(svm      = NULL,
+                           knn      = NULL,
+                           bayes    = NULL,
+                           rl       = NULL,
+                           rlr      = NULL,
+                           xgb      = NULL,
+                           boosting = NULL,
+                           rf       = NULL,
+                           nn       = NULL,
+                           dt       = NULL)
     rowname    <- isolate(input$rowname)
     ruta       <- isolate(input$archivo)
     sep        <- isolate(input$sep)
@@ -183,6 +193,16 @@ mod_carga_datos_server <- function(input, output, session,  updateData){
   
   #' Transform Button Function
   observeEvent(input$transButton, {
+    modelos$mdls <-   list(svm      = NULL,
+                           knn      = NULL,
+                           bayes    = NULL,
+                           rl       = NULL,
+                           rlr      = NULL,
+                           xgb      = NULL,
+                           boosting = NULL,
+                           rf       = NULL,
+                           nn       = NULL,
+                           dt       = NULL)
     datos <- updateData$originales
     cod = ""
     borrar.modelos(updateData)
@@ -220,6 +240,16 @@ mod_carga_datos_server <- function(input, output, session,  updateData){
   
   #' Segment Button Function
   observeEvent(input$segmentButton, {
+    modelos$mdls <-   list(svm      = NULL,
+                           knn      = NULL,
+                           bayes    = NULL,
+                           rl       = NULL,
+                           rlr      = NULL,
+                           xgb      = NULL,
+                           boosting = NULL,
+                           rf       = NULL,
+                           nn       = NULL,
+                           dt       = NULL)
     porcentaje       <- isolate(input$segmentacionDatosA)
     variable         <- isolate(input$sel.predic.var)
     semilla          <- isolate(input$semilla)

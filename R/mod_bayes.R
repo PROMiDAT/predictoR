@@ -59,49 +59,60 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
     updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
     default.codigo.bayes()
   })
-
+  
+  # Genera el texto del modelo, predicción y mc de bayes
   output$txtbayes <- renderPrint({
     input$runBayes
+    tryCatch({
     default.codigo.bayes()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
-    nombre <- paste0("modelo.bayes")
+    nombre <- paste0("Bayes")
     modelo <- traineR::train.bayes(as.formula(var), data = train)
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
-    print(modelo)
+    print(modelo)    
+    },error = function(e){
+      return(invisible(""))
+    })
   })
   
+  #Tabla de la predicción
   output$bayesPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$bayes[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$bayes[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtbayesMC    <- renderPrint({
-    print(modelos$bayes[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_bayes_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$bayes[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
   })
   
+  #Tabla de Indices por Categoría 
   output$bayesIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
+    indices.bayes <- indices.generales(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.bayes,"bayes", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$bayesIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
+    indices.bayes <- indices.generales(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$bayesPrecGlob  <-  fill.gauges(indices.bayes[[1]], tr("precG",idioma))
     output$bayesErrorGlob <-  fill.gauges(indices.bayes[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.bayes,"bayes"))

@@ -84,8 +84,10 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   })
 
   
+  # Genera el texto del modelo, predicción y mc de DT
   output$txtDt <- renderPrint({
     input$runDt
+    tryCatch({
     default.codigo.dt()
     train  <- updateData$datos.aprendizaje
     test   <- updateData$datos.prueba
@@ -93,43 +95,52 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     tipo   <- isolate(input$split.dt)
     minsplit<-isolate(input$minsplit.dt)
     maxdepth<-isolate(input$maxdepth.dt)
-    nombre <- paste0("modelo.dt.",tipo)
+    nombre <- paste0("dtl-",tipo)
     modelo <- traineR::train.rpart(as.formula(var), data = train,
                                    control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
+  },error = function(e){
+    return(invisible(""))
+    })
   })
   
+  #Tabla de la predicción
   output$dtPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$dt[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$dt[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtDtMC    <- renderPrint({
-    print(modelos$dt[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$dt[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_dt_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$dt[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$dt[[nombre.modelo$x]]$mc)
   })
   
+  #Tabla de Indices por Categoría 
   output$dtIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
+    indices.dt <- indices.generales(modelos$mdls$dt[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.dt,"dt", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$dtIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
+    indices.dt <- indices.generales(modelos$mdls$dt[[nombre.modelo$x]]$mc)
+    #Gráfico de Error y Precisión Global
     output$dtPrecGlob  <-  fill.gauges(indices.dt[[1]], tr("precG",idioma))
     output$dtErrorGlob <-  fill.gauges(indices.dt[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.dt,"dt"))
@@ -143,7 +154,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
       datos  <- updateData$datos
       var    <- updateData$variable.predecir
       num    <- length(levels(datos[,var]))
-      modelo <- modelos$dt[[nombre.modelo$x]]$modelo
+      modelo <- modelos$mdls$dt[[nombre.modelo$x]]$modelo
       updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
       prp(modelo, type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
           fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
@@ -159,7 +170,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   output$rulesDt <- renderPrint({
     tipo           <- isolate(input$split.dt)
     updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",tipo,")"))
-    rattle::asRules(modelos$dt[[nombre.modelo$x]]$modelo)
+    rattle::asRules(modelos$mdls$dt[[nombre.modelo$x]]$modelo)
   })
   
   # Actualiza el código a la versión por defecto

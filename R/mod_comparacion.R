@@ -9,15 +9,10 @@
 #' @importFrom shiny NS tagList 
 mod_comparacion_ui <- function(id){
   ns <- NS(id)
-  selector.modelos <- checkboxGroupButtons(ns("select.models"), labelInput("selectMod"), c(" ---- " = "NoDisponible"),
-                                           size = "sm", status = "primary",
-                                           checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                            no = icon("remove", lib = "glyphicon")))
   
   opciones.comparacion <- list(options.run(ns("runComp")), tags$hr(style = "margin-top: 0px;"),
                                fluidRow(col_12(selectInput(inputId = ns("roc.sel"),label = labelInput("selectCat"),
-                                                           choices =  "", width = "100%"))),
-                               fluidRow(col_12(selector.modelos)))
+                                                           choices =  "", width = "100%"))))
   
   
   opcs_comparacion  <- tabsOptions(botones = list(icon("gear")), widths = c(100), heights = c(88),
@@ -43,58 +38,117 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     variable     <- updateData$variable.predecir
     datos        <- updateData$datos
     updateData$selector.comparativa <- actualizar.selector.comparativa()
-    choices      <- as.character(unique(datos[, variable]))
+    choices      <<- as.character(unique(datos[, variable]))
     
     updateSelectInput(session, "roc.sel", choices = choices, selected = choices[1])
-    shinyWidgets::updateCheckboxGroupButtons(session, inputId = "select.models",
-                                 choices = c(" ---- " = "NoDisponible"),
-                                 size = "sm", status = "primary",
-                                 checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                  no = icon("remove", lib = "glyphicon")))
-    
   })
 
-  #Cuando se crea un nuevo modelo
-  observeEvent(updateData$selector.comparativa, {
-      nombres <- updateData$selector.comparativa
-      shinyWidgets::updateCheckboxGroupButtons(session,"select.models",choices = sort(nombres),selected = sort(nombres),
-                                               status = "primary",checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                                                   no = icon("remove", lib = "glyphicon")))
-  })
-
-  #Actualiza la curva ROC
-  observeEvent(updateData$roc, {
-      ejecutar.roc()
-  })
-
-  #Actualiza la curva ROC
-  observeEvent(input$runComp, {
-      ejecutar.roc()
-  })
-
-  #Genera las áreas y gráfico de la curva ROC
-  ejecutar.roc <- function(){
-    output$TablaComp <- DT::renderDataTable({
-      if (!is.null(updateData$datos.aprendizaje)) {
-        calcular.areas(input$roc.sel)
-        DT::datatable(tabla.comparativa(input$select.models, updateData$selector.comparativa, updateData$idioma),
-                      selection = "none", editable = FALSE,
-                      options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+  output$TablaComp <- DT::renderDataTable({
+    res <- data.frame()
+    m   <<- modelos$mdls
+    idioma <- updateData$idiaoma
+    isolate(test <- updateData$datos.prueba)
+    isolate(var  <- updateData$variable.predecir)
+    for (modelo in modelos$mdls) {
+      if(!is.null(modelo)){
+          for (alg in modelo) {
+            ind <- general.indexes(mc = alg$mc)
+            new <- data.frame(
+              OAccuracy = ind$overall.accuracy,
+              EAccuracy = ind$overall.error
+            )
+            
+            for (cat in names(ind$category.accuracy)) {
+              new[[cat]] <- ind$category.accuracy[[cat]]
+            }
+            if(length(ind$category.accuracy) ==2){
+              pred     <<- predict(alg$modelo, test, type = "prob")
+              if(!startsWith(alg$nombre, "rl")){
+                new$roc <- areaROC( pred$prediction[,2],test[,var])
+              }else{
+                new$roc <- areaROC( pred$prediction[,2,],test[,var])
+              }
+            }else{
+              new$roc <- NA
+            }
+            row.names(new) <- alg$nombre
+            res <- rbind(res, new)
+          } 
       }
-    },server = FALSE)
+      #colnames(res[c(1:2,length(res))]) <- c(tr('precG', idioma),tr("errG", idioma), tr('aROC', idioma))
+      
+    }
     
-    #Hace el grafico de la curva roc
+    DT::datatable(res, selection = "none", editable = FALSE,
+                                   options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+  },server = FALSE)
+  
+  #   #Hace el grafico de la curva roc
     output$plot_roc <- renderEcharts4r({
       idioma <- updateData$idioma
-      if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
-        calcular.areas(input$roc.sel)
-        e_plot_ROC(input$select.models)
+      isolate(test <- updateData$datos.prueba)
+      isolate(var <- updateData$variable.predecir)
+      if(!is.null(test) & length(levels(test[,var])) == 2) {
+        clase      <- test[,var]
+        y = c(0, 1)
+        x = c(1, 0)
+        res <<- data.frame(x, y, nombre = "roc")
+        for (modelo in modelos$mdls) {
+          if(!is.null(modelo)){
+            for (alg in modelo) {
+             pre      <- predict(alg$modelo, test, type = "prob")
+             roc.data <- pROC::roc(test[,var], pre$prediction[,2])
+             y  <- roc.data$sensitivities
+             x  <- roc.data$specificities
+             res <<- rbind(res,data.frame(x= x, y = y, nombre = alg$nombre))
+            } 
+          }
+        }
+        
+        res$nombre <- as.factor(res$nombre)
+        colores  <- gg_color_hue(length(unique(res$nombre)))
+        plotroc  <- res %>%
+          group_by(nombre) %>%
+          e_charts(x) %>%
+          e_line(y) %>%
+          e_legend(type = "scroll", bottom = 1) %>% 
+          e_color(c(colores))    %>% 
+          e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+        plotroc$x$opts$color[[which(plotroc$x$opts$legend$data == "roc")]] <- "#5F5C5C"
+        plotroc$x$opts$legend$data[[which(plotroc$x$opts$legend$data == "roc")]] <- NULL
+        plotroc$x$opts$xAxis[[1]]$inverse <- TRUE
+        plotroc
+        # calcular.areas(input$roc.sel)
+        # e_plot_ROC(input$select.models)
       } else {
         showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
         return(NULL)
       }
     })
-  }
+  
+  # #Genera las áreas y gráfico de la curva ROC
+  # ejecutar.roc <- function(){
+  #   output$TablaComp <- DT::renderDataTable({
+  #     if (!is.null(updateData$datos.aprendizaje)) {
+  #       calcular.areas(input$roc.sel)
+  #       DT::datatable(tabla.comparativa(input$select.models, updateData$selector.comparativa, updateData$idioma),
+  #                     selection = "none", editable = FALSE,
+  #                     options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+  #     }
+  #   },server = FALSE)
+  #   
+  #   #Hace el grafico de la curva roc
+  #   output$plot_roc <- renderEcharts4r({
+  #     idioma <- updateData$idioma
+  #     if(!is.null(datos.prueba) & length(levels(datos[,variable.predecir])) == 2) {
+  #       calcular.areas(input$roc.sel)
+  #       e_plot_ROC(input$select.models)
+  #     } else {
+  #       showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
+  #       return(NULL)
+  #     }
+  #   })
+  # }
 
 }
     

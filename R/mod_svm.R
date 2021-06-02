@@ -88,7 +88,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   
   nombre.modelo <- rv(x = NULL)
   
-  #When load tarining-testing
+  #' When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
@@ -96,7 +96,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     default.codigo.svm()
   })
 
-  #Genera el modelo, prediccón y matriz de confusión
+  #' Update model text
   output$txtSvm <- renderPrint({
     input$runSvm
     default.codigo.svm()
@@ -106,11 +106,11 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     var    <- paste0(updateData$variable.predecir, "~.")
     scales <- isolate(input$switch.scale.svm)
     k      <- isolate(input$kernel.svm)
-    nombre <- paste0("modelo.svm.",k)
+    nombre <- paste0("svml-",k)
     modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){
@@ -123,26 +123,26 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     modelosc <<- as.list(modelos)
       
-    obj.predic(modelos$svm[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$svm[[nombre.modelo$x]]$pred,idioma = idioma)
     
     },server = FALSE)
   
   #' Update confusion matrix text
   output$txtSvmMC    <- renderPrint({
-    print(modelos$svm[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$svm[[nombre.modelo$x]]$mc)
   })
   
   #' Update confusion matrix plot
   output$plot_svm_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$svm[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$svm[[nombre.modelo$x]]$mc)
   })
   
   #' Update indexes table
   output$svmIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
+    indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma))
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -151,7 +151,8 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   #' Update error table
   output$svmIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
+    indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
+    #' Overall accuracy and overall error plot
     output$svmPrecGlob  <-  fill.gauges(indices.svm[[1]], tr("precG",idioma))
     output$svmErrorGlob <-  fill.gauges(indices.svm[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.svm,"SVM"))

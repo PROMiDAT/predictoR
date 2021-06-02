@@ -43,16 +43,16 @@ app_server <- function( input, output, session ) {
                  prediccion        = NULL,
                  variable.predecir = NULL)
   
-  modelos <- rv(svm      = list(),
-                knn      = list(),
-                bayes    = list(),
-                rl       = list(),
-                rlr      = list(),
-                xgb      = list(),
-                boosting = list(),
-                rf       = list(),
-                nn       = list(),
-                dt       = list())
+  modelos <- rv(mdls = list(svm      = NULL,
+                            knn      = NULL,
+                            bayes    = NULL,
+                            rl       = NULL,
+                            rlr      = NULL,
+                            xgb      = NULL,
+                            boosting = NULL,
+                            rf       = NULL,
+                            nn       = NULL,
+                            dt       = NULL))
   ###################################  Update  ################################
   #' Update on Language
   observeEvent(input$idioma, {
@@ -95,7 +95,7 @@ app_server <- function( input, output, session ) {
   
   ###################################  Modules  ###############################
   #Carga de Datos
-  callModule(mod_carga_datos_server,    "carga_datos_ui_1",    updateData)
+  callModule(mod_carga_datos_server,    "carga_datos_ui_1",    updateData, modelos)
   
   #Estadisticas Basicas
   callModule(mod_r_numerico_server,     "r_numerico_ui_1",     updateData)

@@ -14,9 +14,6 @@ IndicesM <<- list()
 areas    <<- list()
 scores   <<- list()
 
-
-updatePlot <- reactiveValues(roc = FALSE, svm.graf = NULL)
-
 # Validacion comun para todos los modelos
 validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {
   # Validaciones

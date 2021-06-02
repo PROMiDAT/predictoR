@@ -99,49 +99,54 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     default.codigo.boosting()
   })
   
-  # Genera el modelo, predicción y mc de boosting
+  # Genera el texto del modelo, predicción y mc de boosting
   output$txtBoosting <- renderPrint({
     input$runBoosting
+
+    tryCatch({
     default.codigo.boosting()
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
-    var    <- paste0(updateData$variable.predecir, "~.")
-    iter   <- isolate(input$iter.boosting)
+    train   <- updateData$datos.aprendizaje
+    test    <- updateData$datos.prueba
+    var     <- paste0(updateData$variable.predecir, "~.")
+    iter    <- isolate(input$iter.boosting)
     maxdepth<-isolate(input$maxdepth.boosting)
     minsplit<-isolate(input$minsplit.boosting)
-    nombre <- paste0("modelo.boosting")
-    modelo <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
+    nombre  <- paste0("bl")
+    modelo  <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
                                     control = rpart.control(minsplit =minsplit, maxdepth = maxdepth))
     pred   <- predict(modelo , test, type = 'class')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
+    }, error = function(e) {
+      return(invisible(""))
+    })
   })
 
   #Tabla de la predicción
   output$boostingPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$boosting[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$boosting[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
   #Texto de la Matríz de Confusión
   output$txtBoostingMC    <- renderPrint({
-    print(modelos$boosting[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_boosting_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$boosting[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$boostingIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
+    indices.boosting <- indices.generales(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.boosting,"boosting", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -150,7 +155,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   #Tabla de Errores por Categoría
   output$boostingIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
+    indices.boosting <- indices.generales(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$boostingPrecGlob  <-  fill.gauges(indices.boosting[[1]], tr("precG",idioma))
     output$boostingErrorGlob <-  fill.gauges(indices.boosting[[2]], tr("errG",idioma))
@@ -164,7 +169,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     n <- input$rules.b.n
     tryCatch({
       updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
-      rules(modelos$boosting[[nombre.modelo$x]]$modelo$trees[[n]])
+      rules(modelos$mdls$boosting[[nombre.modelo$x]]$modelo$trees[[n]])
     },error = function(e) {
       stop(tr("NoDRule", updateData$idioma))
     }
@@ -204,7 +209,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   output$plot_boosting_import <- renderEcharts4r({
     cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
     tryCatch({
-      aux <- data.frame(importancia = modelos$boosting[[nombre.modelo$x]]$modelo$importance) 
+      aux <- data.frame(importancia = modelos$mdls$boosting[[nombre.modelo$x]]$modelo$importance) 
       aux$nombre <- row.names(aux) 
       aux$importancia <- abs(aux$importancia) 
       aux <- aux[order(aux$importancia, decreasing = T), ]
@@ -220,7 +225,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   # Gráfico de evolución del error boosting
   output$plot_boosting_error <- renderEcharts4r({
     train  <- updateData$datos.aprendizaje
-    modelo <- modelos$boosting[[nombre.modelo$x]]$modelo
+    modelo <- modelos$mdls$boosting[[nombre.modelo$x]]$modelo
     cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
     tryCatch({
       error(modelo, train) -> evol.train

@@ -1,9 +1,9 @@
 #Divide un string con "-"
-split_name <-function(name){
+split_name <-function(name, idioma){
   nom.aux <- unlist(strsplit(name, "-"))
   ifelse(length(nom.aux) == 1,
-         tr(nom.aux),
-         paste0(tr(nom.aux[1]),"-",nom.aux[2]))
+         tr(nom.aux, idioma),
+         paste0(tr(nom.aux[1], idioma),"-",nom.aux[2]))
 }
 
 #Obtiene los nombres de los indices generales de los modeloes 
@@ -108,7 +108,7 @@ e_plot_ROC <- function(sel) {
   }
 
   df$nombre <- as.factor(df$nombre)
-  colores <- gg_color_hue(length(unique(df$nombre)))
+  colores  <- gg_color_hue(length(unique(df$nombre)))
   plotroc  <- df %>%
     group_by(nombre) %>%
     e_charts(x) %>%

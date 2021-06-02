@@ -111,13 +111,14 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
     }
   })
   
+  # Genera el texto del modelo, predicción y mc de redes
   output$txtnn <- renderPrint({
     input$runNn
     default.codigo.nn()
     train      <- updateData$datos.aprendizaje
     test       <- updateData$datos.prueba
     form       <- paste0(updateData$variable.predecir, "~.")
-    nombre     <- paste0("modelo.nn")
+    nombre     <- paste0("nn")
     idioma     <- updateData$idioma
     threshold  <- isolate(input$threshold.nn)
     stepmax    <- isolate(input$stepmax.nn)
@@ -139,7 +140,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
       
       pred   <- predict(modelo , test, type = 'class')
       mc     <- confusion.matrix(test, pred)
-      isolate(modelos$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+      isolate(modelos$mdls$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
       
@@ -156,21 +157,24 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
 
   })
   
+  #Tabla de la predicción
   output$nnPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    obj.predic(modelos$nn[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$nn[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
+  #Texto de la Matríz de Confusión
   output$txtnnMC    <- renderPrint({
-    print(modelos$nn[[nombre.modelo$x]]$mc)
+    print(modelos$mdls$nn[[nombre.modelo$x]]$mc)
   })
   
+  #Gráfico de la Matríz de Confusión
   output$plot_nn_mc <- renderPlot({
     idioma <- updateData$idioma
     tryCatch({  
       exe(plot.MC.code(idioma = idioma))
-      plot.MC(modelos$nn[[nombre.modelo$x]]$mc)
+      plot.MC(modelos$mdls$nn[[nombre.modelo$x]]$mc)
     },
     error = function(e) { 
       showNotification(paste0("Error (NN) : ", e), duration = 15, type = "error")
@@ -179,17 +183,20 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
 
   })
   
+  #Tabla de Indices por Categoría 
   output$nnIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
+    indices.nn <- indices.generales(modelos$mdls$nn[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.nn,"nn", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
+  #Tabla de Errores por Categoría
   output$nnIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
+    indices.nn <- indices.generales(modelos$mdls$nn[[nombre.modelo$x]]$mc)
+    #' Overall accuracy and overall error plot
     output$nnPrecGlob  <-  fill.gauges(indices.nn[[1]], tr("precG",idioma))
     output$nnErrorGlob <-  fill.gauges(indices.nn[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.nn,"nn"))
@@ -238,7 +245,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
                  input$nn.cap.9, input$nn.cap.10)
       cant  <- isolate(input$cant.capas.nn)
       capas <- capas[1:cant]
-      modelo <- modelos$nn[[nombre.modelo$x]]$modelo
+      modelo <- modelos$mdls$nn[[nombre.modelo$x]]$modelo
       if(cant * sum(capas) <= 1500 & ncol(modelo$covariate) <= 20){
 
         cod <- ifelse(input$fieldCodeNnPlot == "", nn.plot(), input$fieldCodeNnPlot)
