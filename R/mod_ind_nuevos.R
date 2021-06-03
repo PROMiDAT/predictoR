@@ -676,13 +676,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         tr("categorico", isolate(updateData$idioma))
     )
       tryCatch({
-        if(sel != "rlr" && sel != "xgb"){
-          pred                <- predict(model, test, type = 'class')
-        }else{
-          test.aux        <- test
-          test.aux[[vari]]<- as.factor(levels(train[[vari]]))
-          pred            <- predict(model, test.aux, type = 'class')
-        }
+        pred                <- predict(model, test, type = 'class')
         datos               <- test
         datos[,vari]        <- pred$prediction
         newCases$prediccion <- pred

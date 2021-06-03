@@ -93,7 +93,8 @@ cambiar.labels <- function() {
       'dtl', 'garbol', 'reglas', 'minsplit', 'maxdepth', 'splitIndex', 'numTree', 'numVars', 'ruleNumTree', 'evolerror',
       'varImp', 'rfl', 'NoDRule', 'xgb', 'selbooster', 'selnrounds', 'bl', 'selectAlg', 'nn', 'redPlot', 'threshold',
       'selectCapas', 'stepmax', 'nnWar', 'bigPlot', 'rl', 'rlr', 'landa', 'automatico', 'posibLanda', 'gcoeff', 'limitModel', 'aROC', 'RocNo',
-      'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras')
+      'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras',
+      'resultados')
   
   return(x)
 }

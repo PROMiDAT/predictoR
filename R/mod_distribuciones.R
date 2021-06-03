@@ -19,33 +19,34 @@ mod_distribuciones_ui <- function(id){
       selectInput(inputId = ns("sel_dya_cat"), label = NULL, choices = ""))
   )
   
-  opc_dist <- tabsOptions(
-    botones = list(icon("gear"), icon("info"), icon("code")),
-    widths = c(50, 100, 100), heights = c(50, 50, 35),
-    tabs.content = list(
-      list(
-        options.run(ns("run_dist")), tags$hr(style = "margin-top: 0px;"),
-        conditionalPanel(
-          condition = "input.tabDyA == 'numericas'",
-          colourpicker::colourInput(
-            ns("col_dist_bar"), labelInput("selcolbar"), value = "steelblue", 
-            allowTransparent = T),
-          colourpicker::colourInput(
-            ns("col_dist_point"), labelInput("selcolline"), value = "red",
-            allowTransparent = T)
-        )
-      ),
-      list(DT::dataTableOutput(ns("mostrar.atipicos"))),
-      list(
-        conditionalPanel(
-          condition = "input.tabDyA == 'numericas'",
-          codigo.monokai(ns("fieldCodeNum"), height = "10vh")),
-        conditionalPanel(
-          condition = "input.tabDyA == 'categoricas'",
+  opc_dist <- fluidRow(
+    conditionalPanel(
+      "input.tabDyA == 'categoricas'",
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+        list(
           codigo.monokai(ns("fieldCodeCat"), height = "20vh"))
-      )
-    )
-  )
+      ))),
+    conditionalPanel(
+      "input.tabDyA == 'numericas'",
+      tabsOptions(botones = list(icon("gear"), icon("info"), icon("code")),
+                  widths = c(50, 100, 100), heights = c(50, 50, 35), 
+      tabs.content = list(
+        list(
+          options.base(), tags$hr(style = "margin-top: 0px;"),
+          conditionalPanel(
+            condition = "input.tabDyA == 'numericas'",
+            colourpicker::colourInput(
+              ns("col_dist_bar"), labelInput("selcolbar"), value = "steelblue", 
+              allowTransparent = T),
+            colourpicker::colourInput(
+              ns("col_dist_point"), labelInput("selcolline"), value = "red",
+              allowTransparent = T)
+          )
+        ),
+        list(DT::dataTableOutput(ns("mostrar.atipicos"))),
+        list(
+          codigo.monokai(ns("fieldCodeNum"), height = "10vh"))
+      ))))
   
   tagList(
     tabBoxPrmdt(
@@ -77,11 +78,10 @@ mod_distribuciones_server <- function(input, output, session, updateData){
   
   #' Gráfico de Distribuciones (Númericas)
   output$plot_num = renderEcharts4r({
-    input$run_dist
     datos      <- updateData$datos
     var        <- input$sel_dya_num
-    colorBar   <- isolate(input$col_dist_bar)
-    colorPoint <- isolate(input$col_dist_point)
+    colorBar   <- input$col_dist_bar
+    colorPoint <- input$col_dist_point
     titulos <- c(
       tr("minimo", updateData$idioma),
       tr("q1", updateData$idioma),

@@ -145,6 +145,7 @@ reglas;Reglas;Rules
 Rownames;Nombre de Individuos;Row names
 resumen;Resumen Numérico;Numeric Summary
 resumenvar;Resumen Numérico por Variable;Numeric Summary by Variable
+resultados;Resultados Numéricos;Numerical Results
 res;Reescalados;Rescaled
 rfl;Bosques Aleatorios;Random Forests
 rl;Regresión Logística;Logistic Regression

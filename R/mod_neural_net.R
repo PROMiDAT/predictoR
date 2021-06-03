@@ -139,8 +139,9 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
         hidden    = capas)
       
       pred   <- predict(modelo , test, type = 'class')
+      prob   <- predict(modelo , test, type = 'prob')
       mc     <- confusion.matrix(test, pred)
-      isolate(modelos$mdls$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+      isolate(modelos$mdls$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
       

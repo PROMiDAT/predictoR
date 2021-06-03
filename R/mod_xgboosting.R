@@ -100,8 +100,9 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     modelo <- traineR::train.xgboost(as.formula(var), data = train, booster = tipo, 
                                      max_depth = max.depth, nrounds = n.rounds)
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
   },error = function(e){

@@ -100,8 +100,9 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     nombre <- paste0("knnl-",kernel)
     modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ) 
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){

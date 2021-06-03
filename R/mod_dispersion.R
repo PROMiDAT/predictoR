@@ -19,7 +19,7 @@ mod_dispersion_ui <- function(id) {
   
   opc_disp <- tabsOptions(
     heights = c(50, 40), tabs.content = list(
-      list(options.run(ns("run_disp")), tags$hr(style = "margin-top: 0px;"),
+      list(options.base(), tags$hr(style = "margin-top: 0px;"),
            colourpicker::colourInput(
              ns("col_disp"), labelInput("selcolor"), value = "steelblue", 
              allowTransparent = T)),
@@ -52,10 +52,9 @@ mod_dispersion_server <- function(input, output, session, updateData) {
   
   #' Scatter Plot
   output$plot_disp <- renderEcharts4r({
-    input$run_disp
     datos <- updateData$datos
     vars  <- input$sel_disp
-    color <- isolate(input$col_disp)
+    color <- input$col_disp
     
     if(length(vars) == 2) {
       cod <- code.disp.2d(vars, color)

@@ -109,8 +109,9 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     nombre <- paste0("svml-",k)
     modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){

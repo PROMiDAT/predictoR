@@ -127,8 +127,9 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     nombre <- paste0("rlr-",tipo)
     modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]

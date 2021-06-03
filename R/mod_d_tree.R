@@ -99,8 +99,9 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     modelo <- traineR::train.rpart(as.formula(var), data = train,
                                    control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
   },error = function(e){

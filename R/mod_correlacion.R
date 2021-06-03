@@ -10,25 +10,35 @@
 mod_correlacion_ui <- function(id){
   ns <- NS(id)
   
-  opts_cor <- tabsOptions(heights = c(70, 50), tabs.content = list(
-    list(
-      options.run(ns("run_cor")), tags$hr(style = "margin-top: 0px;"),
-      colourpicker::colourInput(
-        ns("col_min"), labelInput("selcolor"), "#FF5733", 
-        allowTransparent = T),
-      colourpicker::colourInput(
-        ns("col_med"), labelInput("selcolor"), "#F8F5F5", 
-        allowTransparent = T),
-      colourpicker::colourInput(
-        ns("col_max"), labelInput("selcolor"), "#2E86C1", 
-        allowTransparent = T)
-    ),
-    list(codigo.monokai(ns("fieldCodeCor"),  height = "30vh"))
-  ))
+  opc_corr <- fluidRow(
+    conditionalPanel(
+      "input['correlacion_ui_1-tabCor'] == 'cor.salida'",
+      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+        list(
+            codigo.monokai(ns("fieldCodeSalida"), height = "10vh"))
+      ))),
+    conditionalPanel(
+      "input['correlacion_ui_1-tabCor'] == 'correlacion'",
+      tabsOptions(heights = c(70, 50), tabs.content = list(
+        list(
+          options.base(), tags$hr(style = "margin-top: 0px;"),
+          colourpicker::colourInput(
+            ns("col_min"), labelInput("selcolor"), "#FF5733", 
+            allowTransparent = T),
+          colourpicker::colourInput(
+            ns("col_med"), labelInput("selcolor"), "#F8F5F5", 
+            allowTransparent = T),
+          colourpicker::colourInput(
+            ns("col_max"), labelInput("selcolor"), "#2E86C1", 
+            allowTransparent = T)
+        ),
+        list(
+            codigo.monokai(ns("fieldCodeCor"),  height = "30vh"))
+      ))))
   
   tagList(
     tabBoxPrmdt(
-      id = ns("tabCor"), opciones = opts_cor, title = NULL,
+      id = ns("tabCor"), opciones = opc_corr, title = NULL,
       tabPanel(
         title = labelInput("correlacion"), value = "correlacion",
         echarts4rOutput(ns('plot_cor'), height = "70vh")),
@@ -48,11 +58,10 @@ mod_correlacion_server <- function(input, output, session, updateData) {
   
   #' Gráfico de Correlaciones
   output$plot_cor <- renderEcharts4r({
-    input$run_cor
     datos <- var.numericas(updateData$datos)
-    col_min <- isolate(input$col_min)
-    col_med <- isolate(input$col_med)
-    col_max <- isolate(input$col_max)
+    col_min <- input$col_min
+    col_med <- input$col_med
+    col_max <- input$col_max
     colores <- list(list(0, col_min), list(0.5, col_med), list(1, col_max))
     
     tryCatch({
@@ -78,7 +87,10 @@ mod_correlacion_server <- function(input, output, session, updateData) {
   })
   
   #' Resultados numéricos de Correlaciones
-  output$txt_cor <- renderPrint(print(cor(var.numericas(updateData$datos))))
+  output$txt_cor <- renderPrint({
+    updateAceEditor(session, "fieldCodeSalida", value = "cor(var.numericas(datos))")
+    print(cor(var.numericas(updateData$datos)))
+  })
 }
 
 ## To be copied in the UI

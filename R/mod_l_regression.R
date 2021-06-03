@@ -81,8 +81,9 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     nombre <- paste0("rl")
     modelo <- traineR::train.glmnet(as.formula(var), data = train)
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {

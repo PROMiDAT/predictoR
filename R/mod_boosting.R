@@ -115,8 +115,9 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     modelo  <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
                                     control = rpart.control(minsplit =minsplit, maxdepth = maxdepth))
     pred   <- predict(modelo , test, type = 'class')
+    prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , mc = mc))
+    isolate(modelos$mdls$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {

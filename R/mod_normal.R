@@ -10,8 +10,14 @@
 mod_normal_ui <- function(id) {
   ns <- NS(id)
   
-  opc_hist <- tabsOptions(heights = c(70, 30), tabs.content = list(
-    list(options.run(ns("run_normal")), tags$hr(style = "margin-top: 0px;"),
+  titulo_norm <- tags$div(
+    class = "multiple-select-var", conditionalPanel(
+      condition = "input.BoxNormal != 'tabNormalCalc'",
+      selectInput(inputId = ns("sel_normal"), label = NULL, choices =  ""))
+  )
+  
+  opc_norm <- tabsOptions(heights = c(70, 30), tabs.content = list(
+    list(options.base(), tags$hr(style = "margin-top: 0px;"),
          conditionalPanel(
            "input.BoxNormal == 'tabNormalPlot'",
            colourpicker::colourInput(
@@ -49,11 +55,8 @@ mod_normal_ui <- function(id) {
   
   tagList(
     tabBoxPrmdt(
-      id = "BoxNormal", opciones = opc_hist, 
-      title = tags$div(
-        class = "multiple-select-var",
-        selectInput(inputId = ns("sel_normal"), label = NULL, choices =  "")
-      ), 
+      id = "BoxNormal", opciones = opc_norm, 
+      title = titulo_norm, 
       tabPanel(
         title = labelInput("plotnormal"), value = "tabNormalPlot",
         echarts4rOutput(ns('plot_normal'), height = "70vh")),
@@ -83,11 +86,10 @@ mod_normal_server <- function(input, output, session, updateData) {
   
   #' Grafico Test de normalidad
   output$plot_normal <- renderEcharts4r({
-    input$run_normal
     var       <- input$sel_normal
     datos     <- updateData$datos[, var]
-    colorBar  <- isolate(input$col_hist_bar)
-    colorLine <- isolate(input$col_hist_line)
+    colorBar  <- input$col_hist_bar
+    colorLine <- input$col_hist_line
     nombres   <- c(tr("histograma", updateData$idioma), 
                    tr("curvanormal", updateData$idioma))
     
@@ -105,11 +107,10 @@ mod_normal_server <- function(input, output, session, updateData) {
   
   #' Grafico qqplot + qqline
   output$plot_qq <- renderEcharts4r({
-    input$run_normal
     var        <- input$sel_normal
     datos      <- updateData$datos[, var]
-    colorPoint <- isolate(input$col_qq_point)
-    colorLine  <- isolate(input$col_qq_line)
+    colorPoint <- input$col_qq_point
+    colorLine  <- input$col_qq_line
     
     tryCatch({
       cod <- paste0("e_qq(datos[['", var, "']], '", colorPoint,
@@ -124,9 +125,8 @@ mod_normal_server <- function(input, output, session, updateData) {
   
   #' Resumen Test de normalidad
   output$calc_normal <- DT::renderDT({
-    input$run_normal
     datos <- updateData$datos
-    alfa <- isolate(as.numeric(input$slide_inter))
+    alfa <- as.numeric(input$slide_inter)
     noms  <- c(tr('asimetria', isolate(updateData$idioma)),
                tr('normalidad', isolate(updateData$idioma)),
                tr('sigue', isolate(updateData$idioma)),
