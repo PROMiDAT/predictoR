@@ -78,13 +78,13 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
-  #' When load training-testing
+  # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxXgb",selected = "tabXgbModelo")
     default.codigo.xgb()
   })
   
-  #' Update model text
+  # Update model text
   output$txtxgb <- renderPrint({
     input$runXgb
     tryCatch({
@@ -110,26 +110,26 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   })
   })
   
-  #' Update predict table
+  # Update predict table
   output$xgbPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
     obj.predic(modelos$mdls$xgb[[nombre.modelo$x]]$pred,idioma = idioma)
     
   },server = FALSE)
   
-  #' Update confusion matrix text
+  # Update confusion matrix text
   output$txtxgbMC    <- renderPrint({
     print(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
   })
   
-  #' Update confusion matrix plot
+  # Update confusion matrix plot
   output$plot_xgb_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
   })
   
-  #' Update indexes table
+  # Update indexes table
   output$xgbIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
     indices.xgb <- indices.generales(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
@@ -138,18 +138,18 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
-  #' Update error table
+  # Update error table
   output$xgbIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
     indices.xgb <- indices.generales(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
-    #' Overall accuracy and overall error plot
+    # Overall accuracy and overall error plot
     output$xgbPrecGlob  <-  fill.gauges(indices.xgb[[1]], tr("precG",idioma))
     output$xgbErrorGlob <-  fill.gauges(indices.xgb[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.xgb,"xgb"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
  
-  #' Importance plot
+  # Importance plot
   output$plot_xgb <- renderEcharts4r({
     tryCatch({
       modelo                    <- modelos$mdls$xgb[[nombre.modelo$x]]$modelo
@@ -170,7 +170,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     })
   })
   
-  #' Update default code
+  # Update default code
   default.codigo.xgb <- function() {
     tipo   <- isolate(input$boosterXgb)
 

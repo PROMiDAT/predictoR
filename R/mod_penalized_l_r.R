@@ -206,7 +206,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
 
 
     # Se actualiza el código del modelo
-    codigo <- rlr.modelo(variable.pr = variable.predecir,
+    codigo <- rlr.modelo(variable.pr = updateData$variable.predecir,
                          type        = tipo,
                          isolate(input$alpha.rlr),
                          isolate(input$switch.scale.rlr))
@@ -214,7 +214,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     updateAceEditor(session, "fieldCodeRlr", value = codigo)
 
     # Se genera el código del posible lambda
-    codigo <- select.landa(variable.predecir,
+    codigo <- select.landa(updateData$variable.predecir,
                            isolate(input$alpha.rlr),
                            isolate(input$switch.scale.rlr),
                            tipo)

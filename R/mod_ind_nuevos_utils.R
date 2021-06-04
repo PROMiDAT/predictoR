@@ -41,7 +41,6 @@ dt.modelo.np <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, spli
 
 # KNN  
 kkn.modelo.np <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
-  kmax <- ifelse(!is.numeric(kmax), round(sqrt(nrow(datos.aprendizaje.completos))), kmax)
   return(paste0("modelo.nuevos <<- traineR::train.knn(",variable.pr,"~., data = datos.aprendizaje.completos, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
 }
 
@@ -68,9 +67,9 @@ rlr.modelo.np <- function(variable.pr = NULL, alpha = 0, escalar = TRUE){
 # RF
 rf.modelo.np <- function(variable.pr = NULL, ntree = 500, mtry = 1){
   ntree  <- ifelse(!is.numeric(ntree), 500, ntree)
-  Código <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
+  Codigo <- paste0("modelo.nuevos <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje.completos,importance = TRUE,",
                    " ntree =",ntree,",mtry =",mtry,")")
-  return(Código)
+  return(Codigo)
 }
 
 # SVM

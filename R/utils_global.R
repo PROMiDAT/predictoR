@@ -1,18 +1,7 @@
 # VARIABLES GLOBALES --------------------------------------------------------------------------------------------------------
 
 # -------------------  Datos
-datos             <<- NULL
 datos.originales  <<- NULL
-datos.prueba      <<- NULL
-datos.aprendizaje <<- NULL
-variable.predecir <<- NULL
-
-# -------------------  Modelos
-
-nombres.modelos   <<- c()
-IndicesM <<- list()
-areas    <<- list()
-scores   <<- list()
 
 # Validacion comun para todos los modelos
 validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {

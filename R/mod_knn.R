@@ -154,8 +154,9 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
   
   # Actualiza el código a la versión por defecto
   default.codigo.knn <- function(k.def = FALSE) {
-    if(!is.null(datos.aprendizaje) & k.def){
-      k.value <- ifelse(k.def, round(sqrt(nrow(datos.aprendizaje))), isolate(input$kmax.knn))
+    train  <- updateData$datos.aprendizaje
+    if(!is.null(train) & k.def){
+      k.value <- ifelse(k.def, round(sqrt(nrow(train))), isolate(input$kmax.knn))
       updateNumericInput(session,"kmax.knn",value = k.value)
     }else{
       k.value <- isolate(input$kmax.knn)

@@ -67,11 +67,12 @@ mod_poder_pred_ui <- function(id){
     
 #' poder_pred Server Function
 #'
+#' @noRd 
 
 mod_poder_pred_server <- function(input, output, session, updateData){
   ns <- session$ns
  
-  #' Gráfico de Distribución Variable a Predecir 
+  # Gráfico de Distribución Variable a Predecir 
   output$hc_distpred = renderEcharts4r({
     var  <- updateData$variable.predecir
     validate(need(var != "", tr("errorcat", isolate(updateData$idioma))))
@@ -93,7 +94,7 @@ mod_poder_pred_server <- function(input, output, session, updateData){
   })
   
 
-  #' Update on load testing data
+  # Update on load testing data
   observeEvent(updateData$datos.prueba, {
     variable     <- updateData$variable.predecir
     datos        <- updateData$datos

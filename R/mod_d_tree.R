@@ -30,7 +30,7 @@ mod_d_tree_ui <- function(id){
                                fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
                                         col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
                                fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
-                                                           choices =  list("gini" = "gini", "Entropía" = "information"))))),
+                                                           choices =  list("gini" = "gini", "Entropia" = "information"))))),
                           codigo.dt.run))),
                       conditionalPanel(
                         "input['d_tree_ui_1-BoxDt']   != 'tabDtModelo'",

@@ -3,7 +3,6 @@ datos <<- NULL
 datos.prueba <<- NULL
 datos.aprendizaje <<- NULL
 variable.predecir <<- NULL
-nombres.modelos <<- c()
 
 #' Filter numeric variables of a data.frame
 #'
@@ -82,30 +81,6 @@ borrar.datos.modelos <- function(flag.datos = TRUE) {
     datos.aprendizaje <<- NULL
     variable.predecir <<- NULL
   }
-  
-  areas    <<- list()
-  scores   <<- list()
-  IndicesM <<- list()
-  
-  nombres.modelos <<- c()
-  
-  rm(list = nombres.modelos, envir = .GlobalEnv)
-  
-  
-  # updateCheckboxGroupButtons(session, inputId = "select.models",
-  #                            choices = c(" ---- " = "NoDisponible"),
-  #                            size = "sm", status = "primary",
-  #                            checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-  #                                             no = icon("remove", lib = "glyphicon")))
-  # 
-  # #Se usan como condicion para el codigo js
-  # output$txtknn <- renderPrint(invisible(""))
-  # output$txtSvm <- renderPrint(invisible(""))
-  # output$txtDt <- renderPrint(invisible(""))
-  # output$txtRf <- renderPrint(invisible(""))
-  # output$txtBoosting <- renderPrint(invisible(""))
-  # output$txtbayes <- renderPrint(invisible(""))
-  # updateSelectInput(session,"kernel.knn",selected = "optimal")
 }
 
 accion.NAs <- function(datos, deleteNA = T) {

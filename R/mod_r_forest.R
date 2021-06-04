@@ -174,9 +174,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
       updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
       rattle::printRandomForests(modelo, n)
     },error = function(e){
-      ifelse(idioma == "es",
-             stop("No se pueden mostrar las reglas para el árbol seleccionado"),
-             stop("Cannot display rules for selected tree"))
+             stop(tr("NoDRule", idioma))
     })
   })
   
@@ -215,9 +213,10 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
 
   # Actualiza el código a la versión por defecto
   default.codigo.rf <- function(rf.def = FALSE){
+    train  <- updateData$datos.aprendizaje
     mtry <- isolate(input$mtry.rf)
-    if((!is.null(datos.aprendizaje) & rf.def) | is.na(mtry)){
-      mtry.value <- ifelse(rf.def || is.na(mtry), round(sqrt(ncol(datos.aprendizaje))), mtry)
+    if((!is.null(train) & rf.def) | is.na(mtry)){
+      mtry.value <- ifelse(rf.def || is.na(mtry), round(sqrt(ncol(train))), mtry)
       if(!is.na(mtry)){
         updateNumericInput(session,"mtry.rf",value = mtry.value)
       }

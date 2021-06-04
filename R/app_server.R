@@ -30,8 +30,6 @@ app_server <- function( input, output, session ) {
                    originales           = NULL, 
                    idioma               = NULL,
                    datos.prueba         = NULL, 
-                   selector.comparativa = NULL,
-                   roc                  = FALSE,
                    datos.aprendizaje    = NULL,
                    variable.predecir    = NULL)
   
@@ -97,7 +95,7 @@ app_server <- function( input, output, session ) {
   #Carga de Datos
   callModule(mod_carga_datos_server,    "carga_datos_ui_1",    updateData, modelos)
   
-  #Estadisticas Basicas
+  #Estadísticas Básicas
   callModule(mod_r_numerico_server,     "r_numerico_ui_1",     updateData)
   callModule(mod_normal_server,         "normal_ui_1",         updateData)
   callModule(mod_dispersion_server,     "dispersion_ui_1",     updateData)

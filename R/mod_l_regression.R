@@ -63,11 +63,12 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
   # Genera el texto del modelo, predicción y mc de rl
   output$txtrl <- renderPrint({
     input$runRl
+    idioma <- updateData$idioma
     
     if (length(levels(updateData$datos[, updateData$variable.predecir])) != 2) {
       if (isFALSE(getOption("shiny.testmode")) || is.null(getOption("shiny.testmode"))) {
         showModal(modalDialog(
-          title = "Regresión Logística", tr("limitModel"),
+          title = tr("rl", idioma), tr("limitModel", idioma),
           footer = modalButton("Cerrar"), easyClose = T
         ))
         return(invisible(""))

@@ -62,7 +62,7 @@ mod_ind_nuevos_ui <- function(id){
               col_7(br(),muestra.datos.pred)))
             )),
           col_1(
-            actionButton(ns("cargarnext"), labelInput("siguiente"), width = "100%",
+            actionButton(ns("cargarnext"), label = NULL, width = "100%",
                          icon = icon("forward"))
           )
         )
@@ -70,7 +70,7 @@ mod_ind_nuevos_ui <- function(id){
     div(id = ns("segundo"),
         style = "display:none",
         fluidRow(
-          col_1(actionButton (ns("transback"), labelInput("atras"), width = "100%",
+          col_1(actionButton (ns("transback"), label = NULL, width = "100%",
                               icon = icon("backward"))),
           col_10(
             tabBoxPrmdt(
@@ -85,13 +85,13 @@ mod_ind_nuevos_ui <- function(id){
                 ),
                 col_7(br(),muestra.datos.pred2)), hr())
             )),
-          col_1(actionButton(ns("transnext"), labelInput("siguiente"), width = "100%",
+          col_1(actionButton(ns("transnext"), label = NULL, width = "100%",
                              icon = icon("forward")))
         )
     ),
     div(id = ns("tercera"),
         style = "display:none",
-        fluidRow(col_1(actionButton(ns("modelback"), labelInput("atras"), width = "100%",
+        fluidRow(col_1(actionButton(ns("modelback"), label = NULL, width = "100%",
                                           icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
@@ -120,12 +120,12 @@ mod_ind_nuevos_ui <- function(id){
                      conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos)
 
                  )),
-                 col_1(actionButton(ns("modelnext"), labelInput("siguiente"), width = "100%",
+                 col_1(actionButton(ns("modelnext"), label = NULL, width = "100%",
                                     icon = icon("forward")))
         )),
     div(id = ns("cuarta"),
         style = "display:none",
-        fluidRow(col_1(actionButton (ns("nuevosback"), labelInput("atras"), width = "100%",
+        fluidRow(col_1(actionButton (ns("nuevosback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
@@ -149,13 +149,13 @@ mod_ind_nuevos_ui <- function(id){
                                actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"), hr()),
                          col_7(br(), muestra.datos.pred3)),br())
                    )),
-                 col_1(actionButton(ns("nuevosnext"), labelInput("siguiente"), width = "100%",
+                 col_1(actionButton(ns("nuevosnext"), label = NULL, width = "100%",
                                     icon = icon("forward")))
         )
     ),
     div(id = ns("quinta"),
         style = "display:none",
-        fluidRow(col_1(actionButton (ns("predicback"), labelInput("atras"), width = "100%",
+        fluidRow(col_1(actionButton (ns("predicback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
@@ -173,10 +173,11 @@ mod_ind_nuevos_ui <- function(id){
 
 #' ind_nuevos Server Function
 #'
+#' @noRd 
 mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   ns <- session$ns
   
-  #' Load Button Function
+  # Load Button Function
   observeEvent(input$loadButtonNPred, {
     cont       <<- 1
     rowname    <- isolate(input$rownameNPred)
@@ -213,7 +214,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     })
   })
   
-  #' Load Button Function (New Cases)
+  # Load Button Function (New Cases)
   observeEvent(input$loadButtonNPred2, {
     rowname    <- isolate(input$rownameNPred2)
     ruta       <- isolate(input$archivoNPred2)
@@ -363,7 +364,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     })
   }, server = T)
   
-  #' Update Transform Table
+  # Update Transform Table
   output$transDataPredN = renderUI({
     datos  <- newCases$originales
     idioma <- updateData$idioma
@@ -394,7 +395,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   })
 
   
-  #' Transform Button Function
+  # Transform Button Function
   observeEvent(input$transButton, {
     datos <- newCases$originales
     cod = ""
@@ -804,7 +805,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     shinyjs::show("cuarta", anim = TRUE)
     shinyjs::hide("quinta", anim = TRUE)
   })
-  #' Update Models Options
+  # Update Models Options
   output$opcModelsPredN = renderUI({
     datos   <- newCases$datos.aprendizaje
     idioma  <- updateData$idioma
@@ -827,7 +828,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     opc_dt  <- list(fluidRow(col_4(numericInput(ns("minsplit.dt.pred"), tr("minsplit", idioma), 20, width = "100%",min = 1)),
                              col_4(numericInput(ns("maxdepth.dt.pred"), tr("maxdepth", idioma), 15, width = "100%",min = 0, max = 30, step = 1)),
                              col_4(selectInput(inputId = ns("split.dt.pred"), label = tr("splitIndex", idioma),selected = 1,
-                                         choices =  list("gini" = "gini", "Entropía" = "information")))))
+                                         choices =  list("gini" = "gini", "Entropia" = "information")))))
     opc_bayes <- list(tags$span())
     
     opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), tr("numTree", idioma), 50, width = "100%",min = 1)),

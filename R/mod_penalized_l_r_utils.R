@@ -40,7 +40,7 @@ e_posib_lambda <- function(cv.glm){
     e_mark_line(data = list(xAxis = x1)) %>%
     e_mark_line(data = list(xAxis = x2)) %>%
     e_axis_labels(
-      x = 'Log(λ)',
+      x = 'Log()',
       y = name)%>%
     e_x_axis(
       formatter = e_axis_formatter(digits = 1))  %>% 

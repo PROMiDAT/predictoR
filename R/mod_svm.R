@@ -88,7 +88,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   
   nombre.modelo <- rv(x = NULL)
   
-  #' When load training-testing
+  # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
@@ -96,7 +96,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     default.codigo.svm()
   })
 
-  #' Update model text
+  # Update model text
   output$txtSvm <- renderPrint({
     input$runSvm
     default.codigo.svm()
@@ -119,28 +119,27 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     })
   })
   
-  #' Update predict table
+  # Update predict table
   output$svmPrediTable <- DT::renderDataTable({
     idioma <- updateData$idioma
-    modelosc <<- as.list(modelos)
-      
+
     obj.predic(modelos$mdls$svm[[nombre.modelo$x]]$pred,idioma = idioma)
     
     },server = FALSE)
   
-  #' Update confusion matrix text
+  # Update confusion matrix text
   output$txtSvmMC    <- renderPrint({
     print(modelos$mdls$svm[[nombre.modelo$x]]$mc)
   })
   
-  #' Update confusion matrix plot
+  # Update confusion matrix plot
   output$plot_svm_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$mdls$svm[[nombre.modelo$x]]$mc)
   })
   
-  #' Update indexes table
+  # Update indexes table
   output$svmIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
     indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
@@ -149,18 +148,18 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
-  #' Update error table
+  # Update error table
   output$svmIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
     indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
-    #' Overall accuracy and overall error plot
+    # Overall accuracy and overall error plot
     output$svmPrecGlob  <-  fill.gauges(indices.svm[[1]], tr("precG",idioma))
     output$svmErrorGlob <-  fill.gauges(indices.svm[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.svm,"SVM"))
   
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
-  #' Update default code
+  # Update default code
   default.codigo.svm <- function() {
     kernel <- isolate(input$kernel.svm)
     # Se actualiza el código del modelo
@@ -184,7 +183,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
 
   }
   
-  #' Update SVM plot
+  # Update SVM plot
   output$plot_svm <- renderPlot({
     tryCatch({
       idioma    <- updateData$idioma

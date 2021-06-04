@@ -20,6 +20,10 @@
 #' @importFrom stats cor cutree hclust median na.omit
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass
+#' @importFrom grDevices adjustcolor hcl rainbow 
+#' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text 
+#' @importFrom stats as.formula loess model.frame model.matrix predict predict.lm qt symnum 
+#' @importFrom utils head 
 #' @keywords internal
 #' @noRd
 

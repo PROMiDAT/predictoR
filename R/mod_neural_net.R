@@ -91,14 +91,14 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
-  #Cuando se generan los datos de prueba y aprendizaje
+  # Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
     default.codigo.nn()
   })
 
   
-  #Actualiza la cantidad de capas ocultas
+  # Actualiza la cantidad de capas ocultas
   observeEvent(c(input$cant.capas.nn, updateData$datos.aprendizaje), {
     if(!is.null(updateData$datos.aprendizaje) && !is.null(input$cant.capas.nn)){
       for (i in 1:10) {
@@ -147,7 +147,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
       
     },
     error = function(e) {
-      showNotification(paste0("Error (NN) : ",e), duration = 15, type = "error")
+      showNotification(paste0("Error (NN-10) : ",e), duration = 15, type = "error")
       return(invisible(""))
     },
     warning = function(w){
@@ -197,7 +197,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   output$nnIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
     indices.nn <- indices.generales(modelos$mdls$nn[[nombre.modelo$x]]$mc)
-    #' Overall accuracy and overall error plot
+    # Overall accuracy and overall error plot
     output$nnPrecGlob  <-  fill.gauges(indices.nn[[1]], tr("precG",idioma))
     output$nnErrorGlob <-  fill.gauges(indices.nn[[2]], tr("errG",idioma))
     xtable(indices.error.table(indices.nn,"nn"))

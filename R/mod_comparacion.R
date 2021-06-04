@@ -9,17 +9,13 @@
 #' @importFrom shiny NS tagList 
 mod_comparacion_ui <- function(id){
   ns <- NS(id)
-  
-  opciones.comparacion <- list(options.base(), tags$hr(style = "margin-top: 0px;"),
-                               fluidRow(col_12(selectInput(inputId = ns("roc.sel"),label = labelInput("selectCat"),
-                                                           choices =  "", width = "100%"))))
-  
-  
-  opcs_comparacion  <- tabsOptions(botones = list(icon("gear")), widths = c(100), heights = c(88),
-                                   tabs.content = list(opciones.comparacion))
-  
+
+  title_comp <- fluidRow(shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
+                         tags$div(class="multiple-select-var",
+                                  selectInput(inputId = ns("roc.sel"),label = NULL,
+                                              choices =  "", width = "100%")))
   tagList(
-    tabBoxPrmdt(id = "BoxCom", opciones = opcs_comparacion,
+    tabBoxPrmdt(id = "BoxCom", title = title_comp,
                 tabPanel(title = labelInput("tablaComp"),
                          withLoader(DT::dataTableOutput(ns("TablaComp"), height="70vh"), 
                                     type = "html", loader = "loader4")),
@@ -30,28 +26,28 @@ mod_comparacion_ui <- function(id){
 }
     
 #' comparacion Server Function
-
+#'
+#' @noRd 
 mod_comparacion_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   
-  #' Update on load testing data
+  # Update on load testing data
   observeEvent(updateData$datos.prueba, {
     variable     <- updateData$variable.predecir
     datos        <- updateData$datos
-    updateData$selector.comparativa <- actualizar.selector.comparativa()
     choices      <- as.character(unique(datos[, variable]))
-    opts <- list()
-    opts[[choices[1]]] <- 2
-    opts[[choices[2]]] <- 1
-    updateSelectInput(session, "roc.sel", choices = opts, selected = opts[1])
+    if(length(choices==2))
+    updateSelectInput(session, "roc.sel", choices = choices, selected = choices[1])
   })
   
-  #' Update Comparison Table
+  # Update Comparison Table
   output$TablaComp <- DT::renderDataTable({
-    res    <- data.frame()
-    idioma <- updateData$idioma
+    res      <- data.frame()
+    idioma   <- updateData$idioma
+    category <- input$roc.sel
     isolate(test <- updateData$datos.prueba)
     isolate(var  <- updateData$variable.predecir)
+    tryCatch({
     for (modelo in modelos$mdls) {
       if(!is.null(modelo)){
           for (alg in modelo) {
@@ -65,11 +61,10 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
               new[[cat]] <- ind$category.accuracy[[cat]]
             }
             if(length(ind$category.accuracy) ==2){
-              #pred     <<- predict(alg$modelo, test, type = "prob")
               if(!startsWith(alg$nombre, "rl")){
-                new$roc <- areaROC(alg$prob$prediction[,2], test[,var])
+                new$roc <- areaROC(alg$prob$prediction[,category], test[,var])
               }else{
-                new$roc <- areaROC(alg$prob$prediction[,2,], test[,var])
+                new$roc <- areaROC(alg$prob$prediction[,category,], test[,var])
               }
             }else{
               new$roc <- NA
@@ -87,27 +82,31 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     res                        <- round(res, 5)*100
     DT::datatable(res, selection = "none", editable = FALSE,
                                    options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+    }, error = function(e) {
+      DT::datatable(data.frame(), selection = "none", editable = FALSE,
+                    options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+    })
   },server = FALSE)
   
-  #' Update Plot ROC
+  # Update Plot ROC
     output$plot_roc <- renderEcharts4r({
       idioma        <- updateData$idioma
-      mdlsa         <<-modelos$mdls
+      category      <- input$roc.sel
       isolate(test  <- updateData$datos.prueba)
       isolate(var   <- updateData$variable.predecir)
       if(!is.null(test) & length(levels(test[,var])) == 2) {
         clase      <- test[,var]
-        y = c(0, 1)
-        x = c(1, 0)
-        res <- data.frame(x, y, nombre = "roc")
+        y <- c(0, 1)
+        x <- c(1, 0)
+        nombre <- "roc"
+        res    <- data.frame(x, y, nombre = nombre)
         for (modelo in modelos$mdls) {
           if(!is.null(modelo)){
             for (alg in modelo) {
-             #pre        <- predict(alg$modelo, test, type = "prob")
              if(!startsWith(alg$nombre, "rl")){
-               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,2])
+               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category], direction= "<" )
              }else{
-               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,2,])
+               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category,], direction= "<" )
              }
              y   <- roc.data$sensitivities
              x   <- roc.data$specificities
