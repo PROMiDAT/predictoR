@@ -521,6 +521,186 @@ pairs.panels <- function (x, smooth = TRUE, scale = FALSE, density = TRUE, ellip
   }
 }
 
+r.test <- function (n, r12, r34 = NULL, r23 = NULL, r13 = NULL, r14 = NULL, 
+          r24 = NULL, n2 = NULL, pooled = TRUE, twotailed = TRUE) 
+{
+  cl <- match.call()
+  if (is.null(r34) & is.null(r13) & is.null(r23)) {
+    t <- r12 * sqrt(n - 2)/sqrt(1 - r12^2)
+    p <- 1 - pt(abs(t), n - 2)
+    if (twotailed) 
+      p <- 2 * p
+    ci <- r.con(r12, n)
+    result <- list(Call = cl, Test = "Test of significance of a  correlation", 
+                   t = t, p = p, ci = ci)
+  }
+  else {
+    if (is.null(r23)) {
+      if (is.null(r34)) {
+        stop("You seem to be testing two dependent correlations, but have not specified the other correlation(s)  correctly.")
+      }
+      if (!is.null(r13)) {
+        stop("You seem to be testing two dependent correlations, but have not specified the correlation(s)  correctly.")
+      }
+      xy.z <- 0.5 * log((1 + r12)/(1 - r12))
+      xz.z <- 0.5 * log((1 + r34)/(1 - r34))
+      if (is.null(n2)) 
+        n2 <- n
+      se.diff.r <- sqrt(1/(n - 3) + 1/(n2 - 3))
+      diff <- xy.z - xz.z
+      z <- abs(diff/se.diff.r)
+      p <- (1 - pnorm(z))
+      if (twotailed) 
+        p <- 2 * p
+      result <- list(Call = cl, Test = "Test of difference between two independent correlations", 
+                     z = z, p = p)
+    }
+    else {
+      if (is.null(r14)) {
+        if (!is.null(r34)) {
+          if (is.null(r13)) {
+            r13 <- r34
+          }
+        }
+        if (is.null(r13)) {
+          stop("You seem to be trying to test two dependent correlations, but have not specified the other correlation(s)")
+        }
+        diff <- r12 - r13
+        determin = 1 - r12 * r12 - r23 * r23 - r13 * 
+          r13 + 2 * r12 * r23 * r13
+        av = (r12 + r13)/2
+        cube = (1 - r23) * (1 - r23) * (1 - r23)
+        t2 = diff * sqrt((n - 1) * (1 + r23)/(((2 * (n - 
+                                                       1)/(n - 3)) * determin + av * av * cube)))
+        p <- pt(abs(t2), n - 3, lower.tail = FALSE)
+        if (twotailed) 
+          p <- 2 * p
+        cl <- paste("r.test(n = ", n, ",  r12 = ", r12, 
+                    ",  r23 = ", r23, ",  r13 = ", r13, ")")
+        result <- list(Call = cl, Test = "Test of difference between two correlated  correlations", 
+                       t = t2, p = p)
+      }
+      else {
+        z12 <- fisherz(r12)
+        z34 <- fisherz(r34)
+        pooledr <- (r12 + r34)/2
+        if (pooled) {
+          r1234 = 1/2 * ((r13 - pooledr * r23) * (r24 - 
+                                                    r23 * pooledr) + (r14 - r13 * pooledr) * 
+                           (r23 - pooledr * r13) + (r13 - r14 * pooledr) * 
+                           (r24 - pooledr * r14) + (r14 - pooledr * 
+                                                      r24) * (r23 - r24 * pooledr))
+          z1234 <- r1234/((1 - pooledr^2) * (1 - pooledr^2))
+        }
+        else {
+          r1234 = 1/2 * ((r13 - r12 * r23) * (r24 - r23 * 
+                                                r34) + (r14 - r13 * r34) * (r23 - r12 * r13) + 
+                           (r13 - r14 * r34) * (r24 - r12 * r14) + (r14 - 
+                                                                      r12 * r24) * (r23 - r24 * r34))
+          z1234 <- r1234/((1 - r12^2) * (1 - r34^2))
+        }
+        ztest <- (z12 - z34) * sqrt(n - 3)/sqrt(2 * (1 - 
+                                                       z1234))
+        z <- ztest
+        p <- (1 - pnorm(abs(z)))
+        if (twotailed) 
+          p <- 2 * p
+        result <- list(Call = cl, Test = "Test of difference between two dependent correlations", 
+                       z = z, p = p)
+      }
+    }
+  }
+  class(result) <- c("psych", "r.test")
+  return(result)
+}
+cor.wt <- function (data, vars = NULL, w = NULL, sds = NULL, cor = TRUE) 
+{
+  cl <- match.call()
+  if (is.list(data) && !is.data.frame(data)) {
+    w <- data$n
+    sds <- data$sd
+    x <- data$mean
+  }
+  else {
+    x <- data
+  }
+  if (!is.null(vars)) {
+    x <- x[, vars]
+    w <- w[, vars]
+    sds <- sds[, vars]
+  }
+  if (is.null(w)) 
+    w <- matrix(rep(rep(1/nrow(x), nrow(x)), ncol(x)), nrow = nrow(x), 
+                ncol = ncol(x))
+  if (is.null(ncol(w))) {
+    wt <- w/sum(w)
+  }
+  else {
+    wt <- t(t(w)/colSums(w))
+  }
+  cnames <- colnames(x)
+  for (i in 1:ncol(x)) {
+    if (is.factor(x[, i]) || is.logical(x[, i])) {
+      x[, i] <- as.numeric(x[, i])
+      colnames(x)[i] <- paste(cnames[i], "*", sep = "")
+    }
+  }
+  means <- colSums(x * wt, na.rm = TRUE)
+  xc <- scale(x, center = means, scale = FALSE)
+  if (is.null(sds)) {
+    xs <- xc/sqrt(w)
+  }
+  else {
+    xs <- xc * sds/sqrt(w)
+  }
+  xwt <- sqrt(wt) * xc
+  if (any(is.na(xwt))) {
+    cov <- apply(xwt, 2, function(x) colSums(xwt * x, na.rm = TRUE))
+  }
+  else {
+    cov <- crossprod(xwt)
+  }
+  if (cor) {
+    r <- cov2cor(cov)
+  }
+  else {
+    r <- cov
+  }
+  xw <- wt * xc
+  result <- list(r = r, xwt = xwt, wt = wt, mean = means, xc = xc, 
+                 xs = xs)
+  result$Call <- cl
+  class(result) <- c("psych", "cor.wt")
+  return(result)
+}
+
+r.con <- function (rho, n, p = 0.95, twotailed = TRUE) 
+{
+  z <- fisherz(rho)
+  if (n < 4) {
+    stop("number of subjects must be greater than 3")
+  }
+  se <- 1/sqrt(n - 3)
+  p <- 1 - p
+  if (twotailed) 
+    p <- p/2
+  dif <- qnorm(p)
+  zlow <- z + dif * se
+  zhigh <- z - dif * se
+  ci <- c(zlow, zhigh)
+  ci <- fisherz2r(ci)
+  return(ci)
+}
+
+fisherz2r <- function (z) 
+{
+  (exp(2 * z) - 1)/(1 + exp(2 * z))
+}
+
+fisherz <- function (rho) 
+{
+  0.5 * log((1 + rho)/(1 - rho))
+}
 
 #Colores de ggplot2
 gg_color_hue <- function(n) {

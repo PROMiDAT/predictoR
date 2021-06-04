@@ -210,7 +210,8 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   output$plot_boosting_import <- renderEcharts4r({
     cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
     tryCatch({
-      aux <- data.frame(importancia = modelos$mdls$boosting[[nombre.modelo$x]]$modelo$importance) 
+      imp <- modelos$mdls$boosting[[nombre.modelo$x]]$modelo$importance
+      aux <- data.frame(importancia = imp) 
       aux$nombre <- row.names(aux) 
       aux$importancia <- abs(aux$importancia) 
       aux <- aux[order(aux$importancia, decreasing = T), ]

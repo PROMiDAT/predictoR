@@ -185,8 +185,9 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
       updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
       aux <- data.frame(modelos$mdls$rf[[nombre.modelo$x]]$modelo$importance)
       aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)
-      aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
-      aux$label <- row.names(aux)
+      aux   <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
+      label <- row.names(aux)
+      aux   <- cbind(aux,label = label)
       
       aux %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>% 
         e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% 

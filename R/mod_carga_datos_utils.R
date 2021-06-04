@@ -77,9 +77,7 @@ borrar.modelos <- function(updateData){
 # Borra los datos de los modelos
 borrar.datos.modelos <- function(flag.datos = TRUE) {
   if (flag.datos) {
-    datos.prueba      <<- NULL
-    datos.aprendizaje <<- NULL
-    variable.predecir <<- NULL
+
   }
 }
 

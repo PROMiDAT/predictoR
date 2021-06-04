@@ -165,7 +165,9 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
       
       updateData$originales <- carga.datos(
       rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
-      borrar.datos.modelos()
+      datos.prueba      <<- NULL
+      datos.aprendizaje <<- NULL
+      variable.predecir <<- NULL
       borrar.modelos(updateData)
 
       
@@ -206,7 +208,9 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
     datos <- updateData$originales
     cod = ""
     borrar.modelos(updateData)
-    borrar.datos.modelos()
+    datos.prueba      <<- NULL     
+    datos.aprendizaje <<- NULL     
+    variable.predecir <<- NULL
     close.menu("parte2", is.null(updateData$datos.aprendizaje))
     
     updateAceEditor(session, "fieldCodeTrans", value = cod)
@@ -254,7 +258,6 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
     variable         <- isolate(input$sel.predic.var)
     semilla          <- isolate(input$semilla)
     permitir.semilla <- isolate(input$permitir.semilla)
-    borrar.datos.modelos(FALSE)
     tryCatch({
       if(variable != ""){
         updateData$variable.predecir <-  variable

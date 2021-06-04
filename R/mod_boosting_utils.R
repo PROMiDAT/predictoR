@@ -45,8 +45,8 @@ boosting.plot.import <- function() {
 e_evol_error <- function(x) {
   if (!((class(x) == "errorevol"))) 
     stop("x class should be errorevol")
-  
-  evolplot <- data.frame(x = c(1:length(x$error)), train = x$error)
+  train    <- x$error
+  evolplot <- data.frame(x = c(1:length(x$error)), train = train)
   evolplot %>%
     e_charts(x) %>%
     e_line(train) %>%

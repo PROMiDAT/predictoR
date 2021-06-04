@@ -81,9 +81,11 @@ mod_poder_pred_server <- function(input, output, session, updateData){
       data <- updateData$datos[, var]
       cod  <- code.dist.varpred(var)
       updateAceEditor(session, "fieldCodeDistpred", value = cod)
+      label <- levels(data) 
+      value <- summary(data, maxsum = length(levels(data)))
       datos <- data.frame (
-        label = levels(data), 
-        value = summary(data, maxsum = length(levels(data)))
+        label = label, 
+        value = value
       )
       datos %>% e_charts(label) %>% e_bar(value, name = var) %>%
         e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()

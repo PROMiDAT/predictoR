@@ -158,7 +158,10 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
       variables.importantes     <- variables.importantes[1:length(nombres),]  
       variables.importantes[,2] <- abs(variables.importantes[,2]) 
       variables.importantes     <- na.omit(variables.importantes) 
-      datos.xgb <- data.frame(label = variables.importantes$Feature, values = variables.importantes[,2]) 
+      label                     <- variables.importantes$Feature
+      values                    <- variables.importantes[,2]
+      datos.xgb <- data.frame(label  = label, 
+                              values = values) 
       datos.xgb %>% e_charts(label) %>% e_bar(values, name = var) %>% 
         e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
         e_flip_coords()%>% 

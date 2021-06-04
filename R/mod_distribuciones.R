@@ -124,9 +124,11 @@ mod_distribuciones_server <- function(input, output, session, updateData){
       cod <- code.dist.cat(var)
       updateAceEditor(session, "fieldCodeCat", value = cod)
       
+      label <- levels(datos.plot)
+      value <- summary(datos.plot, maxsum = length(levels(datos.plot)))
       datos.plot <- data.frame (
-        label = levels(datos.plot),
-        value = summary(datos.plot, maxsum = length(levels(datos.plot)))
+        label = label,
+        value = value
       )
       
       datos.plot %>% e_charts(label) %>% e_bar(value, name = var) %>%
