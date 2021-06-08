@@ -23,4 +23,4 @@
 NULL
 utils::globalVariables(c(
   "variable.predecir", "datos.prueba", "datos.aprendizaje","datos","<<-", "z", "prop", "plot.rlr.coeff", "x",
-  "plot.err", "OOB", "cont", "MeanDecreaseAccuracy", "plot.MC", "y", "importancia"))
+  "plot.err", "OOB", "cont", "MeanDecreaseAccuracy", "plot.MC", "y", "importancia", "part1", "part2"))

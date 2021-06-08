@@ -16,7 +16,7 @@ svm.MC <- function( kernel = "linear"){
 }
 
 #Código del gráfico de svm
-svm.plot <- function(variables, resto, kernel = "linear"){
+svm.plot <- function(var.pred,train,  variables, resto, kernel = "linear"){
   if(is.null(variables)){
     return("NULL")
   }
@@ -26,8 +26,8 @@ svm.plot <- function(variables, resto, kernel = "linear"){
     l <- c(l , paste0(resto[i]," = ", i))
   }
   l <- paste0("list(",paste0(l,collapse = ","),")")
-  s <- paste0("modelo.svm.temp <<- traineR::train.svm(",variable.predecir,"~",variables[1],"+",variables[2],", data = datos.aprendizaje, kernel = '",kernel,"') \n")
-  color <- length(unique(datos.aprendizaje[,variable.predecir]))
+  s <- paste0("modelo.svm.temp <<- traineR::train.svm(",var.pred,"~",variables[1],"+",variables[2],", data = datos.aprendizaje, kernel = '",kernel,"') \n")
+  color <- length(unique(train[,var.pred]))
   color <- as.string.c(gg_color_hue(color))
   return(paste0(s,"plot(modelo.svm.temp, datos, ",variables[1],"~",variables[2],", slice = ",l,", col = ",color,")"))
 }

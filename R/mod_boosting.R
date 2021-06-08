@@ -127,8 +127,10 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
 
   #Tabla de la predicción
   output$boostingPrediTable <- DT::renderDataTable({
+    test   <- updateData$datos.prueba
+    var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$boosting[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$boosting[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
   
@@ -168,9 +170,11 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   #Mostrar Reglas
   output$rulesB <- renderPrint({
     n <- input$rules.b.n
+    isolate(train   <- updateData$datos.aprendizaje)
+    isolate(var.pred<- updateData$variable.predecir)
     tryCatch({
       updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
-      rules(modelos$mdls$boosting[[nombre.modelo$x]]$modelo$trees[[n]])
+      rules(modelos$mdls$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
     },error = function(e) {
       stop(tr("NoDRule", updateData$idioma))
     }

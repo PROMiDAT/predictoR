@@ -59,7 +59,7 @@ selectada <- function (fila, vardep.summary, ...)
 }
 
 #Reglas
-rules <- function (model, compact = FALSE, ...){
+rules <- function (model, train, var.pred, compact = FALSE, ...){
   if (!inherits(model, "rpart"))
     stop(rattle:::Rtxt("Not a legitimate rpart tree"))
   rtree <- length(attr(model, "ylevels")) == 0
@@ -80,7 +80,7 @@ rules <- function (model, compact = FALSE, ...){
       else {
         yval <- ylevels[frm[i, ]$yval]
         yval <- ifelse(yval == -1, 1, 2)
-        yval <- levels(datos.aprendizaje[,variable.predecir])[yval]
+        yval <- levels(train[,var.pred])[yval]
       }
       cover <- frm[i, ]$n
       pcover <- round(100 * cover/ds.size)

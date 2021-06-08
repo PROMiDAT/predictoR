@@ -2,7 +2,7 @@
 
 #Crea el modelo Bayes
 bayes.modelo <- function(variable.pr = NULL){
-  return(paste0("modelo.bayes <<- train.bayes(",variable.predecir,"~., data = datos.aprendizaje)"))
+  return(paste0("modelo.bayes <<- train.bayes(",variable.pr,"~., data = datos.aprendizaje)"))
 }
 
 #Codigo de la prediccion de Bayes

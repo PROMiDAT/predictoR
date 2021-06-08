@@ -143,9 +143,10 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   #Tabla de la predicción
   output$rlrPrediTable <- DT::renderDataTable({
+    test   <- updateData$datos.prueba
+    var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$rlr[[nombre.modelo$x]]$pred,idioma = idioma)
-    
+    obj.predic(modelos$mdls$rlr[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   #Texto de la Matríz de Confusión

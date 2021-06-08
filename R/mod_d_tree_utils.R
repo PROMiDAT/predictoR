@@ -20,8 +20,8 @@ dt.MC <- function(tipo){
 }
 
 #Código del gráfico de dt
-dt.plot <- function(tipo){
-  num <- length(levels(datos[,variable.predecir]))
+dt.plot <- function(tipo, num = 1){
+  #∫num <- length(levels(datos[,var.pred]))
   return(paste0("prp(modelo.dt.",tipo,", type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
                 fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
                 box.col = gg_color_hue(",num,")[modelo.dt.",tipo,"$frame$yval])"))

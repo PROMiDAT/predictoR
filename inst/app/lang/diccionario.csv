@@ -72,6 +72,7 @@ info;MÁS INFORMACIÓN;MORE INFORMATION
 knnl;K Vecinos Más Cercanos;K Nearest Neighbors
 kmax;K Máximo:;K Max:
 landa;Mejor Lambda:;Better Lambda:
+lambda;Log(λ);Log(λ)
 limitModel;Este modelo solo se puede aplicar a variables binarias;This model can only be applied to binary variables
 manual;Manual;Manual
 maxdepth;Profundidad Máxima:;Max Depth:

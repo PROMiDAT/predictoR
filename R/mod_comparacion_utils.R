@@ -7,8 +7,8 @@ split_name <-function(name, idioma){
 }
 
 #Obtiene la cantidad de categorías de la variable a predecir
-num.categorias.pred <- function(){
-  return(length(levels(datos.aprendizaje[,variable.predecir])))
+num.categorias.pred <- function(test, var.pred){
+  return(length(levels(test[,var.pred])))
 }
 
 #Cálcula el área de la curva ROC

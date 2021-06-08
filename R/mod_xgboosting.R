@@ -112,9 +112,10 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   
   # Update predict table
   output$xgbPrediTable <- DT::renderDataTable({
+    test   <- updateData$datos.prueba
+    var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$xgb[[nombre.modelo$x]]$pred,idioma = idioma)
-    
+    obj.predic(modelos$mdls$xgb[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   # Update confusion matrix text

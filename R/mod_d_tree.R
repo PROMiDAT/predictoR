@@ -111,8 +111,10 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de la predicción
   output$dtPrediTable <- DT::renderDataTable({
+    test   <- updateData$datos.prueba
+    var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$dt[[nombre.modelo$x]]$pred,idioma = idioma)
+    obj.predic(modelos$mdls$dt[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
   
@@ -156,7 +158,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
       var    <- updateData$variable.predecir
       num    <- length(levels(datos[,var]))
       modelo <- modelos$mdls$dt[[nombre.modelo$x]]$modelo
-      updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
+      updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo, num))
       prp(modelo, type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
           fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
           box.col = gg_color_hue(num)[modelo$frame$yval], roundint=FALSE)
@@ -164,7 +166,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     error = function(e){
       output$plot_dt <- renderPlot(NULL)
     })
-    
   })
   
   #Mostrar Reglas

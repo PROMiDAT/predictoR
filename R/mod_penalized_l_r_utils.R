@@ -40,7 +40,7 @@ e_posib_lambda <- function(cv.glm){
     e_mark_line(data = list(xAxis = x1)) %>%
     e_mark_line(data = list(xAxis = x2)) %>%
     e_axis_labels(
-      x = 'Log()',
+      x = tr("lambda"),
       y = name)%>%
     e_x_axis(
       formatter = e_axis_formatter(digits = 1))  %>% 
@@ -52,12 +52,15 @@ e_posib_lambda <- function(cv.glm){
 
 #Gráfico de coeficientes lambda RLR
 e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
-
-  plot.rlr.coeff <<- data.frame(t(as.data.frame(as.matrix(modelo$beta[[category]]))))
-  plot.rlr.coeff <<- cbind(x = log(modelo$lambda), plot.rlr.coeff)
+  matriz<<- as.matrix(modelo$beta[[category]])
+  dataframe<<- as.data.frame(matriz)
+  datap <<- t(dataframe)
+  plot.rlr.coeff <<- data.frame(datap)
+  x <<- log(modelo$lambda)
+  plot.rlr.coeff <<- cbind(x = x, plot.rlr.coeff)
   plot.rlr.coeff <<- plot.rlr.coeff[order(plot.rlr.coeff$x),]
   predictoras    <-  colnames(plot.rlr.coeff)
-  lambda         <- ifelse(best.lambda %in% plot.rlr.coeff$x, best.lambda, log(cv.glm$lambda.min))
+  lambda         <-  ifelse(best.lambda %in% plot.rlr.coeff$x, best.lambda, log(cv.glm$lambda.min))
   
   for (i in 2:length(predictoras)) {
     exe(paste0("plot.rlr.coeff$n",i," <<- '",predictoras[i], "'\n"))
@@ -70,7 +73,7 @@ e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
     aux <- paste0(aux, "e_line(serie = ",predictoras[i],", bind = ",nombres[n],") %>%\n ")
     n <- n +1
   }
-  
+
   plot <- paste0("plot.rlr.coeff %>% \n",
                  "e_charts(x = x) %>% \n",
                  aux,
@@ -89,5 +92,5 @@ e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
                                         return(params.name)
                                         }else
                                         {return('')}}"))
-  
+
 }

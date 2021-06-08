@@ -16,8 +16,8 @@ validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {
 }
 
 # Crea la tabla de comparación entre predicción y datos reales (datos de prueba)
-obj.predic <- function(predic.var = NULL, idioma){
-  real <- datos.prueba[, variable.predecir]
+obj.predic <- function(predic.var = NULL, idioma, test, var.pred){
+  real <- test[, var.pred]
   if(is.numeric(predic.var$prediction)) {
     predic.var <- factor(predic.var, labels = levels(real))
   }

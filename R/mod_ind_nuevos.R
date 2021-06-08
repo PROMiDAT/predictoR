@@ -506,7 +506,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     newCases$variable.predecir <- variable
     newCases$m.seleccionado    <- m.seleccionado
     codigo                     <- ""
-    cont                       <<- 1
+    cont                       <- 1
     if(m.seleccionado == "rl")
       if(length(levels(train[,variable])) != 2)
         stop(tr("limitModel", updateData$idioma), call. = FALSE)
@@ -635,7 +635,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     }, error = function(e) {
       if(cont !=1)
       showNotification(paste0("ERROR al generar el modelo: ", e), type = "error")
-      cont <<- 1 + 1
+      cont <- cont + 1
       return(invisible(""))
     },
     warning = function(w){

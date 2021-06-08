@@ -1,8 +1,5 @@
 # -------------------  Datos
 datos <<- NULL
-datos.prueba <<- NULL
-datos.aprendizaje <<- NULL
-variable.predecir <<- NULL
 
 #' Filter numeric variables of a data.frame
 #'
@@ -71,7 +68,6 @@ borrar.modelos <- function(updateData){
   updateData$datos.prueba         <- NULL
   updateData$datos.aprendizaje    <- NULL
   updateData$variable.predecir    <- NULL
-  updateData$selector.comparativa <- NULL
 }
 
 # Borra los datos de los modelos
@@ -145,10 +141,12 @@ segmentar.datos <- function(datos,porcentaje = 30, semilla = 5, perm.semilla = F
     rm(.Random.seed, envir = globalenv())
   }
   particion <- sample(1:nrow(datos),size = nrow(datos)*porcentaje/100, replace = FALSE)
-  datos.prueba <<- datos[-particion,]
-  datos.aprendizaje <<- datos[particion,]
+  test <- datos[-particion,]
+  train <- datos[particion,]
   if (perm.semilla) 
     set.seed(semilla)
+  
+  return(list(test = test, train = train))
 }
 
 ############################### Generar Código ################################

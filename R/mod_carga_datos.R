@@ -165,9 +165,6 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
       
       updateData$originales <- carga.datos(
       rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
-      datos.prueba      <<- NULL
-      datos.aprendizaje <<- NULL
-      variable.predecir <<- NULL
       borrar.modelos(updateData)
 
       
@@ -180,7 +177,6 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
       } else {
         updateData$datos <- updateData$originales
         datos <<- updateData$originales
-        colnames(updateData$datos)
       }
     }, error = function(e) {
       updateData$datos      <- NULL
@@ -208,9 +204,6 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
     datos <- updateData$originales
     cod = ""
     borrar.modelos(updateData)
-    datos.prueba      <<- NULL     
-    datos.aprendizaje <<- NULL     
-    variable.predecir <<- NULL
     close.menu("parte2", is.null(updateData$datos.aprendizaje))
     
     updateAceEditor(session, "fieldCodeTrans", value = cod)
@@ -261,7 +254,6 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
     tryCatch({
       if(variable != ""){
         updateData$variable.predecir <-  variable
-        variable.predecir            <<- variable
         datos                        <-  updateData$datos
         
         codigo.editor <- code.segment(porcentaje,
@@ -269,9 +261,9 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
                                       semilla,
                                       permitir.semilla)
         updateAceEditor(session, "fieldCodeSegment", value = codigo.editor)
-        segmentar.datos(datos,porcentaje,semilla,permitir.semilla)
-        updateData$datos.prueba      <-  datos.prueba
-        updateData$datos.aprendizaje <-  datos.aprendizaje
+        res <- segmentar.datos(datos,porcentaje,semilla,permitir.semilla)
+        updateData$datos.prueba      <-  res$test
+        updateData$datos.aprendizaje <-  res$train
       }
     }, error = function(e) {
       borrar.modelos(updateData)

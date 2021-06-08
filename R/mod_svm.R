@@ -121,10 +121,10 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   
   # Update predict table
   output$svmPrediTable <- DT::renderDataTable({
+    test   <- updateData$datos.prueba
+    var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-
-    obj.predic(modelos$mdls$svm[[nombre.modelo$x]]$pred,idioma = idioma)
-    
+    obj.predic(modelos$mdls$svm[[nombre.modelo$x]]$pred,idioma = idioma, test, var)  
     },server = FALSE)
   
   # Update confusion matrix text
@@ -194,7 +194,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
       var       <- paste0(isolate(updateData$variable.predecir), "~",paste(variables, collapse = "+") )
       var2      <- paste(variables, collapse = "~") 
       k         <- isolate(input$kernel.svm)
-      updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(variables, colnames(datos[, -which(colnames(datos) == variable)]), k))
+      updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k))
       if (length(variables) == 2){
       modelo.svm.temp <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
       slices <- lapply(1:(ncol(datos)-1),function(i) i)
