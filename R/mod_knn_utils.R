@@ -1,8 +1,8 @@
 # Códigos de KNN --------------------------------------------------------------------------------------------------------
+#' @import traineR 
 
 #Crea el modelo KNN
 code.kkn.modelo <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
-  library(traineR)
   return(paste0("modelo.knn.",kernel," <<- traineR::train.knn(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')"))
 }
 

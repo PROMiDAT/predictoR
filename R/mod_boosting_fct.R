@@ -61,7 +61,7 @@ selectada <- function (fila, vardep.summary, ...)
 #Reglas
 rules <- function (model, train, var.pred, compact = FALSE, ...){
   if (!inherits(model, "rpart"))
-    stop(rattle:::Rtxt("Not a legitimate rpart tree"))
+    stop(Rtxt("Not a legitimate rpart tree"))
   rtree <- length(attr(model, "ylevels")) == 0
   target <- as.character(attr(model$terms, "variables")[2])
   frm <- model$frame
@@ -100,7 +100,7 @@ rules <- function (model, train, var.pred, compact = FALSE, ...){
         cat(sprintf(" %s", pth), sep = "")
       }
       else {
-        cat(sprintf(rattle:::Rtxt("Rule number: %s "), names[i]))
+        cat(sprintf(Rtxt("Rule number: %s "), names[i]))
         if (rtree){
           cat(sprintf("[%s=%s cover=%d (%.0f%%)]\n", target, yval, cover, pcover))
         }else{
@@ -112,4 +112,10 @@ rules <- function (model, train, var.pred, compact = FALSE, ...){
   }
   cat("\n")
   invisible(ordered)
+}
+
+#Funciones tomadas del paquete RATTLE
+Rtxt <- function (...) 
+{
+  gettext(paste(...), domain = "R-rattle")
 }

@@ -113,10 +113,10 @@ carga.datos <- function(nombre.filas = T, ruta = NULL, separador = ";",
   return(accion.NAs(res, deleteNA))
 }
 
+#' @import traineR 
 
 carga.datos.np <- function(nombre.filas = T, ruta = NULL, separador = ";",
                         sep.decimal = ",", encabezado = T) {
-  library(traineR)
   if(!is.null(ruta)) {
     ruta <- gsub("\\", "/", ruta, fixed = T)
   }
