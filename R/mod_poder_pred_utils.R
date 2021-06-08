@@ -26,7 +26,7 @@ pairs.poder  <- function(datos,variable.predecir){
 
 #Gráfica la densidad de las variables númericas
 e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=variable.predecir))
+  label = str_interp(label,list(X=variable,Y=variable.predecir))
   datos.plot <- data.frame(
     "variable" = datos.dens[, variable],
     "variable.predecir" = datos.dens[, variable.predecir]
@@ -46,7 +46,7 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
 
 #Hace la gráfica de distribuciones según la variable predictiva
 e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"){
-  label = stringr::str_interp(label,list(X=variable,Y=var.predecir))
+  label = str_interp(label,list(X=variable,Y=var.predecir))
   
   dataplot <-  dist.x.predecir(datos, variable, var.predecir)
   colnames(dataplot) <- c(

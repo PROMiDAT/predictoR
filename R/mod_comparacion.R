@@ -36,8 +36,11 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     variable     <- updateData$variable.predecir
     datos        <- updateData$datos
     choices      <- as.character(unique(datos[, variable]))
-    if(length(choices==2))
-    updateSelectInput(session, "roc.sel", choices = choices, selected = choices[1])
+    if(length(choices) == 2){
+      updateSelectInput(session, "roc.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "roc.sel", choices = "")
+    }
   })
   
   # Update Comparison Table
@@ -67,7 +70,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
                 new$roc <- areaROC(alg$prob$prediction[,category,], test[,var])
               }
             }else{
-              new$roc <- NA
+              new$roc <- NULL
             }
             row.names(new) <- split_name(alg$nombre, idioma)
             res            <- rbind(res, new)
@@ -77,7 +80,11 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     }
     colnames(res)[1]           <- tr('precG', idioma)
     colnames(res)[2]           <- tr('errG', idioma)
-    colnames(res)[dim(res)[2]] <- tr('aROC', idioma)
+
+    if(length(ind$category.accuracy) ==2){
+      colnames(res)[dim(res)[2]] <- tr('aROC', idioma)
+    }
+    
     res[]                      <- lapply(res, as.numeric)
     res                        <- round(res, 5)*100
     DT::datatable(res, selection = "none", editable = FALSE,
