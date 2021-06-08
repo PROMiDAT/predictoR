@@ -51,12 +51,12 @@ e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"
   dataplot <-  dist.x.predecir(datos, variable, var.predecir)
   colnames(dataplot) <- c(
     "variable" ,
-    "variable.predecir" ,
+    "var.predecir" ,
     "count" ,
     "prop"
   )
   dataplot %>%
-    group_by(variable.predecir) %>%
+    group_by(var.predecir) %>%
     e_charts(variable, stack = "grp") %>%
     e_bar(prop, count, label = list(show = T)) %>%
     e_title(label,

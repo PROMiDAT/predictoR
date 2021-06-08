@@ -33,7 +33,7 @@ e_posib_lambda <- function(cv.glm){
   lower <- cv.glm$cvlo
   name  <- cv.glm$name[[1]]
   data.lambda <- data.frame(x, y, upper, lower, name)
-  plot <- data.lambda %>%
+  plot  <- data.lambda %>%
     e_charts(x) %>%
     e_scatter(y, symbol_size = 7) %>%
     e_error_bar(lower, upper) %>%
@@ -52,45 +52,33 @@ e_posib_lambda <- function(cv.glm){
 
 #Gráfico de coeficientes lambda RLR
 e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
-  matriz<<- as.matrix(modelo$beta[[category]])
-  dataframe<<- as.data.frame(matriz)
-  datap <<- t(dataframe)
-  plot.rlr.coeff <<- data.frame(datap)
-  x <<- log(modelo$lambda)
-  plot.rlr.coeff <<- cbind(x = x, plot.rlr.coeff)
-  plot.rlr.coeff <<- plot.rlr.coeff[order(plot.rlr.coeff$x),]
-  predictoras    <-  colnames(plot.rlr.coeff)
-  lambda         <-  ifelse(best.lambda %in% plot.rlr.coeff$x, best.lambda, log(cv.glm$lambda.min))
-  
-  for (i in 2:length(predictoras)) {
-    exe(paste0("plot.rlr.coeff$n",i," <<- '",predictoras[i], "'\n"))
+  data   <- data.frame(t(as.data.frame(as.matrix(modelo$beta[[category]]))))
+  x      <- log(modelo$lambda)
+  data   <- cbind(x = x, data)
+  data   <- data[order(data$x),]
+  lambda <- ifelse(best.lambda %in% data$x, best.lambda, log(cv.glm$lambda.min))
+  new    <- data.frame()
+  for (nom in colnames(data)[-1]) {
+    x      <- data[["x"]]
+    y      <- data[[nom]]
+    nombre <- nom
+    new.   <- data.frame(x = x, y = y, nombre = nombre)
+    new    <- rbind(new, new.)
   }
-  
-  nombres <- colnames(plot.rlr.coeff)
-  aux <- ''
-  n <- length(predictoras) + 1
-  for (i in 2:length(predictoras)) {
-    aux <- paste0(aux, "e_line(serie = ",predictoras[i],", bind = ",nombres[n],") %>%\n ")
-    n <- n +1
-  }
-
-  plot <- paste0("plot.rlr.coeff %>% \n",
-                 "e_charts(x = x) %>% \n",
-                 aux,
-                 "e_mark_line(data = list(xAxis = ",lambda,")) %>%",
-                 "e_axis_labels(
-                    x = 'Log Lambda',
-                    y = 'Coefficients: Response ",category,"') %>%  \n",
-                 "e_legend(show = FALSE)%>%  \n",
-                 "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() "
-  )
-  plot <- exe(plot)
-  plot  %>% 
+  new %>%
+    group_by(nombre) %>%
+    e_charts(x) %>%
+    e_line(y, bind = nombre)%>%
+    e_axis_labels(
+      x = 'Log Lambda',
+      y = paste0('Coefficients: Response ', category))%>%
+    e_mark_line(data = list(xAxis = lambda)) %>%
+    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
     e_labels(position = 'left',formatter = htmlwidgets::JS("
                                         function(params){
                                         if(params.dataIndex==0){
                                         return(params.name)
                                         }else
-                                        {return('')}}"))
-
+                                        {return('')}}"))%>%
+    e_legend(show = FALSE)
 }

@@ -37,49 +37,29 @@ plot.rf.error <- function(){
   return(paste0("data     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate)) \n",
                 "e_rf_error(data)\n"))
 }
-# 
-# #Gráfico de evolución del error
-# e_rf_error <- function(dataplot) {
-#   categorias   <- colnames(dataplot[,-c(1,2)])
-#   aux <- ''
-#   for (i in 1:length(categorias)) {
-#     aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
-#   }
-#   plot <- paste0("dataplot     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate))\n",
-#                  "dataplot %>% \n",       
-#                  "e_charts(x = x) %>% \n",
-#                  "e_line(serie = OOB) %>% \n",
-#                  aux,
-#                  "e_legend(orient = 'vertical',
-#              right = '20', top = '10%') %>% \n",
-#                  "e_axis_labels(
-#             x = 'Trees',
-#             y = 'Error') %>%  \n",
-#                  "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() \n"
-#   )
-#   exe(plot)
-# }
 
 #Gráfico de evolución del error
-e_rf_error <- function(dataplot) {
-  categorias   <- colnames(dataplot[,-c(1,2)])
-  aux <- ''
-  for (i in 1:length(categorias)) {
-    if(i == length(categorias)){
-      aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) \n ")
-    }else{
-      aux <- paste0(aux, "e_line(serie = ",categorias[i],", lineStyle = list(type = 'dashed')) %>% \n ")
-      
-    }
+e_rf_error <- function(data) {
+  new <- data.frame()
+  for (nom in colnames(data)[-1]) {
+    x      <- data[["x"]]
+    y      <- data[[nom]]
+    nombre <- nom
+    new.   <- data.frame(x = x, y = y, nombre = nombre)
+    new    <- rbind(new, new.)
   }
-  plot.err <<- dataplot %>%        
-                 e_charts(x = x) %>%
-                 e_line(serie = OOB) %>% 
-                 e_legend(orient = 'vertical',
-                    right = '20', top = '10%') %>% 
-                 e_axis_labels(
-                    x = 'Trees',
-                    y = 'Error') %>%  
-                 e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() 
-  exe(paste0("plot.err %>%  ", aux))
+  
+  plot.rf.err <- new %>%
+    group_by(nombre) %>%
+    e_charts(x) %>%
+    e_line(y, lineStyle = list(type = 'dashed')) %>%
+    e_legend(orient = 'vertical',
+             right = '20', top = '10%') %>% 
+    e_axis_labels(
+      x = 'Trees',
+      y = 'Error') %>%  
+    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() 
+  
+  plot.rf.err$x$opts$series[[which(plot.rf.err$x$opts$legend$data == "OOB")]]$lineStyle$type <- "solid"
+  plot.rf.err
 }
