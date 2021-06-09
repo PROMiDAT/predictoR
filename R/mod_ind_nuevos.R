@@ -574,7 +574,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                           isolate(modelo)
                         },
                         rl    = {
-                          isolate(modelo <- traineR::train.glmnet(as.formula(var), data = train))
+                          isolate(modelo <<- traineR::train.glm(as.formula(var), data = train))
                           updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
                           isolate(modelo)
                           
@@ -644,9 +644,11 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         return(invisible(""))
         
       }        
-      if(input$selectModelsPred == "rl"){
-        print(codigo)
-
+      if(m.seleccionado == "rl"){
+        isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
+        updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
+        newCases$modelo      <- modelo
+        print(modelo)
       }
     })
   })

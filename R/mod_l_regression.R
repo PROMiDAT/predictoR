@@ -80,7 +80,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
     nombre <- paste0("rl")
-    modelo <- traineR::train.glmnet(as.formula(var), data = train)
+    modelo <- traineR::train.glm(as.formula(var), data = train)
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)

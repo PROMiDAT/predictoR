@@ -164,6 +164,19 @@ as.string.c <- function(vect, .numeric = FALSE){
   }
 }
 
+#Funciones tomadas del paquete htmlwidgets
+
+JS <- function (...) 
+{
+  x <- c(...)
+  if (is.null(x)) 
+    return()
+  if (!is.character(x)) 
+    stop("The arguments for JS() must be a character vector")
+  x <- paste(x, collapse = "\n")
+  structure(x, class = unique(c("JS_EVAL", oldClass(x))))
+}
+
 #Funciones tomadas del paquete dummies
 
 dummy.data.frame<-function (data, names = NULL, omit.constants = TRUE, dummy.classes = getOption("dummy.classes"), 

@@ -64,7 +64,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
               new[[cat]] <- ind$category.accuracy[[cat]]
             }
             if(length(ind$category.accuracy) ==2){
-              if(!startsWith(alg$nombre, "rl")){
+              if(!startsWith(alg$nombre, "rlr")){
                 new$roc <- areaROC(alg$prob$prediction[,category], test[,var])
               }else{
                 new$roc <- areaROC(alg$prob$prediction[,category,], test[,var])
@@ -110,7 +110,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
         for (modelo in modelos$mdls) {
           if(!is.null(modelo)){
             for (alg in modelo) {
-             if(!startsWith(alg$nombre, "rl")){
+             if(!startsWith(alg$nombre, "rlr")){
                roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category], direction= "<" )
              }else{
                roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category,], direction= "<" )

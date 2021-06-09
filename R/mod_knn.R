@@ -3,7 +3,6 @@
 #' @description A shiny Module.
 #'
 #' @param id,input,output,session Internal parameters for {shiny}.
-#'
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
@@ -78,14 +77,14 @@ opc_knn <- fluidRow(conditionalPanel(
 mod_knn_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
-  
+  requireNamespace("traineR", quietly=TRUE)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxKnn",selected = "tabKknModelo")
     default.codigo.knn(k.def = TRUE)
   })
-  
+
   # Genera el texto del modelo, predicción y mc de knn
   output$txtknn <- renderPrint({
     input$runKnn

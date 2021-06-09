@@ -66,14 +66,14 @@ e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"
     e_legend(orient = 'vertical',
              right = '5', top = '15%') %>%
     e_flip_coords() %>%
-    e_tooltip(formatter = htmlwidgets::JS("
+    e_tooltip(formatter = JS("
                                         function(params){
                                         return('<strong>' + params.value[1] +
                                         '</strong><br />Percent: ' + parseFloat(params.value[0] * 100).toFixed(2)+
                                         '%<br /> ' + 'Count: ' + params.name)}"))%>%
     e_x_axis(
       formatter = e_axis_formatter("percent", digits = 0)) %>%
-    e_labels(position = 'inside' ,formatter = htmlwidgets::JS("
+    e_labels(position = 'inside' ,formatter =  JS("
                                         function(params){
                                         return(params.name + ' (' + parseFloat(params.value[0] *100).toFixed(2) + '%)' )}"))%>% 
     e_datazoom(show = F) %>% 

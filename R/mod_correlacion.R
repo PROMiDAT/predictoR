@@ -75,7 +75,7 @@ mod_correlacion_server <- function(input, output, session, updateData) {
           inRange = list(color = c(col_min, col_med, col_max)),
           itemStyle = list(borderWidth = 2, borderColor = "#fff")
         ) %>% e_datazoom(show = F) %>% e_show_loading() %>% e_tooltip(
-          formatter = htmlwidgets::JS(paste0(
+          formatter =  JS(paste0(
             "function(params) {\n",
             "  return(params.value[1] + ' ~ ' + params.value[0] + ': ' + parseFloat(params.value[2]).toFixed(3))\n", 
             "}"))
