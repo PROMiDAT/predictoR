@@ -20,19 +20,19 @@ mod_normal_ui <- function(id) {
     list(options.base(), tags$hr(style = "margin-top: 0px;"),
          conditionalPanel(
            "input.BoxNormal == 'tabNormalPlot'",
-           colourpicker::colourInput(
+           colourInputs(
              ns("col_hist_bar"), labelInput("selcolbar"),
              value = "steelblue", allowTransparent = T),
-           colourpicker::colourInput(
+           colourInputs(
              ns("col_hist_line"), labelInput("selcolline"),
              value = "#555555", allowTransparent = T)
          ),
          conditionalPanel(
            "input.BoxNormal == 'tabQPlot'",
-           colourpicker::colourInput(
+           colourInputs(
              ns("col_qq_point"), labelInput("selcolpoint"),
              value = "steelblue", allowTransparent = T),
-           colourpicker::colourInput(
+           colourInputs(
              ns("col_qq_line"), labelInput("selcolline"),
              value = "#555555", allowTransparent = T)
          ),

@@ -20,7 +20,7 @@ mod_dispersion_ui <- function(id) {
   opc_disp <- tabsOptions(
     heights = c(50, 40), tabs.content = list(
       list(options.base(), tags$hr(style = "margin-top: 0px;"),
-           colourpicker::colourInput(
+           colourInputs(
              ns("col_disp"), labelInput("selcolor"), value = "steelblue", 
              allowTransparent = T)),
       list(col_12(codigo.monokai(ns("fieldCodeDisp"), height = "25vh"))

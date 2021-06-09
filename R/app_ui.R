@@ -98,7 +98,7 @@ app_ui <- function(request) {
                                label = "Cantidad de Clusters", max = 10),
                    radioSwitch("deleteNAaux", "eliminanaaux", c("eliminarai", "impsutar")),
                    
-                   colourpicker::colourInput(
+                   colourInputs(
                      "auxColor", NULL, value = "red", allowTransparent = T)
           )
         )

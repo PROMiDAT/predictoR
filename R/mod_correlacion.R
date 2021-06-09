@@ -22,13 +22,13 @@ mod_correlacion_ui <- function(id){
       tabsOptions(heights = c(70, 50), tabs.content = list(
         list(
           options.base(), tags$hr(style = "margin-top: 0px;"),
-          colourpicker::colourInput(
+          colourInputs(
             ns("col_min"), labelInput("selcolor"), "#FF5733", 
             allowTransparent = T),
-          colourpicker::colourInput(
+          colourInputs(
             ns("col_med"), labelInput("selcolor"), "#F8F5F5", 
             allowTransparent = T),
-          colourpicker::colourInput(
+          colourInputs(
             ns("col_max"), labelInput("selcolor"), "#2E86C1", 
             allowTransparent = T)
         ),
