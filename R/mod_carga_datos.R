@@ -46,11 +46,7 @@ mod_carga_datos_ui <- function(id){
         col_6(id = "colSemilla", numericInput(ns("semilla"), labelInput("semilla"), value =5, width = "100%")), 
         br(),
         col_6(
-              radioSwitch(ns("permitir.semilla"), NULL, c("habilitada", "deshabilitada"), val.def = F),
-
-               switchInput(ns("permitir_semilla2"), onStatus = "success", offStatus = "danger", value = F, width = "100%",
-               label = "", onLabel = labelInput("habilitada"), offLabel = labelInput("deshabilitada"), labelWidth = "100%",
-               inline = T,size = "large")
+              radioSwitch(ns("permitir.semilla"), NULL, c("habilitada", "deshabilitada"), val.def = F)
                )
         ),
         selectInput(ns("sel.predic.var"), label = labelInput("seleccionarPredecir"),

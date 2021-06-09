@@ -13,7 +13,7 @@
 #' @import shinydashboardPlus
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
-#' @importFrom shinyWidgets switchInput checkboxGroupButtons radioGroupButtons
+# @importFrom shinyWidgets radioGroupButtons      shinyWidgets ,
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
 #' @importFrom DT tableHeader formatStyle
 #' @importFrom utils read.table write.csv head

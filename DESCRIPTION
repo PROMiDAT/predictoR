@@ -24,7 +24,6 @@ Imports:
     htmltools (>= 0.5.1), 
     colourpicker (>= 1.1.0),
     shinydashboard (>= 0.7.1),
-    shinyWidgets ,
     shinycustomloader (>= 0.9.0), 
     shinydashboardPlus (>= 2.0.0)
 Depends: R (>= 4.0)
