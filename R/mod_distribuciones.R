@@ -35,10 +35,10 @@ mod_distribuciones_ui <- function(id){
           options.base(), tags$hr(style = "margin-top: 0px;"),
           conditionalPanel(
             condition = "input.tabDyA == 'numericas'",
-            colourInputs(
+            colourpicker::colourInput(
               ns("col_dist_bar"), labelInput("selcolbar"), value = "steelblue", 
               allowTransparent = T),
-            colourInputs(
+            colourpicker::colourInput(
               ns("col_dist_point"), labelInput("selcolline"), value = "red",
               allowTransparent = T)
           )

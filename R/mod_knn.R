@@ -77,7 +77,7 @@ opc_knn <- fluidRow(conditionalPanel(
 mod_knn_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
-  requireNamespace("traineR", quietly=TRUE)
+  #requireNamespace("traineR")
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {

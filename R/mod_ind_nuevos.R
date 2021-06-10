@@ -97,21 +97,11 @@ mod_ind_nuevos_ui <- function(id){
                    tabBoxPrmdt(
                      id = "BoxModeloa",
                      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag") ,solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
-                              list(
-                                   selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"),
-                                   radioGroupButtons(ns("selectModelsPred"), labelInput("selectMod"), list("<span data-id=\"knnl\"></span>" = "knn",
-                                                                                                           "<span data-id=\"dtl\"></span>" = "dt",
-                                                                                                           "<span data-id=\"rfl\"></span>" = "rf",
-                                                                                                           "<span data-id=\"bl\"></span>" = "ada",
-                                                                                                           "<span data-id=\"svml\"></span>" = "svm",
-                                                                                                           "Bayes" = "bayes",
-                                                                                                           "<span data-id=\"xgb\"></span>" = "xgb",
-                                                                                                           "<span data-id=\"nn\"></span>" = "nn",
-                                                                                                           "<span data-id=\"rl\"></span>" = "rl",
-                                                                                                           "<span data-id=\"rlr\"></span>" = "rlr"),
-                                                     size = "sm", status = "primary",individual = FALSE, justified = FALSE, selected = "knn",
-                                                     checkIcon = list(yes = icon("ok", lib = "glyphicon"),
-                                                                      no = icon("remove", lib = "glyphicon")), width = "100%")),
+                                fluidRow(
+                                  col_6(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
+                                  col_6(selectInput(inputId = ns("selectModelsPred"), label = labelInput("selectMod"), 
+                                                    choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%"))
+                                ), hr(style = "border-top: 2px solid #cccccc;" ),
                               uiOutput(ns('opcModelsPredN')),
                               withLoader(verbatimTextOutput(ns("txtPredNuevos")), 
                                          type = "html", loader = "loader4"),
@@ -176,7 +166,15 @@ mod_ind_nuevos_ui <- function(id){
 #' @noRd 
 mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   ns <- session$ns
-
+  observeEvent(updateData$idioma, {
+    
+    nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
+    names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),updateData$idioma)
+    
+    
+    updateSelectInput(session, "selectModelsPred", choices = nombres, selected = input$selectModelsPred)
+  })
+ 
   # Load Button Function
   observeEvent(input$loadButtonNPred, {
     rowname    <- isolate(input$rownameNPred)

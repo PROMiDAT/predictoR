@@ -74,7 +74,7 @@ e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
       y = paste0('Coefficients: Response ', category))%>%
     e_mark_line(data = list(xAxis = lambda)) %>%
     e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
-    e_labels(position = 'left',formatter = JS("
+    e_labels(position = 'left',formatter = e_JS("
                                         function(params){
                                         if(params.dataIndex==0){
                                         return(params.name)

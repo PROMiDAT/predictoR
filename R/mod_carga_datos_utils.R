@@ -1,31 +1,11 @@
 # -------------------  Datos
 datos <<- NULL
 
-#' Filter numeric variables of a data.frame
-#'
-#' @param data a data.frame object.
-#'
-#' @author Diego Jimenez <diego.jimenez@promidat.com>
-#' @return data.frame
-#' @export var.numericas
-#' @examples
-#' var.numericas(iris)
-#' 
 var.numericas <- function(data) {
   if(is.null(data)) return(NULL)
   subset(data, select = sapply(data, class) %in% c('numeric', 'integer'))
 }
 
-#' Filter category variables of a data.frame
-#'
-#' @param data a data.frame object.
-#'
-#' @author Diego Jimenez <diego.jimenez@promidat.com>
-#' @return data.frame
-#' @export var.categoricas
-#' @examples
-#' var.categoricas(iris)
-#' 
 var.categoricas <- function(data) {
   if(is.null(data)) return(NULL)
   subset(data, select = !sapply(data, class) %in% c('numeric', 'integer'))

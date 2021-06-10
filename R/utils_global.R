@@ -166,7 +166,7 @@ as.string.c <- function(vect, .numeric = FALSE){
 
 #Funciones tomadas del paquete htmlwidgets
 
-JS <- function (...) 
+e_JS <- function (...) 
 {
   x <- c(...)
   if (is.null(x)) 

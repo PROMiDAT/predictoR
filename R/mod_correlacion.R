@@ -22,13 +22,13 @@ mod_correlacion_ui <- function(id){
       tabsOptions(heights = c(70, 50), tabs.content = list(
         list(
           options.base(), tags$hr(style = "margin-top: 0px;"),
-          colourInputs(
+          colourpicker::colourInput(
             ns("col_min"), labelInput("selcolor"), "#FF5733", 
             allowTransparent = T),
-          colourInputs(
+          colourpicker::colourInput(
             ns("col_med"), labelInput("selcolor"), "#F8F5F5", 
             allowTransparent = T),
-          colourInputs(
+          colourpicker::colourInput(
             ns("col_max"), labelInput("selcolor"), "#2E86C1", 
             allowTransparent = T)
         ),
@@ -75,7 +75,7 @@ mod_correlacion_server <- function(input, output, session, updateData) {
           inRange = list(color = c(col_min, col_med, col_max)),
           itemStyle = list(borderWidth = 2, borderColor = "#fff")
         ) %>% e_datazoom(show = F) %>% e_show_loading() %>% e_tooltip(
-          formatter =  JS(paste0(
+          formatter =  e_JS(paste0(
             "function(params) {\n",
             "  return(params.value[1] + ' ~ ' + params.value[0] + ': ' + parseFloat(params.value[2]).toFixed(3))\n", 
             "}"))

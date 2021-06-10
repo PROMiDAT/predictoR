@@ -1,15 +1,34 @@
 #Calcula proporciones
-dist.x.predecir <- function(data, variable, variable.predecir) {
-  if(variable != variable.predecir){
-    data <- data %>%
-      dplyr::group_by_at(c(variable, variable.predecir)) %>%
-      dplyr::summarise(count = n())
-  } else {
-    data <- data %>% dplyr::group_by_at(variable) %>%
-      dplyr::summarise(count = n())
+
+dist_cat_predecir <- function(data, variable, variable.pr){
+  res <- data.frame()
+  for (i in levels(data[[variable]])) {
+    x <- which(data[[variable]]==i)
+    for (j in levels(data[[variable.pr]])) {
+      y <- which(data[[variable.pr]]==j)
+      if(nrow(data[intersect(x,y),]) != 0){
+        res <- rbind(res, data.frame(as.factor(i),as.factor(j),count = nrow(data[intersect(x,y),])))
+      }
+    }
   }
-  data <- data %>% dplyr::mutate(prop = round(count/sum(count),4))
-  return(data)
+  
+  colnames(res) <- c(
+    "variable" ,
+    "var.predecir" ,
+    "count" 
+  )
+  prop <- c()
+  for (i in levels(data[[variable]])) {
+    x <- which(res[["variable"]]==i)
+    for (j in levels(data[[variable.pr]])) {
+      y <- which(res[["var.predecir"]]==j)
+      cant <- res[intersect(x,y),"count"]
+      tot  <- sum(res[x,"count"])
+      prop <- c(prop,round(cant/tot,4))
+    }
+  }
+  res <- cbind(res, prop)
+  return(res)
 }
 
 #Gráfica el pairs
@@ -47,14 +66,8 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
 #Hace la gráfica de distribuciones según la variable predictiva
 e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"){
   label = str_interp(label,list(X=variable,Y=var.predecir))
-  
-  dataplot <-  dist.x.predecir(datos, variable, var.predecir)
-  colnames(dataplot) <- c(
-    "variable" ,
-    "var.predecir" ,
-    "count" ,
-    "prop"
-  )
+  dataplot <<-  dist_cat_predecir(datos, variable, var.predecir)
+
   dataplot %>%
     group_by(var.predecir) %>%
     e_charts(variable, stack = "grp") %>%
@@ -66,14 +79,14 @@ e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"
     e_legend(orient = 'vertical',
              right = '5', top = '15%') %>%
     e_flip_coords() %>%
-    e_tooltip(formatter = JS("
+    e_tooltip(formatter = e_JS("
                                         function(params){
                                         return('<strong>' + params.value[1] +
                                         '</strong><br />Percent: ' + parseFloat(params.value[0] * 100).toFixed(2)+
                                         '%<br /> ' + 'Count: ' + params.name)}"))%>%
     e_x_axis(
       formatter = e_axis_formatter("percent", digits = 0)) %>%
-    e_labels(position = 'inside' ,formatter =  JS("
+    e_labels(position = 'inside' ,formatter =  e_JS("
                                         function(params){
                                         return(params.name + ' (' + parseFloat(params.value[0] *100).toFixed(2) + '%)' )}"))%>% 
     e_datazoom(show = F) %>% 

@@ -20,7 +20,7 @@ mod_dispersion_ui <- function(id) {
   opc_disp <- tabsOptions(
     heights = c(50, 40), tabs.content = list(
       list(options.base(), tags$hr(style = "margin-top: 0px;"),
-           colourInputs(
+           colourpicker::colourInput(
              ns("col_disp"), labelInput("selcolor"), value = "steelblue", 
              allowTransparent = T)),
       list(col_12(codigo.monokai(ns("fieldCodeDisp"), height = "25vh"))
@@ -65,7 +65,7 @@ mod_dispersion_server <- function(input, output, session, updateData) {
       datos %>% e_charts(x) %>% e_scatter(y, bind = id, symbol_size = 10) %>%
         e_x_axis(x) %>% e_y_axis(y) %>% e_datazoom(show = F) %>%
         e_color(color) %>% e_axis_labels(x = vars[1], y = vars[2]) %>%
-        e_tooltip(formatter = JS(paste0(
+        e_tooltip(formatter = e_JS(paste0(
           "function(params) {
             return('<b>' + params.name + ' </b><br/>", vars[1], 
           ": ' + params.value[0] + '<br />", vars[2], ": ' + params.value[1])
@@ -83,7 +83,7 @@ mod_dispersion_server <- function(input, output, session, updateData) {
         e_x_axis_3d(name = vars[1], axisLine = list(lineStyle = list(color = "white"))) %>%
         e_y_axis_3d(name = vars[2], axisLine = list(lineStyle = list(color = "white"))) %>%
         e_z_axis_3d(name = vars[3], axisLine = list(lineStyle = list(color = "white"))) %>%
-        e_tooltip(formatter =  JS(paste0(
+        e_tooltip(formatter =  e_JS(paste0(
           "function(params) {
             return('<b>' + params.name + ' </b><br/>", vars[1], ": ' + params.value[0] + '<br/>", 
           vars[2], ": ' + params.value[1] + '<br/>", vars[3], ": ' + params.value[2])

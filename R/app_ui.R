@@ -11,17 +11,21 @@
 #' @import htmltools
 #' @import shinycustomloader
 #' @import shinydashboardPlus
+#' @importFrom pROC roc
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
-# @importFrom shinyWidgets radioGroupButtons      shinyWidgets ,
-#' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
+#' @importFrom rpart path.rpart
+#' @importFrom glmnet cv.glmnet
 #' @importFrom DT tableHeader formatStyle
 #' @importFrom utils read.table write.csv head
-#' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame model.matrix predict predict.lm qt symnum cov2cor pt
+#' @importFrom grDevices adjustcolor hcl rainbow 
+#' @importFrom rattle asRules printRandomForests
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass
-#' @importFrom grDevices adjustcolor hcl rainbow 
+#' @importFrom flexdashboard renderGauge gaugeOutput gauge gaugeSectors
+#' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
 #' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text 
+#' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame model.matrix predict predict.lm qt symnum cov2cor pt
 #' @keywords internal
 #' @noRd
 
@@ -98,7 +102,7 @@ app_ui <- function(request) {
                                label = "Cantidad de Clusters", max = 10),
                    radioSwitch("deleteNAaux", "eliminanaaux", c("eliminarai", "impsutar")),
                    
-                   colourInputs(
+                   colourpicker::colourInput(
                      "auxColor", NULL, value = "red", allowTransparent = T)
           )
         )
