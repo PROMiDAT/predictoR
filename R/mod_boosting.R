@@ -75,8 +75,8 @@ mod_boosting_ui <- function(id){
                verbatimTextOutput(ns("txtBoostingMC"))),
       
       tabPanel(title = labelInput("indices"),value = "tabBIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("boostingPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("boostingErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("boostingPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("boostingErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("boostingIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("boostingIndErrTable"))))),
       
@@ -160,8 +160,8 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.boosting <- indices.generales(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$boostingPrecGlob  <-  fill.gauges(indices.boosting[[1]], tr("precG",idioma))
-    output$boostingErrorGlob <-  fill.gauges(indices.boosting[[2]], tr("errG",idioma))
+    output$boostingPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$boostingErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
     xtable(indices.error.table(indices.boosting,"boosting"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -251,8 +251,6 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
         output$txtBoostingMC        <- renderPrint(invisible(NULL))
         output$boostingIndPrecTable <- shiny::renderTable(NULL)
         output$boostingIndErrTable  <- shiny::renderTable(NULL)
-        output$boostingPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$boostingErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
 }

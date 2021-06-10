@@ -58,8 +58,8 @@ mod_d_tree_ui <- function(id){
                verbatimTextOutput(ns("txtDtMC"))),
       
       tabPanel(title = labelInput("indices"),value = "tabDtIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("dtPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("dtErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("dtPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("dtErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("dtIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("dtIndErrTable"))))),
       
@@ -144,8 +144,8 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.dt <- indices.generales(modelos$mdls$dt[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$dtPrecGlob  <-  fill.gauges(indices.dt[[1]], tr("precG",idioma))
-    output$dtErrorGlob <-  fill.gauges(indices.dt[[2]], tr("errG",idioma))
+    output$dtPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.dt[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$dtErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.dt[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
     xtable(indices.error.table(indices.dt,"dt"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -217,8 +217,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
         output$txtDtMC        <- renderPrint(invisible(NULL))
         output$dtIndPrecTable <- shiny::renderTable(NULL)
         output$dtIndErrTable  <- shiny::renderTable(NULL)
-        output$dtPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$dtErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
 }

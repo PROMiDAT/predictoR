@@ -87,8 +87,8 @@ mod_penalized_l_r_ui <- function(id){
                verbatimTextOutput(ns("txtrlrMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabRlrIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("rlrPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("rlrErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("rlrPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("rlrErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("rlrIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("rlrIndErrTable")))))
     )
@@ -175,8 +175,9 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     idioma      <- updateData$idioma
     indices.rlr <- indices.generales(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$rlrPrecGlob  <-  fill.gauges(indices.rlr[[1]], tr("precG",idioma))
-    output$rlrErrorGlob <-  fill.gauges(indices.rlr[[2]], tr("errG",idioma))
+    output$rlrPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rlr[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$rlrErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.rlr[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
+    
     xtable(indices.error.table(indices.rlr,"rlr"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -278,8 +279,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     output$txtDtMC        <- renderPrint(invisible(NULL))
     output$dtIndPrecTable <- shiny::renderTable(NULL)
     output$dtIndErrTable  <- shiny::renderTable(NULL)
-    output$dtPrecGlob     <- flexdashboard::renderGauge(NULL)
-    output$dtErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
 }

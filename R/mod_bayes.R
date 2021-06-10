@@ -39,8 +39,8 @@ mod_bayes_ui <- function(id){
                verbatimTextOutput(ns("txtbayesMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabBayesIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("bayesPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("bayesErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("bayesPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("bayesErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("bayesIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("bayesIndErrTable")))))
     )
@@ -115,8 +115,8 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.bayes <- indices.generales(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$bayesPrecGlob  <-  fill.gauges(indices.bayes[[1]], tr("precG",idioma))
-    output$bayesErrorGlob <-  fill.gauges(indices.bayes[[2]], tr("errG",idioma))
+    output$bayesPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.bayes[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$bayesErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.bayes[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
     xtable(indices.error.table(indices.bayes,"bayes"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -149,8 +149,6 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
         output$txtbayesMC        <- renderPrint(invisible(NULL))
         output$bayesIndPrecTable <- shiny::renderTable(NULL)
         output$bayesIndErrTable  <- shiny::renderTable(NULL)
-        output$bayesPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$bayesErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
 
 }

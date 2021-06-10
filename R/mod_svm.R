@@ -72,8 +72,8 @@ mod_svm_ui <- function(id){
                verbatimTextOutput(ns("txtSvmMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabSvmIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("svmPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("svmErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("svmPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("svmErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("svmIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("svmIndErrTable")))))
     )
@@ -153,8 +153,9 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
-    output$svmPrecGlob  <-  fill.gauges(indices.svm[[1]], tr("precG",idioma))
-    output$svmErrorGlob <-  fill.gauges(indices.svm[[2]], tr("errG",idioma))
+    output$svmPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.svm[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$svmErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.svm[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
+    
     xtable(indices.error.table(indices.svm,"SVM"))
   
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)

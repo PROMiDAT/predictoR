@@ -20,7 +20,6 @@
 #' @importFrom grDevices adjustcolor hcl rainbow 
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass
-#' @importFrom flexdashboard renderGauge gaugeOutput gauge gaugeSectors
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
 #' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text 
 #' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame model.matrix predict predict.lm qt symnum cov2cor pt

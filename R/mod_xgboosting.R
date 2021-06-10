@@ -63,8 +63,8 @@ mod_xgboosting_ui <- function(id){
                verbatimTextOutput(ns("txtxgbMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabXgbIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("xgbPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("xgbErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("xgbPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("xgbErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("xgbIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("xgbIndErrTable")))))
     )
@@ -144,8 +144,9 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.xgb <- indices.generales(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
-    output$xgbPrecGlob  <-  fill.gauges(indices.xgb[[1]], tr("precG",idioma))
-    output$xgbErrorGlob <-  fill.gauges(indices.xgb[[2]], tr("errG",idioma))
+    output$xgbPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.xgb[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$xgbErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.xgb[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
+    
     xtable(indices.error.table(indices.xgb,"xgb"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -209,8 +210,6 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
         output$txtxgbMC        <- renderPrint(invisible(NULL))
         output$xgbIndPrecTable <- shiny::renderTable(NULL)
         output$xgbIndErrTable  <- shiny::renderTable(NULL)
-        output$xgbPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$xgbErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
 }
     

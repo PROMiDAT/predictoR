@@ -128,15 +128,7 @@ indices.prec.table <- function(indices, nombre = "", idioma){
   return(prec)
 }
 
-#Genera un gauge
-new.gauge <- function(val, lab){
-  return(paste0("flexdashboard::renderGauge({
-                flexdashboard::gauge(round(",val,",2),
-                min = 0, max = 100, symbol = '%',
-                label = '",lab,"',
-                flexdashboard::gaugeSectors(success = c(0, 100)))})"))
-}
-
+#Genera el gráfico de error y precisión global
 e_global_gauge<- function(value, label, color1, color2){
   e_charts() %>% 
     e_gauge(value, "",
@@ -189,10 +181,6 @@ e_global_gauge<- function(value, label, color1, color2){
               color = "#54564D"
             )
     ) 
-}
-# Genera los gauges
-fill.gauges <- function(indices, titulos) {
-    exe(new.gauge(indices, titulos))
 }
 
 # Concatena y ejecuta un string como código

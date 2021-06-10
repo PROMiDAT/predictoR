@@ -187,8 +187,6 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
         output$txtknnMC        <- renderPrint(invisible(NULL))
         output$knnIndPrecTable <- shiny::renderTable(NULL)
         output$knnIndErrTable  <- shiny::renderTable(NULL)
-        output$knnPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$knnErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
 }   

@@ -75,8 +75,8 @@ mod_r_forest_ui <- function(id){
                verbatimTextOutput(ns("txtRfMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabRfIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("rfPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("rfErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("rfPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("rfErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("rfIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("rfIndErrTable"))))),
       
@@ -158,8 +158,9 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.rf <- indices.generales(modelos$mdls$rf[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$rfPrecGlob  <-  fill.gauges(indices.rf[[1]], tr("precG",idioma))
-    output$rfErrorGlob <-  fill.gauges(indices.rf[[2]], tr("errG",idioma))
+    output$rfPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rf[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$rfErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.rf[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
+    
     xtable(indices.error.table(indices.rf,"rf"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -259,9 +260,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
         output$plot_rf_mc     <- renderPlot(NULL)
         output$txtRfMC        <- renderPrint(invisible(NULL))
         output$rfIndPrecTable <- shiny::renderTable(NULL)
-        output$rfIndErrTable  <- shiny::renderTable(NULL)
-        output$rfPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$rfErrorGlob    <- flexdashboard::renderGauge(NULL)
+        output$rfIndErrTable  <- shiny::renderTable(NULL) 
   }
 
 }

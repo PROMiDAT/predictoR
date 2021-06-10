@@ -76,8 +76,8 @@ mod_neural_net_ui <- function(id){
                verbatimTextOutput(ns("txtnnMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabNnIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("nnPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("nnErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("nnPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("nnErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("nnIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("nnIndErrTable")))))
     )
@@ -199,8 +199,9 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.nn <- indices.generales(modelos$mdls$nn[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
-    output$nnPrecGlob  <-  fill.gauges(indices.nn[[1]], tr("precG",idioma))
-    output$nnErrorGlob <-  fill.gauges(indices.nn[[2]], tr("errG",idioma))
+    output$nnPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.nn[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$nnErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.nn[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
+    
     xtable(indices.error.table(indices.nn,"nn"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -272,8 +273,6 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
         output$txtNnMC        <- renderPrint(invisible(NULL))
         output$nnIndPrecTable <- shiny::renderTable(NULL)
         output$nnIndErrTable  <- shiny::renderTable(NULL)
-        output$nnPrecGlob     <- flexdashboard::renderGauge(NULL)
-        output$nnErrorGlob    <- flexdashboard::renderGauge(NULL)
   }
   
 }

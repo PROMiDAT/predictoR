@@ -17,7 +17,7 @@ rulesRandomForest <- function (model, n = 1, include.class = NULL, format = "", 
     tr.path <- tr.paths[[i]]
     nodenum <- as.integer(names(tr.paths[i]))
     target <- levels(model$y)[trs[nodenum, "prediction"]]
-    if (!is.null(include.class) && target %notin% include.class) 
+    if (!is.null(include.class) && target %notinto% include.class) 
       (next)()
     cat(sprintf("%sTree %d Rule %d Node %d %s\n \n", comment, 
                 n, i, nodenum, ifelse(is.null(target), "Regression (to do - extract predicted value)", 
@@ -145,5 +145,8 @@ sdecimal2binarys <- function (x)
   return(rev(sdecimal2binarys.small(x)))
 }
 
-
+`%notinto%` <- function (x, y) {
+  !x %in% y
+}
+ 
 
