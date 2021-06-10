@@ -170,9 +170,15 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   
   #Mostrar Reglas
   output$rulesDt <- renderPrint({
-    tipo           <- isolate(input$split.dt)
-    updateAceEditor(session, "fieldCodeDtRule", paste0("asRules(modelo.dt.",tipo,")"))
-    rattle::asRules(modelos$mdls$dt[[nombre.modelo$x]]$modelo)
+    tipo  <- isolate(input$split.dt)
+    model <- modelos$mdls$dt[[nombre.modelo$x]]$modelo
+    var   <- model$prmdt$var.pred
+    updateAceEditor(session, "fieldCodeDtRule", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
+                            response.name ='",paste0("Rule Number - ", var),"')"))
+    
+    rpart.plot::rpart.rules(model, cover = TRUE,nn = TRUE ,roundint=FALSE, style = "tall", digits=3, 
+                            response.name = paste0("Rule Number - ", var))
+    
   })
   
   # Actualiza el código a la versión por defecto

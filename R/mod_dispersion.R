@@ -74,9 +74,10 @@ mod_dispersion_server <- function(input, output, session, updateData) {
     } else if (length(vars) == 3) {
       cod <- code.disp.3d(vars, color)
       updateAceEditor(session, "fieldCodeDisp", value = cod)
+      id <- row.names(datos)
       datos <- data.frame(
         x = datos[[vars[1]]], y = datos[[vars[2]]],
-        z = datos[[vars[3]]], id = row.names(datos)
+        z = datos[[vars[3]]], id = id
       )
       
       datos %>% e_charts(x) %>% e_scatter_3d(y, z, bind = id) %>% e_color(color) %>%

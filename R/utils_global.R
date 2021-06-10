@@ -137,6 +137,59 @@ new.gauge <- function(val, lab){
                 flexdashboard::gaugeSectors(success = c(0, 100)))})"))
 }
 
+e_global_gauge<- function(value, label, color1, color2){
+  e_charts() %>% 
+    e_gauge(value, "",
+            itemStyle = list(color = color1,  
+                             shadowColor = color2,
+                             shadowBlur = 10,
+                             shadowOffsetX = 2,
+                             shadowOffsetY = 2),
+            progress = list(
+              show = TRUE,
+              width = 30
+            ),
+            startAngle = 180,
+            endAngle = 0
+            ,
+            pointer = list(
+              show = FALSE
+            ),
+            axisLine = list(
+              lineStyle = list(
+                width = 30
+              )
+            ),
+            axisTick = list(
+              distance = -39,
+              splitNumber = 5,
+              lineStyle = list(
+                color = "#999",
+                width = 1
+              )
+            ),
+            splitLine = list(
+              distance = -42,
+              length = 10,
+              lineStyle = list(
+                color = "#999",
+                width = 2
+              )
+            ),
+            axisLabel = list(
+              distance = 0,
+              color = "#999",
+              fontSize = 10
+            ),
+            detail = list(
+              borderRadius = 8,
+              fontSize = 15,
+              offsetCenter = c(0, '-20%'),
+              formatter =   paste0('{value}%\n',label),
+              color = "#54564D"
+            )
+    ) 
+}
 # Genera los gauges
 fill.gauges <- function(indices, titulos) {
     exe(new.gauge(indices, titulos))

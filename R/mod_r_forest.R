@@ -169,11 +169,11 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   output$rulesRf <- renderPrint({
     idioma <- updateData$idioma
     n      <- input$rules.rf.n
-    modelo <- modelos$mdls$rf[[nombre.modelo$x]]$modelo
+    modelo <<- modelos$mdls$rf[[nombre.modelo$x]]$modelo
     modelo$call$data <- updateData$datos.aprendizaje
     tryCatch({
-      updateAceEditor(session,"fieldCodeRfRules",paste0("printRandomForests(modelo.rf, ",n,")"))
-      rattle::printRandomForests(modelo, n)
+      updateAceEditor(session,"fieldCodeRfRules",paste0("rulesRandomForest(modelo.rf, ",n,")"))
+      rulesRandomForest(modelo, n)
     },error = function(e){
              stop(tr("NoDRule", idioma))
     })

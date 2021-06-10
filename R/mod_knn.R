@@ -63,8 +63,8 @@ opc_knn <- fluidRow(conditionalPanel(
                verbatimTextOutput(ns("txtknnMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabKknIndex",
-               fluidRow(col_6(flexdashboard::gaugeOutput(ns("knnPrecGlob"), width = "100%")),
-                        col_6(flexdashboard::gaugeOutput(ns("knnErrorGlob"), width = "100%"))),
+               fluidRow(col_6(echarts4rOutput(ns("knnPrecGlob"), width = "100%")),
+                        col_6(echarts4rOutput(ns("knnErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("knnIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("knnIndErrTable")))))
       )
@@ -145,8 +145,8 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     idioma <- updateData$idioma
     indices.knn <- indices.generales(modelos$mdls$knn[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
-    output$knnPrecGlob  <-  fill.gauges(indices.knn[[1]], tr("precG",idioma))
-    output$knnErrorGlob <-  fill.gauges(indices.knn[[2]], tr("errG",idioma))
+    output$knnPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.knn[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
+    output$knnErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.knn[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
     xtable(indices.error.table(indices.knn,"KNN"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)

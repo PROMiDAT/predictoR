@@ -3,7 +3,6 @@
 #' @param request Internal parameter for `{shiny}`. 
 #'     DO NOT REMOVE.
 #' @import shiny
-#' @import dplyr
 #' @import rlang
 #' @import traineR 
 #' @import shinyAce
@@ -19,7 +18,6 @@
 #' @importFrom DT tableHeader formatStyle
 #' @importFrom utils read.table write.csv head
 #' @importFrom grDevices adjustcolor hcl rainbow 
-#' @importFrom rattle asRules printRandomForests
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass
 #' @importFrom flexdashboard renderGauge gaugeOutput gauge gaugeSectors

@@ -23,9 +23,9 @@ e_histnormal <- function(data, colorbar = "steelblue", colorline = "gray",
   normalidad <- dnorm(x, promedio, desviacion)
   
   d <- diff(h$breaks)[1]
-  
+  n <- round(normalidad, 3)
   distribu <- data.frame(
-    x = round(h$mids, 3), d = round(h$density, 3), n = round(normalidad, 3),
+    x = round(h$mids, 3), d = round(h$density, 3), n = n,
     name = paste0("(", h$mids - d / 2, " - ", h$mids + d / 2, ")")
   )
   

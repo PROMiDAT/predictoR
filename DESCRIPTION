@@ -18,7 +18,6 @@ Imports:
     glmnet,
     rpart,
     pROC,
-    rattle,
     colourpicker,
     traineR (>= 1.6.2),
     shinyjs (>= 2.0.0),

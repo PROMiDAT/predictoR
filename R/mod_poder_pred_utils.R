@@ -7,7 +7,8 @@ dist_cat_predecir <- function(data, variable, variable.pr){
     for (j in levels(data[[variable.pr]])) {
       y <- which(data[[variable.pr]]==j)
       if(nrow(data[intersect(x,y),]) != 0){
-        res <- rbind(res, data.frame(as.factor(i),as.factor(j),count = nrow(data[intersect(x,y),])))
+        count <- nrow(data[intersect(x,y),])
+        res   <- rbind(res, data.frame(as.factor(i),as.factor(j),count = count))
       }
     }
   }
@@ -66,7 +67,7 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
 #Hace la gráfica de distribuciones según la variable predictiva
 e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"){
   label = str_interp(label,list(X=variable,Y=var.predecir))
-  dataplot <<-  dist_cat_predecir(datos, variable, var.predecir)
+  dataplot <-  dist_cat_predecir(datos, variable, var.predecir)
 
   dataplot %>%
     group_by(var.predecir) %>%
