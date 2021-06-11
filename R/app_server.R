@@ -24,7 +24,7 @@ app_server <- function( input, output, session ) {
   )
   
   onStop(function() stopApp())
-  
+  exe(paste0("library(traineR)"))
   ##################################  Variables  ##############################
   updateData <- rv(datos                = NULL, 
                    originales           = NULL, 
