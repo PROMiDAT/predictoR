@@ -1,12 +1,14 @@
+#Funciones tomadas de los paquetes RATTLE Y RANDOMFOREST
+
 rulesRandomForest <- function (model, n = 1, include.class = NULL, format = "", comment = "") 
 {
   if (!inherits(model, "randomForest")) 
     stop(Rtxt("the model is not of the 'randomForest' class"))
   if (format == "VB") 
     comment = "'"
-  trs <- getTrees(model, n)
+  trs      <- getTrees(model, n)
   tr.paths <- getRFPathNodesT(trs)
-  tr.vars <- attr(model$terms, "dataClasses")[-1]
+  tr.vars  <- attr(model$terms, "dataClasses")[-1]
   cat(sprintf("%sRandom Forest Model %d", comment, n), "\n\n")
   cat(paste(comment, "-------------------------------------------------------------\n", 
             sep = ""))

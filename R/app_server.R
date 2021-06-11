@@ -24,8 +24,6 @@ app_server <- function( input, output, session ) {
   )
   
   onStop(function() stopApp())
-  exe(paste0("library(traineR)"))
-  
   
   ##################################  Variables  ##############################
   updateData <- rv(datos                = NULL, 
@@ -35,24 +33,24 @@ app_server <- function( input, output, session ) {
                    datos.aprendizaje    = NULL,
                    variable.predecir    = NULL)
   
-  newCases <- rv(originales        = NULL, 
-                 datos.prueba      = NULL, 
-                 datos.aprendizaje = NULL,
-                 m.seleccionado    = NULL,
-                 modelo            = NULL,
-                 prediccion        = NULL,
-                 variable.predecir = NULL)
+  newCases   <-     rv(originales        = NULL, 
+                       datos.prueba      = NULL, 
+                       datos.aprendizaje = NULL,
+                       m.seleccionado    = NULL,
+                       modelo            = NULL,
+                       prediccion        = NULL,
+                       variable.predecir = NULL)
   
-  modelos <- rv(mdls = list(svm      = NULL,
-                            knn      = NULL,
-                            bayes    = NULL,
-                            rl       = NULL,
-                            rlr      = NULL,
-                            xgb      = NULL,
-                            boosting = NULL,
-                            rf       = NULL,
-                            nn       = NULL,
-                            dt       = NULL))
+  modelos    <-  rv(mdls = list(svm      = NULL,
+                                knn      = NULL,
+                                bayes    = NULL,
+                                rl       = NULL,
+                                rlr      = NULL,
+                                xgb      = NULL,
+                                boosting = NULL,
+                                rf       = NULL,
+                                nn       = NULL,
+                                dt       = NULL))
   ###################################  Update  ################################
   #' Update on Language
   observeEvent(input$idioma, {
@@ -117,10 +115,10 @@ app_server <- function( input, output, session ) {
   callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData, modelos)
   callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData, modelos)
   
-  #Comparacion de Modelos
+  #Comparación de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos)
   
-  #Prediccion de Individuos Nuevos
+  #Predicción de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases)
   
 }

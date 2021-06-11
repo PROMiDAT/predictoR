@@ -132,55 +132,69 @@ indices.prec.table <- function(indices, nombre = "", idioma){
 e_global_gauge<- function(value, label, color1, color2){
   e_charts() %>% 
     e_gauge(value, "",
-            itemStyle = list(color = color1,  
-                             shadowColor = color2,
-                             shadowBlur = 10,
+            itemStyle = list(color         = color1,  
+                             shadowColor   = color2,
+                             shadowBlur    = 10,
                              shadowOffsetX = 2,
                              shadowOffsetY = 2),
             progress = list(
-              show = TRUE,
-              width = 30
+              show   = TRUE,
+              width  = 30
             ),
             startAngle = 180,
-            endAngle = 0
+            endAngle   = 0
             ,
             pointer = list(
-              show = FALSE
+              show  = FALSE
             ),
-            axisLine = list(
+            axisLine    = list(
               lineStyle = list(
-                width = 30
+                width   = 30
               )
             ),
             axisTick = list(
-              distance = -39,
+              distance    = -39,
               splitNumber = 5,
-              lineStyle = list(
-                color = "#999",
-                width = 1
+              lineStyle   = list(
+                color     = "#999",
+                width     = 1
               )
             ),
-            splitLine = list(
+            splitLine  = list(
               distance = -42,
-              length = 10,
-              lineStyle = list(
+              length   = 10,
+              lineStyle= list(
                 color = "#999",
                 width = 2
               )
             ),
-            axisLabel = list(
+            axisLabel  = list(
               distance = 0,
-              color = "#999",
+              color    = "#999",
               fontSize = 10
             ),
             detail = list(
               borderRadius = 8,
-              fontSize = 15,
+              fontSize     = 15,
               offsetCenter = c(0, '-20%'),
-              formatter =   paste0('{value}%\n',label),
-              color = "#54564D"
+              formatter    =   paste0('{value}%\n',label),
+              color        = "#54564D"
             )
     ) 
+}
+
+contr.dummy <- function (n, contrasts = TRUE) 
+{
+  if (length(n) <= 1) {
+    if (is.numeric(n) && length(n) == 1 && n > 1) 
+      levels <- 1:n
+    else stop("contrasts are not defined for 0 degrees of freedom")
+  }
+  else levels <- n
+  lenglev <- length(levels)
+  cont <- array(0, c(lenglev, lenglev), list(levels, levels))
+  cont[col(cont) == row(cont)] <- 1
+  cont
 }
 
 # Concatena y ejecuta un string como código
@@ -216,76 +230,6 @@ e_JS <- function (...)
     stop("The arguments for JS() must be a character vector")
   x <- paste(x, collapse = "\n")
   structure(x, class = unique(c("JS_EVAL", oldClass(x))))
-}
-
-#Funciones tomadas del paquete dummies
-
-dummy.data.frame<-function (data, names = NULL, omit.constants = TRUE, dummy.classes = getOption("dummy.classes"), 
-                            all = TRUE, ...) 
-{
-  df <- data.frame(row.names = row.names(data))
-  new.attr <- list()
-  for (nm in names(data)) {
-    
-    old.attr <- attr(df, "dummies")
-    if (isTRUE(nm %in% names || (is.null(names) && (dummy.classes == 
-                                                    "ALL" || class(data[, nm]) %in% dummy.classes)))) {
-      dummies <- dummy(nm, data, ...)
-      if (ncol(dummies) == 1 & omit.constants) {
-        dummies <- matrix(nrow = nrow(data), ncol = 0)
-      }
-      if (ncol(dummies) > 0) 
-        new.attr[[nm]] <- (ncol(df) + 1):(ncol(df) + 
-                                            ncol(dummies))
-    }
-    else {
-      if (!all) 
-        (next)()
-      dummies <- data[, nm, drop = FALSE]
-    }
-    df <- cbind(df, dummies)
-    print(df)
-  }
-  attr(df, "dummies") <- new.attr
-  return(df)
-}
-
-dummy <- function (x, data = NULL, sep = "", drop = TRUE, fun = as.integer, 
-                   verbose = FALSE) 
-{
-  if (is.null(data)) {
-    name <- as.character(sys.call(1))[2]
-    name <- sub("^(.*\\$)", "", name)
-    name <- sub("\\[.*\\]$", "", name)
-  }
-  else {
-    if (length(x) > 1) 
-      stop("More than one variable provided to produce dummy variable.")
-    name <- x
-    x <- data[, name]
-  }
-  if (drop == FALSE && class(x) == "factor") {
-    x <- factor(x, levels = levels(x), exclude = NULL)
-  }
-  else {
-    x <- factor(x, exclude = NULL)
-  }
-  if (length(levels(x)) < 2) {
-    if (verbose) 
-      warning(name, " has only 1 level. Producing dummy variable anyway.")
-    return(matrix(rep(1, length(x)), ncol = 1, dimnames = list(rownames(x), 
-                                                               c(paste(name, sep, x[[1]], sep = "")))))
-  }
-  mm <- model.matrix(~x - 1, model.frame(~x - 1), contrasts = FALSE)
-  colnames.mm <- colnames(mm)
-  if (verbose) 
-    cat(" ", name, ":", ncol(mm), "dummy varibles created\n")
-  mm <- matrix(fun(mm), nrow = nrow(mm), ncol = ncol(mm), dimnames = list(NULL, 
-                                                                          colnames.mm))
-  colnames(mm) <- sub("^x", paste(name, sep, sep = ""), colnames(mm))
-  if (!is.null(row.names(data))) 
-    rownames(mm) <- rownames(data)
-  return(mm)
 }
 
 #Funciones tomadas del paquete rpart
