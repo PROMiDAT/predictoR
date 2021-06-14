@@ -37,10 +37,10 @@ app_ui <- function(request) {
         title = HTML(paste0(
           '<span class = "logo-lg">
             <a href = "https://promidat.com" target = "_blank">
-              <img src = "img/logo.png" width = "100%" style = "padding-top:2px; padding-bottom:6px;">
+              
             </a>
-          </span>',
-          '<img src= "img/logo_small.png" height = 50%, width = "120%">'
+          </span>'
+          
         ))
       ),
       dashboardSidebar(
