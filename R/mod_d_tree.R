@@ -23,7 +23,7 @@ mod_d_tree_ui <- function(id){
   codigo.dt.run<- list(conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtModelo'",
                                      codigo.monokai(ns("fieldCodeDt"),height = "10vh")))
   
-  opc_dt <- fluidRow(conditionalPanel(
+  opc_dt <- div(conditionalPanel(
                         "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo'",
                         tabsOptions(heights = c(70, 30), tabs.content = list(
                           list(options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),

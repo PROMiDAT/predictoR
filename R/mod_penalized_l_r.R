@@ -9,17 +9,6 @@
 #' @importFrom shiny NS tagList 
 mod_penalized_l_r_ui <- function(id){
   ns <- NS(id)
-  opciones.rlr <- list(options.run(ns("runRlr")), tags$hr(style = "margin-top: 0px;"),
-                       conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo'",
-                                        fluidRow(col_6(selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
-                                                                     choices = list("Ridge" = 0, "Lasso" = 1))),
-                                                 col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
-                                        fluidRow(col_6(id = ns("colManualLanda"),br(),
-                                                        numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
-                                                 col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"))))),
-                       conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
-                                        fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
-                                                                    choices =  "", width = "100%")))))
   
   codigo.rlr.run<- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
                                          codigo.monokai(ns("fieldCodeRlrLanda"), height = "10vh")),
@@ -35,7 +24,7 @@ mod_penalized_l_r_ui <- function(id){
                       conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrIndex'",
                                        codigo.monokai(ns("fieldCodeRlrIG"), height = "10vh")))
   
-  opc_rlr  <-   fluidRow(
+  opc_rlr  <-   div(
     conditionalPanel(
       "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
       tabsOptions(heights = c(70, 30), tabs.content = list(
@@ -45,15 +34,15 @@ mod_penalized_l_r_ui <- function(id){
             options.run(ns("runRlr")), tags$hr(style = "margin-top: 0px;"),
             fluidRow(col_6(selectInput(inputId = ns("alpha.rlr"), label = labelInput("selectAlg"),selected = 1,
                                        choices = list("Ridge" = 0, "Lasso" = 1))),
-                     col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no")))),
-            fluidRow(col_6(id = ns("colManualLanda"),br(),
-                           numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
-                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico") )))),
+                     col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no"))))),
           conditionalPanel(
             "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
-                                        choices =  "", width = "100%"))))),
+                                        choices =  "", width = "100%"))),
+            fluidRow(col_6(id = ns("colManualLanda"),br(),
+                           numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
+                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F))))),
         codigo.rlr.run
       ))),
     conditionalPanel(
@@ -118,23 +107,23 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     input$runRlr
     tryCatch({
     default.codigo.rlr()
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
+    train  <<- updateData$datos.aprendizaje
+    test   <<- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
     scales <- isolate(input$switch.scale.rlr)
     tipo   <- rlr.type()
-    alpha  <- isolate(input$alpha.rlr)
+    alpha  <<- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
     isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
-    x         <- model.matrix(as.formula(var), train)[, -1]
-    y         <- train[,updateData$variable.predecir]
+    x         <<- model.matrix(as.formula(var), train)[, -1]
+    y         <<- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
-    
+    cvv <<- cv$cv.glm
     print(modelo)
   },error = function(e){
     return(invisible(""))
@@ -192,11 +181,11 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   })
 
   #Obtiene el lambda seleccionado
-  get_landa_rlr <- function(){
+  get_lambda_rlr <- function(){
     landa <- NULL
-    if (!is.na(isolate(input$landa)) && (isolate(input$permitir.landa)=="TRUE")) {
-      if (isolate(input$landa) > 0) {
-        landa <- isolate(input$landa)
+    if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
+      if (input$landa > 0) {
+        landa <- input$landa
       }
     }
     return(landa)
@@ -252,11 +241,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Gráfica de los coeficientes Lambdas
   output$plot_rlr_landa <- renderEcharts4r({
     tryCatch({  
-      lambda <- get_landa_rlr()
+      lambda <- get_lambda_rlr()
       tipo   <- rlr.type()
       cv.glm <- cv$cv.glm
       coeff  <- input$coeff.sel
       modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+      lambda <- ifelse(is.null(lambda),cv.glm$lambda.min, modelo$lambda[lambda])
       updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,", cv.glm.",tipo,")"))
       e_coeff_landa(modelo, coeff, log(lambda), cv.glm)
     },

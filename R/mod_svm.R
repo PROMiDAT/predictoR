@@ -25,7 +25,7 @@ mod_svm_ui <- function(id){
                      conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
                                       codigo.monokai(ns("fieldCodeSvmPlot"),height = "10vh")))
   
-  opc_svm <-     fluidRow(
+  opc_svm <-     div(
     conditionalPanel(
       "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
       tabsOptions(heights = c(70, 30), tabs.content = list(

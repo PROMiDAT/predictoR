@@ -25,7 +25,7 @@ mod_boosting_ui <- function(id){
                       conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBIndex'",
                                        codigo.monokai(ns("fieldCodeBoostingIG"),   height = "10vh")))  
   opciones <-   
-    fluidRow(
+    div(
       conditionalPanel(
         "input['boosting_ui_1-BoxB'] == 'tabBModelo' || input['boosting_ui_1-BoxB'] == 'tabBRules'",
         tabsOptions(heights = c(70, 30), tabs.content = list(

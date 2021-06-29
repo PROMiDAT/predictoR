@@ -26,7 +26,7 @@ mod_r_forest_ui <- function(id){
                      conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
                                       codigo.monokai(ns("fieldCodeRfRules"), height = "10vh")))
   
-  opc_rf  <-     fluidRow(
+  opc_rf  <-     div(
     conditionalPanel(
       "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo' || input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
       tabsOptions(heights = c(70, 30), tabs.content = list(

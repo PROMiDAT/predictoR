@@ -28,7 +28,7 @@ mod_knn_ui <- function(id){
   codigo.knn.run <- list(conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
                                       codigo.monokai(ns("fieldCodeKnn"), height = "10vh")))
   
-opc_knn <- fluidRow(conditionalPanel(
+opc_knn <- div(conditionalPanel(
   "input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
   tabsOptions(heights = c(70, 30), tabs.content = list(
     list(options.run(ns("runKnn")), tags$hr(style = "margin-top: 0px;"),

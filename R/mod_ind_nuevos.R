@@ -727,11 +727,11 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   }
   
   # Habilita o deshabilita la semilla RLR
-  observeEvent(input$permitir.landa.pred, {
-    if (input$permitir.landa.pred) {
-      shinyjs::enable("landa.pred")
+  observeEvent(input$permitir.lambda.pred, {
+    if (input$permitir.lambda.pred) {
+      shinyjs::enable("lambda.pred")
     } else {
-      shinyjs::disable("landa.pred")
+      shinyjs::disable("lambda.pred")
     }
   })
   
@@ -838,10 +838,12 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
    
     opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = tr("selectAlg", idioma),selected = 1,
                                   choices = list("Ridge" = 0, "Lasso" = 1))),
-                             col_6(radioSwitchNP(ns("switch.scale.rlr.pred"), "escal", c("si", "no"),idioma = idioma ))),
-                    fluidRow(col_6(id = ns("colManualLanda"),br(),
-                                   numericInput(ns("landa.pred"), tr("landa", idioma),value = 2, min = 0, "NULL", width = "100%")), br(),
-                             col_6(radioSwitchNP(ns("permitir.landa.pred"), "", c("manual", "automatico"),idioma = idioma ))))
+                             col_6(radioSwitchNP(ns("switch.scale.rlr.pred"), "escal", c("si", "no"),idioma = idioma )))
+                    # ,
+                    # fluidRow(col_6(id = ns("colManualLanda"),br(),
+                    #                numericInput(ns("lambda.pred"), tr("landa", idioma),value = 2, min = 0, "NULL", width = "100%")), br(),
+                    #          col_6(radioSwitchNP(ns("permitir.lambda.pred"), "", c("manual", "automatico"),idioma = idioma )))
+                    )
   
     opc_xgb <- list(fluidRow(col_4(selectInput(inputId = ns("boosterXgb.pred"), label = tr("selbooster", idioma), selected = 1,
                                                choices = c("gbtree", "gblinear", "dart"))),

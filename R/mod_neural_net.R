@@ -34,7 +34,7 @@ mod_neural_net_ui <- function(id){
   
   codigo.nn.run <- list(conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnModelo'",
                                      codigo.monokai(ns("fieldCodeNn"), height = "10vh")))
-  opc_nn <- fluidRow(
+  opc_nn <- div(
     conditionalPanel(
     "input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
     tabsOptions(heights = c(70, 30), tabs.content = list(

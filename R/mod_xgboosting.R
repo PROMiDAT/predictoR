@@ -28,7 +28,7 @@ mod_xgboosting_ui <- function(id){
                      conditionalPanel("input['xgboosting_ui_1-BoxXgb'] == 'tabXgbIndex'",
                                       codigo.monokai(ns("fieldCodeXgbIG"), height = "10vh")))
   
-  opc_xgb <- fluidRow(conditionalPanel(
+  opc_xgb <- div(conditionalPanel(
     "input['xgboosting_ui_1-BoxXgb']  == 'tabXgbModelo'",
     tabsOptions(heights = c(70, 30), tabs.content = list(
       list(options.run(ns("runXgb")), tags$hr(style = "margin-top: 0px;"),
