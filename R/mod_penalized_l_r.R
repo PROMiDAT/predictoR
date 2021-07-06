@@ -107,23 +107,22 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     input$runRlr
     tryCatch({
     default.codigo.rlr()
-    train  <<- updateData$datos.aprendizaje
-    test   <<- updateData$datos.prueba
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
     scales <- isolate(input$switch.scale.rlr)
     tipo   <- rlr.type()
-    alpha  <<- isolate(input$alpha.rlr)
+    alpha  <- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
     isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
-    x         <<- model.matrix(as.formula(var), train)[, -1]
-    y         <<- train[,updateData$variable.predecir]
+    x         <- model.matrix(as.formula(var), train)[, -1]
+    y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
-    cvv <<- cv$cv.glm
     print(modelo)
   },error = function(e){
     return(invisible(""))
@@ -247,7 +246,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       coeff  <- input$coeff.sel
       modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
       lambda <- ifelse(is.null(lambda),cv.glm$lambda.min, modelo$lambda[lambda])
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,", cv.glm.",tipo,")"))
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",log(lambda),", cv.glm.",tipo,")"))
       e_coeff_landa(modelo, coeff, log(lambda), cv.glm)
     },
     error = function(e){ 
