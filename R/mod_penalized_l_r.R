@@ -41,7 +41,7 @@ mod_penalized_l_r_ui <- function(id){
             fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
                                         choices =  "", width = "100%"))),
             fluidRow(col_6(id = ns("colManualLanda"),br(),
-                           numericInput(ns("landa"), labelInput("landa"),value = 2, min = 0, "NULL", width = "100%")), br(),
+                           numericInput(ns("landa"), labelInput("landa"),value = 0, width = "100%")), br(),
                      col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F))))),
         codigo.rlr.run
       ))),
@@ -123,6 +123,11 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
+    updateNumericInput(session, 
+                       "landa", 
+                       max   =  round(max(log(modelo$lambda)), 5), 
+                       min   =  round(min(log(modelo$lambda)), 5),
+                       value =  round(min(log(modelo$lambda)), 5))
     print(modelo)
   },error = function(e){
     return(invisible(""))
@@ -173,6 +178,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   # Habilita o deshabilita la semilla
   observeEvent(input$permitir.landa, {
     if (input$permitir.landa) {
+      modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+      updateNumericInput(session, 
+                         "landa", 
+                         max   =  round(max(log(modelo$lambda)), 5), 
+                         min   =  round(min(log(modelo$lambda)), 5),
+                         value =  round(min(log(modelo$lambda)), 5))
       shinyjs::enable("landa")
     } else {
       shinyjs::disable("landa")
@@ -181,11 +192,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
 
   #Obtiene el lambda seleccionado
   get_lambda_rlr <- function(){
-    landa <- NULL
+    landa  <- NULL
+    modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+    idioma <- updateData$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
-      if (input$landa > 0) {
-        landa <- input$landa
-      }
+        if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5))
+          landa <- input$landa
+        else
+          showNotification(tr("limitLambda",idioma), duration = 10, type = "message")
     }
     return(landa)
   }
@@ -226,9 +240,9 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   #Gráfica de los Lambdas
   output$plot_rlr_posiblanda <- renderEcharts4r({
-
+    idioma <- updateData$idioma
     tryCatch({  
-      e_posib_lambda(cv$cv.glm)
+      e_posib_lambda(cv$cv.glm, labels = c(tr("superior", idioma),tr("inferior", idioma)))
     },
     error = function(e) { 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")
@@ -245,9 +259,9 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       cv.glm <- cv$cv.glm
       coeff  <- input$coeff.sel
       modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
-      lambda <- ifelse(is.null(lambda),cv.glm$lambda.min, modelo$lambda[lambda])
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",log(lambda),", cv.glm.",tipo,")"))
-      e_coeff_landa(modelo, coeff, log(lambda), cv.glm)
+      lambda <- ifelse(is.null(lambda), round(log(cv.glm$lambda.min),5), lambda)
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,", cv.glm.",tipo,")"))
+      e_coeff_landa(modelo, coeff, lambda, cv.glm)
     },
     error = function(e){ 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")
