@@ -205,10 +205,8 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   output$plot_error_rf <- renderEcharts4r({
     tryCatch({
       modelo    <- modelos$mdls$rf[[nombre.modelo$x]]$modelo
-      dataplot  <- data.frame(x = c(1:length(modelo$err.rate[,1])),cbind(modelo$err.rate))
       updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
-      e_rf_error(dataplot)
-      
+      e_rf_error(modelo)
     }, error = function(e){
       return(NULL)
     })

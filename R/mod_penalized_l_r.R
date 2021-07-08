@@ -242,7 +242,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   output$plot_rlr_posiblanda <- renderEcharts4r({
     idioma <- updateData$idioma
     tryCatch({  
-      e_posib_lambda(cv$cv.glm, labels = c(tr("superior", idioma),tr("inferior", idioma)))
+      e_posib_lambda(cv$cv.glm, labels = c(tr("superior", idioma),tr("inferior", idioma),tr("lambda", idioma)))
     },
     error = function(e) { 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")
@@ -256,12 +256,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     tryCatch({  
       lambda <- get_lambda_rlr()
       tipo   <- rlr.type()
-      cv.glm <- cv$cv.glm
       coeff  <- input$coeff.sel
+      cv.glm <- cv$cv.glm
       modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
-      lambda <- ifelse(is.null(lambda), round(log(cv.glm$lambda.min),5), lambda)
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,", cv.glm.",tipo,")"))
-      e_coeff_landa(modelo, coeff, lambda, cv.glm)
+      lambda <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
+      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
+      e_coeff_landa(modelo, coeff, lambda, tr("lambda", updateData$idioma))
     },
     error = function(e){ 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")

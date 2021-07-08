@@ -15,7 +15,7 @@ Support Vector Machines and Bayesian Methods.
 Package: \tab predictoR\cr
 Type: \tab Package\cr
 Version: \tab 2.0.1\cr
-Date: \tab 2021-06-10\cr
+Date: \tab 2021-06-11\cr
 License: \tab GPL (>=2)\cr
 }
 }

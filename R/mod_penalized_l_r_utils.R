@@ -22,9 +22,24 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
          "e_posib_lambda(cv.glm.",type,")")
 }
 
-#Crea el gráfico de posibles lambda para rlr
-#e_posib_lambda(exe("modelo.rlr.",tipo), exe("cv.glm.",tipo))
-e_posib_lambda <- function(cv.glm, labels = c("Valor Superior", "Valor Inferior")){
+#' Possible lambda
+#' 
+#' @param cv.glm a cv.glmnet model.
+#' @param labels a character vector of length 3 specifying the titles to use on legend.
+#' 
+#' @author Joseline Quiros <joseline.quiros@promidat.com>
+#' @return echarts4r plot
+#' @export e_posib_lambda
+#' @import echarts4r
+#' @importFrom glmnet cv.glmnet
+#' @examples
+#' x         <- model.matrix(Species~., iris)[, -1]
+#' y         <- iris[,'Species']
+#' cv.glm    <- glmnet::cv.glmnet(x, y, standardize = TRUE, alpha = 1, family = 'multinomial')
+#' e_posib_lambda(cv.glm)
+#' 
+#' 
+e_posib_lambda <- function(cv.glm, labels = c("Valor Superior", "Valor Inferior", "lambda")){
   x  <- log(cv.glm$lambda)
   y  <- cv.glm$cvm
   x1 <- x[cv.glm$index[[1]]]
@@ -51,7 +66,7 @@ e_posib_lambda <- function(cv.glm, labels = c("Valor Superior", "Valor Inferior"
                                                        "return('<b>Log(lambda.1se): </b>' + ",
                                                        "Number.parseFloat(params.value).toFixed(4))}"))))) %>%
     e_axis_labels(
-      x = tr("lambda"),
+      x = labels[3],
       y = name)%>%
     e_x_axis(
       formatter = e_axis_formatter(digits = 1))  %>% 
@@ -61,15 +76,33 @@ e_posib_lambda <- function(cv.glm, labels = c("Valor Superior", "Valor Inferior"
   plot
 }
 
-#Gráfico de coeficientes lambda RLR
-e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
-  data   <- data.frame(t(as.data.frame(as.matrix(modelo$beta[[category]]))))
-  x      <- round(log(modelo$lambda), 5)
-  data   <- cbind(x = x, data)
-  data   <- data[order(data$x),]
-  #lambda <- ifelse(best.lambda %in% data$x, best.lambda, log(cv.glm$lambda.min))
-  lambda <- best.lambda
-  new    <- data.frame()
+#' Coefficients and lambda
+#' 
+#' @description Plot the coefficients and selected lambda of a glmnet model.
+#'
+#' @param model a glmnet model.
+#' @param category a category of the variable to be predicted.
+#' @param sel.lambda the selected lambda.
+#' @param label a character specifying the title to use on selected lambda tooltip.
+#'
+#' @author Joseline Quiros <joseline.quiros@promidat.com>
+#' @return echarts4r plot
+#' @import echarts4r
+#' @import traineR
+#' 
+#' @export e_coeff_landa
+#'
+#' @examples
+#' modelo <- traineR::train.glmnet(Species~., iris)
+#' e_coeff_landa(modelo, 'setosa', log(modelo$lambda[1]))
+#' 
+e_coeff_landa <- function(model, category, sel.lambda = NULL, label = 'Log Lambda') {
+  data       <- data.frame(t(as.data.frame(as.matrix(model$beta[[category]]))))
+  x          <- round(log(model$lambda), 5)
+  data       <- cbind(x = x, data)
+  data       <- data[order(data$x),]
+  sel.lambda <- sel.lambda
+  new        <- data.frame()
   for (nom in colnames(data)[-1]) {
     x      <- data[["x"]]
     y      <- data[[nom]]
@@ -77,23 +110,27 @@ e_coeff_landa <- function(modelo, category, best.lambda = NULL, cv.glm) {
     new.   <- data.frame(x = x, y = y, nombre = nombre)
     new    <- rbind(new, new.)
   }
-  new %>%
-    group_by(nombre) %>%
-    e_charts(x) %>%
-    e_line(y, bind = nombre)%>%
-    e_axis_labels(
-      x = 'Log Lambda',
-      y = paste0('Coefficients: Response ', category))%>%
-    e_mark_line(data = list(xAxis = lambda,
-                            tooltip = list(formatter = e_JS(paste0("function(params){",
-                                                                   "return('<b>",tr("lambda"),": </b>' + ",
-                                                                   "Number.parseFloat(params.value).toFixed(4))}"))))) %>%
-    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
-    e_labels(position = 'left',formatter = e_JS("
-                                        function(params){
-                                        if(params.dataIndex==0){
-                                        return(params.name)
-                                        }else
-                                        {return('')}}"))%>%
-    e_legend(show = FALSE)
+  coeff_landa_plot <- new %>%
+                        group_by(nombre) %>%
+                        e_charts(x) %>%
+                        e_line(y, bind = nombre)%>%
+                        e_axis_labels(
+                          x = label,
+                          y = paste0('Coefficients: Response ', category)) %>%
+                        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
+                        e_labels(position = 'left',formatter = e_JS("
+                                                            function(params){
+                                                            if(params.dataIndex==0){
+                                                            return(params.name)
+                                                            }else
+                                                            {return('')}}"))%>%
+                        e_legend(show = FALSE)
+  if(!is.null(sel.lambda)){
+    coeff_landa_plot <- coeff_landa_plot %>%
+                        e_mark_line(data = list(xAxis = sel.lambda,
+                                                tooltip = list(formatter = e_JS(paste0("function(params){",
+                                                                                       "return('<b>",label,": </b>' + ",
+                                                                                       "Number.parseFloat(params.value).toFixed(4))}")))))
+  }
+  coeff_landa_plot
 }

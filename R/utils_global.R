@@ -128,8 +128,21 @@ indices.prec.table <- function(indices, nombre = "", idioma){
   return(prec)
 }
 
-#Genera el gráfico de error y precisión global
-e_global_gauge<- function(value, label, color1, color2){
+#' Gauge Plot
+#' 
+#' @param value a number specifying the value of the graph.
+#' @param label a character specifying the title to use on legend.
+#' @param color1 a color for the gauge.
+#' @param color2 a shadowColor for the gauge.
+#' 
+#' @author Joseline Quiros <joseline.quiros@promidat.com>
+#' @return echarts4r plot
+#' @export e_global_gauge
+#' @import echarts4r
+#' @examples
+#' e_global_gauge(87, "Global Precision")
+#'
+e_global_gauge<- function(value = 100, label = "Label", color1 = "#B5E391", color2 = "#90C468"){
   e_charts() %>% 
     e_gauge(value, "",
             itemStyle = list(color         = color1,  
@@ -217,19 +230,6 @@ as.string.c <- function(vect, .numeric = FALSE){
   else{
     return(paste0("c('",paste0(vect, collapse = "','"),"')"))
   }
-}
-
-#Funciones tomadas del paquete htmlwidgets
-
-e_JS <- function (...) 
-{
-  x <- c(...)
-  if (is.null(x)) 
-    return()
-  if (!is.character(x)) 
-    stop("The arguments for JS() must be a character vector")
-  x <- paste(x, collapse = "\n")
-  structure(x, class = unique(c("JS_EVAL", oldClass(x))))
 }
 
 #Funciones tomadas del paquete rpart

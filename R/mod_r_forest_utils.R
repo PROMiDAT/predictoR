@@ -34,13 +34,27 @@ rf.importance.plot <- function() {
 
 #Código del gráfico de error del modelo
 plot.rf.error <- function(){
-  return(paste0("data     <- data.frame(x = c(1:length(modelo.rf$err.rate[,1])),cbind(modelo.rf$err.rate)) \n",
-                "e_rf_error(data)\n"))
+  return(paste0("e_rf_error(modelo.rf)\n"))
 }
 
-#Gráfico de evolución del error
-e_rf_error <- function(data) {
-  new <- data.frame()
+
+#' Error Evolution
+#'
+#' @param model a random forest model.
+#'
+#' @author Joseline Quiros <joseline.quiros@promidat.com>
+#' @return echarts4r plot
+#' @export e_rf_error
+#' @import echarts4r
+#' @import traineR
+#' @examples
+#' model <- traineR::train.randomForest(Species~., iris, mtry = 2, ntree = 20)
+#' e_rf_error(model)
+#' 
+#' 
+e_rf_error <- function(model) {
+  data <- data.frame(x = c(1:length(model$err.rate[,1])),cbind(model$err.rate))
+  new  <- data.frame()
   for (nom in colnames(data)[-1]) {
     x      <- data[["x"]]
     y      <- data[[nom]]
