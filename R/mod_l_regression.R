@@ -9,22 +9,37 @@
 #' @importFrom shiny NS tagList 
 mod_l_regression_ui <- function(id){
   ns <- NS(id)
-  codigo.rl <- list(tags$div(options.run(ns("runRl"))), tags$hr(style = "margin-top: 0px;"),
-                    conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlModelo'",
-                                     codigo.monokai(ns("fieldCodeRl"), height = "10vh")),
-                    conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlPred'",
+  codigo.run <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlModelo'",
+                                     codigo.monokai(ns("fieldCodeRl"), height = "10vh")))
+  
+  codigo.rl  <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlPred'",
                                      codigo.monokai(ns("fieldCodeRlPred"), height = "10vh")),
-                    conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlMC'",
+                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlMC'",
                                      codigo.monokai(ns("fieldCodeRlMC"), height = "10vh")),
-                    conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlIndex'",
+                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlIndex'",
                                      codigo.monokai(ns("fieldCodeRlIG"), height = "10vh")))
   
   opc_rl <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
                          tabs.content = list(codigo.rl))
+  opciones <-   
+    div(
+      conditionalPanel(
+        "input['l_regression_ui_1-BoxRl'] == 'tabRlModelo'",
+        tabsOptions(heights = c(70, 30), tabs.content = list(
+          list(
+            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;")),
+          codigo.run
+        ))),
+      conditionalPanel(
+        "input['l_regression_ui_1-BoxRl'] != 'tabRlModelo'",
+        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+          codigo.rl
+        )))
+    )
   
   tagList(
     tabBoxPrmdt(
-      id = ns("BoxRl"),opciones = opc_rl,
+      id = ns("BoxRl"),opciones = opciones,
       tabPanel(title = labelInput("generatem"), value = "tabRlModelo",
                withLoader(verbatimTextOutput(ns("txtrl")), 
                           type = "html", loader = "loader4")),

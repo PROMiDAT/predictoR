@@ -9,10 +9,10 @@
 #' @importFrom shiny NS tagList 
 mod_bayes_ui <- function(id){
   ns <- NS(id)
-  codigo.bayes <- list(tags$div(options.run(ns("runBayes"))), tags$hr(style = "display:none;",),
+  codigo.run <- list(
                        conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
-                                        codigo.monokai(ns("fieldCodeBayes"), height = "10vh")),
-                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesPred'",
+                                        codigo.monokai(ns("fieldCodeBayes"), height = "10vh")))
+  codigo.bayes <- list(conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesPred'",
                                         codigo.monokai(ns("fieldCodeBayesPred"), height = "10vh")),
                        conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesMC'",
                                         codigo.monokai(ns("fieldCodeBayesMC"), height = "10vh")),
@@ -21,10 +21,25 @@ mod_bayes_ui <- function(id){
   
   opc_bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
                             tabs.content = list(codigo.bayes))
+  opciones <-   
+    div(
+      conditionalPanel(
+        "input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
+        tabsOptions(heights = c(70, 30), tabs.content = list(
+          list(
+            options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;")),
+          codigo.run
+        ))),
+      conditionalPanel(
+        "input['bayes_ui_1-BoxBayes'] != 'tabBayesModelo'",
+        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+          codigo.bayes
+        )))
+    )
   
   tagList(
     tabBoxPrmdt(
-      id = ns("BoxBayes"), opciones = opc_bayes,
+      id = ns("BoxBayes"), opciones = opciones,
       tabPanel(title = labelInput("generatem"), value = "tabBayesModelo",
                withLoader(verbatimTextOutput(ns("txtbayes")), 
                           type = "html", loader = "loader4")),

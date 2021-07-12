@@ -1,8 +1,3 @@
-# VARIABLES GLOBALES --------------------------------------------------------------------------------------------------------
-
-# -------------------  Datos
-datos.originales  <<- NULL
-
 # Validacion comun para todos los modelos
 validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {
   # Validaciones

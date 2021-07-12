@@ -115,19 +115,19 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     alpha  <- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
     modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
-    pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
-    mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
+    pred   <- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
+    mc     <- confusion.matrix(test, pred)
     updateNumericInput(session, 
                        "landa", 
                        max   =  round(max(log(modelo$lambda)), 5), 
                        min   =  round(min(log(modelo$lambda)), 5),
-                       value =  round(min(log(modelo$lambda)), 5))
+                       value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
+    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     print(modelo)
   },error = function(e){
     return(invisible(""))
@@ -182,10 +182,12 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       updateNumericInput(session, 
                          "landa", 
                          max   =  round(max(log(modelo$lambda)), 5), 
-                         min   =  round(min(log(modelo$lambda)), 5),
-                         value =  round(min(log(modelo$lambda)), 5))
+                         min   =  round(min(log(modelo$lambda)), 5))
       shinyjs::enable("landa")
     } else {
+      updateNumericInput(session, 
+                         "landa", 
+                          value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
       shinyjs::disable("landa")
     }
   })
@@ -196,10 +198,16 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
     idioma <- updateData$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
-        if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5))
+        if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
           landa <- input$landa
-        else
+        }
+        else{
           showNotification(tr("limitLambda",idioma), duration = 10, type = "message")
+          updateNumericInput(session, 
+                             "landa", 
+                             value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
+          landa <- input$landa
+        }
     }
     return(landa)
   }
