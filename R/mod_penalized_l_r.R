@@ -133,7 +133,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     return(invisible(""))
   })
   })
-  
   #Tabla de la predicción
   output$rlrPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
@@ -185,9 +184,11 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                          min   =  round(min(log(modelo$lambda)), 5))
       shinyjs::enable("landa")
     } else {
+      tryCatch({
       updateNumericInput(session, 
                          "landa", 
-                          value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
+                          value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))},
+      warning = function(w){})
       shinyjs::disable("landa")
     }
   })
@@ -200,6 +201,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
         if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
           landa <- input$landa
+
         }
         else{
           showNotification(tr("limitLambda",idioma), duration = 10, type = "message")
@@ -208,6 +210,11 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                              value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
           landa <- input$landa
         }
+      pred   <- predict(modelo , updateData$datos.prueba, type = 'class', s = exp(landa) )
+      mc     <- confusion.matrix( updateData$datos.prueba, pred)
+      
+      isolate(modelos$mdls$rlr[[nombre.modelo$x]]$pred <- pred)
+      isolate(modelos$mdls$rlr[[nombre.modelo$x]]$mc   <- mc)
     }
     return(landa)
   }
