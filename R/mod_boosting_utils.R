@@ -34,9 +34,9 @@ boosting.plot.import <- function() {
     "aux$nombre <- row.names(aux)\n",
     "aux$importancia <- abs(aux$importancia)\n",
     "aux <- aux[order(aux$importancia, decreasing = T), ]\n\n",
-    "aux %>% e_charts(nombre) %>% e_bar(importancia, name = var) %>% \n",
-    "  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% \n",
-    "  e_flip_coords() %>%\n",
+    "aux |>  e_charts(nombre) |>  e_bar(importancia, name = var) |>  \n",
+    "  e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() |>  \n",
+    "  e_flip_coords() |> \n",
     "  e_y_axis(inverse = TRUE) \n"
   ))
 }
@@ -47,19 +47,19 @@ e_evol_error <- function(x) {
     stop("x class should be errorevol")
   train    <- x$error
   evolplot <- data.frame(x = c(1:length(x$error)), train = train)
-  evolplot %>%
-    e_charts(x) %>%
-    e_line(train) %>%
+  evolplot |> 
+    e_charts(x) |> 
+    e_line(train) |> 
     e_title("Ensemble error vs number or trees",
             left = 'center',
             top = 5,
-            textStyle = list(fontSize = 15))%>%
+            textStyle = list(fontSize = 15))|> 
     e_legend(orient = 'vertical',
-             right = '20', top = '10%') %>%
+             right = '20', top = '10%') |> 
     e_axis_labels(
       x = "Iterations",
       y = "Error"
-    )%>%  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+    )|>   e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()
 }
 
 #Reglas de boosting

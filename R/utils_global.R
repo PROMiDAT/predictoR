@@ -138,7 +138,7 @@ indices.prec.table <- function(indices, nombre = "", idioma){
 #' e_global_gauge(87, "Global Precision")
 #'
 e_global_gauge<- function(value = 100, label = "Label", color1 = "#B5E391", color2 = "#90C468"){
-  e_charts() %>% 
+  e_charts() |>  
     e_gauge(value, "",
             itemStyle = list(color         = color1,  
                              shadowColor   = color2,

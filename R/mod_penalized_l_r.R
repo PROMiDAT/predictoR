@@ -127,7 +127,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                        max   =  round(max(log(modelo$lambda)), 5), 
                        min   =  round(min(log(modelo$lambda)), 5),
                        value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
-    isolate(modelos$mdls$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate(modelos$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     print(modelo)
   },error = function(e){
     return(invisible(""))
@@ -138,25 +138,25 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$rlr[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
+    obj.predic(modelos$rlr[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   #Texto de la Matríz de Confusión
   output$txtrlrMC    <- renderPrint({
-    print(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
+    print(modelos$rlr[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_rlr_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$rlr[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$rlrIndPrecTable <- shiny::renderTable({
     idioma      <- updateData$idioma
-    indices.rlr <- indices.generales(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
+    indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rlr,"rlr", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -165,7 +165,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Tabla de Errores por Categoría
   output$rlrIndErrTable  <- shiny::renderTable({
     idioma      <- updateData$idioma
-    indices.rlr <- indices.generales(modelos$mdls$rlr[[nombre.modelo$x]]$mc)
+    indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$rlrPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rlr[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$rlrErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.rlr[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
@@ -177,7 +177,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   # Habilita o deshabilita la semilla
   observeEvent(input$permitir.landa, {
     if (input$permitir.landa) {
-      modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+      modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
       updateNumericInput(session, 
                          "landa", 
                          max   =  round(max(log(modelo$lambda)), 5), 
@@ -196,7 +196,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Obtiene el lambda seleccionado
   get_lambda_rlr <- function(){
     landa  <- NULL
-    modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+    modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
     idioma <- updateData$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
         if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
@@ -213,8 +213,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       pred   <- predict(modelo , updateData$datos.prueba, type = 'class', s = exp(landa) )
       mc     <- confusion.matrix( updateData$datos.prueba, pred)
       
-      isolate(modelos$mdls$rlr[[nombre.modelo$x]]$pred <- pred)
-      isolate(modelos$mdls$rlr[[nombre.modelo$x]]$mc   <- mc)
+      isolate(modelos$rlr[[nombre.modelo$x]]$pred <- pred)
+      isolate(modelos$rlr[[nombre.modelo$x]]$mc   <- mc)
     }
     return(landa)
   }
@@ -273,7 +273,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       tipo   <- rlr.type()
       coeff  <- input$coeff.sel
       cv.glm <- cv$cv.glm
-      modelo <- modelos$mdls$rlr[[nombre.modelo$x]]$modelo
+      modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
       lambda <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
       updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
       e_coeff_landa(modelo, coeff, lambda, tr("lambda", updateData$idioma))

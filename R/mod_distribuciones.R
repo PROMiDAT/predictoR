@@ -109,7 +109,7 @@ mod_distribuciones_server <- function(input, output, session, updateData){
     datos <- datos[datos[, var] %in% atipicos$out, var, drop = F]
     datos <- datos[order(datos[, var]), , drop = F]
     DT::datatable(datos, options = list(
-      dom = 't', scrollX = TRUE, scrollY = "28vh", pageLength = nrow(datos))) %>%
+      dom = 't', scrollX = TRUE, scrollY = "28vh", pageLength = nrow(datos))) |>
       formatStyle(1, color = "white", backgroundColor = "#CBB051", target = "row")
   })
   
@@ -131,8 +131,8 @@ mod_distribuciones_server <- function(input, output, session, updateData){
         value = value
       )
       
-      datos.plot %>% e_charts(label) %>% e_bar(value, name = var) %>%
-        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+      datos.plot |> e_charts(label) |> e_bar(value, name = var) |>
+        e_tooltip() |> e_datazoom(show = F) |> e_show_loading()
     }, error = function(e) {
       showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
       return(NULL)

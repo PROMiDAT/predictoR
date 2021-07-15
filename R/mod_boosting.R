@@ -102,7 +102,6 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   # Genera el texto del modelo, predicción y mc de boosting
   output$txtBoosting <- renderPrint({
     input$runBoosting
-
     tryCatch({
     default.codigo.boosting()
     train   <- updateData$datos.aprendizaje
@@ -117,7 +116,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate(modelos$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {
@@ -130,26 +129,26 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$boosting[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
+    obj.predic(modelos$boosting[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
   
   #Texto de la Matríz de Confusión
   output$txtBoostingMC    <- renderPrint({
-    print(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
+    print(modelos$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_boosting_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$boostingIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.boosting <- indices.generales(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
+    indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.boosting,"boosting", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -158,7 +157,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   #Tabla de Errores por Categoría
   output$boostingIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.boosting <- indices.generales(modelos$mdls$boosting[[nombre.modelo$x]]$mc)
+    indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$boostingPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$boostingErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
@@ -174,7 +173,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     isolate(var.pred<- updateData$variable.predecir)
     tryCatch({
       updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
-      rules(modelos$mdls$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
+      rules(modelos$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
     },error = function(e) {
       stop(tr("NoDRule", updateData$idioma))
     }
@@ -214,14 +213,14 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   output$plot_boosting_import <- renderEcharts4r({
     cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
     tryCatch({
-      imp <- modelos$mdls$boosting[[nombre.modelo$x]]$modelo$importance
+      imp <- modelos$boosting[[nombre.modelo$x]]$modelo$importance
       aux <- data.frame(importancia = imp) 
       aux$nombre <- row.names(aux) 
       aux$importancia <- abs(aux$importancia) 
       aux <- aux[order(aux$importancia, decreasing = T), ]
-      aux %>% e_charts(nombre) %>% e_bar(importancia, name = var) %>%  
-        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>%  
-        e_flip_coords() %>% 
+      aux |>  e_charts(nombre) |>  e_bar(importancia, name = var) |>   
+        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() |>   
+        e_flip_coords() |>  
         e_y_axis(inverse = TRUE)
     }, error = function(e) {
       return(NULL)
@@ -231,7 +230,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   # Gráfico de evolución del error boosting
   output$plot_boosting_error <- renderEcharts4r({
     train  <- updateData$datos.aprendizaje
-    modelo <- modelos$mdls$boosting[[nombre.modelo$x]]$modelo
+    modelo <- modelos$boosting[[nombre.modelo$x]]$modelo
     cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
     tryCatch({
       error(modelo, train) -> evol.train
@@ -243,14 +242,11 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
 
   # Limpia los datos al ejecutar el botón run
   limpia.boosting <- function() {
-        output$txtBoosting          <- renderPrint(invisible(""))
         output$plot_boosting_error  <- renderEcharts4r(NULL)
         output$plot_boosting_import <- renderEcharts4r(NULL)
-        output$boostingPrediTable   <- DT::renderDataTable(NULL)
         output$plot_boosting_mc     <- renderPlot(NULL)
-        output$txtBoostingMC        <- renderPrint(invisible(NULL))
-        output$boostingIndPrecTable <- shiny::renderTable(NULL)
-        output$boostingIndErrTable  <- shiny::renderTable(NULL)
+        output$boostingIndPrecTable <- renderEcharts4r(NULL)
+        output$boostingIndErrTable  <- renderEcharts4r(NULL)
   }
   
 }

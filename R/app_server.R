@@ -41,16 +41,16 @@ app_server <- function( input, output, session ) {
                        prediccion        = NULL,
                        variable.predecir = NULL)
   
-  modelos    <-  rv(mdls = list(svm      = NULL,
-                                knn      = NULL,
-                                bayes    = NULL,
-                                rl       = NULL,
-                                rlr      = NULL,
-                                xgb      = NULL,
-                                boosting = NULL,
-                                rf       = NULL,
-                                nn       = NULL,
-                                dt       = NULL))
+  modelos    <-  rv(svm      = NULL,
+                    knn      = NULL,
+                    bayes    = NULL,
+                    rl       = NULL,
+                    rlr      = NULL,
+                    xgb      = NULL,
+                    boosting = NULL,
+                    rf       = NULL,
+                    nn       = NULL,
+                    dt       = NULL)
   ###################################  Update  ################################
   #' Update on Language
   observeEvent(input$idioma, {

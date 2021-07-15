@@ -10,7 +10,6 @@
 #' @import htmltools
 #' @import shinycustomloader
 #' @import shinydashboardPlus
-#' @importFrom pROC roc
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
 #' @importFrom rpart path.rpart

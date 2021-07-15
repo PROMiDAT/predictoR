@@ -24,9 +24,9 @@ e_xgb_varImp <- function(booster = "gbtree"){
          "variables.importantes[,2] <- abs(variables.importantes[,2])","\n",
          "variables.importantes     <- na.omit(variables.importantes)\n",
          "datos.xgb <- data.frame(label = variables.importantes$Feature, values = variables.importantes[,2])\n",
-         "datos.xgb %>% e_charts(label) %>% e_bar(values, name = var) %>%\n",
-         "e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%\n",
-         "e_flip_coords()%>%\n",
+         "datos.xgb |>  e_charts(label) |>  e_bar(values, name = var) |> \n",
+         "e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|> \n",
+         "e_flip_coords()|> \n",
          "e_y_axis(inverse = TRUE)\n"
          
   )

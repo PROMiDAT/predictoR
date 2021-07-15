@@ -9,26 +9,25 @@ Description: Perform a supervised data analysis on a database through a 'shiny' 
 License: GPL (>=2)
 Imports: 
     DT (>= 0.18),
-    golem (>= 0.2.1),
+    golem (>= 0.3.1),
     shiny  (>= 1.6.0),
     rlang  (>= 0.4.11),
     config (>= 0.3.1),
-    xtable,
-    glmnet,
-    rpart,
-    pROC,
-    colourpicker,
+    xtable  (>= 1.8-4),
+    glmnet (>= 4.1-2),
+    rpart (>= 4.1-15),
+    colourpicker (>= 1.1.0),
     traineR (>= 1.6.2),
     shinyjs (>= 2.0.0),
-    xgboost (>= 1.3.1.1),
+    xgboost (>= 1.4.1.1),
     rpart.plot (>= 3.0.9),
-    echarts4r (>= 0.4.0),
+    echarts4r (>= 0.4.1),
     shinyAce (>= 0.4.1), 
-    htmltools (>= 0.5.1), 
+    htmltools (>= 0.5.1.1), 
     shinydashboard (>= 0.7.1),
     shinycustomloader (>= 0.9.0), 
-    shinydashboardPlus (>= 2.0.0)
-Depends: R (>= 4.0)
+    shinydashboardPlus (>= 2.0.1)
+Depends: R (>= 4.1)
 Encoding: UTF-8
 URL: https://www.promidat.com
 LazyData: true

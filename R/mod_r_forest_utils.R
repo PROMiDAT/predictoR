@@ -25,9 +25,9 @@ rf.importance.plot <- function() {
     "aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)\n",
     "aux <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]\n",
     "aux$label <- row.names(aux)\n\n",
-    "aux %>% e_charts(label) %>% e_bar(MeanDecreaseAccuracy, name = var) %>% \n",
-    "  e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() %>% \n",
-    "  e_flip_coords() %>%\n",
+    "aux |>  e_charts(label) |>  e_bar(MeanDecreaseAccuracy, name = var) |>  \n",
+    "  e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() |>  \n",
+    "  e_flip_coords() |> \n",
     "  e_y_axis(inverse = TRUE) \n"
   ))
 }
@@ -63,16 +63,16 @@ e_rf_error <- function(model) {
     new    <- rbind(new, new.)
   }
   
-  plot.rf.err <- new %>%
-    group_by(nombre) %>%
-    e_charts(x) %>%
-    e_line(y, lineStyle = list(type = 'dashed')) %>%
+  plot.rf.err <- new |> 
+    group_by(nombre) |> 
+    e_charts(x) |> 
+    e_line(y, lineStyle = list(type = 'dashed')) |> 
     e_legend(orient = 'vertical',
-             right = '20', top = '10%') %>% 
+             right = '20', top = '10%') |>  
     e_axis_labels(
       x = 'Trees',
-      y = 'Error') %>%  
-    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading() 
+      y = 'Error') |>   
+    e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() 
   
   plot.rf.err$x$opts$series[[which(plot.rf.err$x$opts$legend$data == "OOB")]]$lineStyle$type <- "solid"
   plot.rf.err

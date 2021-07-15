@@ -69,12 +69,12 @@ mod_correlacion_server <- function(input, output, session, updateData) {
       updateAceEditor(session, "fieldCodeCor", value = cod)
       
       datos.plot <- round(cor(datos), 3)
-      datos.plot %>% e_charts() %>% 
+      datos.plot |>  e_charts() |>  
         e_correlations(
           order = "hclust", label = list(show = T),
           inRange = list(color = c(col_min, col_med, col_max)),
           itemStyle = list(borderWidth = 2, borderColor = "#fff")
-        ) %>% e_datazoom(show = F) %>% e_show_loading() %>% e_tooltip(
+        ) |>  e_datazoom(show = F) |>  e_show_loading() |>  e_tooltip(
           formatter =  e_JS(paste0(
             "function(params) {\n",
             "  return(params.value[1] + ' ~ ' + params.value[0] + ': ' + parseFloat(params.value[2]).toFixed(3))\n", 

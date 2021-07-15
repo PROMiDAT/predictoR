@@ -102,7 +102,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate(modelos$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
   },error = function(e){
@@ -115,25 +115,25 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$xgb[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
+    obj.predic(modelos$xgb[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   # Update confusion matrix text
   output$txtxgbMC    <- renderPrint({
-    print(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
+    print(modelos$xgb[[nombre.modelo$x]]$mc)
   })
   
   # Update confusion matrix plot
   output$plot_xgb_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$xgb[[nombre.modelo$x]]$mc)
   })
   
   # Update indexes table
   output$xgbIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.xgb <- indices.generales(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
+    indices.xgb <- indices.generales(modelos$xgb[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.xgb,"xgb", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -142,7 +142,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   # Update error table
   output$xgbIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.xgb <- indices.generales(modelos$mdls$xgb[[nombre.modelo$x]]$mc)
+    indices.xgb <- indices.generales(modelos$xgb[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
     output$xgbPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.xgb[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$xgbErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.xgb[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
@@ -154,7 +154,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   # Importance plot
   output$plot_xgb <- renderEcharts4r({
     tryCatch({
-      modelo                    <- modelos$mdls$xgb[[nombre.modelo$x]]$modelo
+      modelo                    <- modelos$xgb[[nombre.modelo$x]]$modelo
       nombres                   <- modelo$feature_names    
       variables.importantes     <- xgboost::xgb.importance(feature_names = nombres, model = modelo ) 
       variables.importantes     <- variables.importantes[1:length(nombres),]  
@@ -164,9 +164,9 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
       values                    <- variables.importantes[,2]
       datos.xgb <- data.frame(label  = label, 
                               values = values) 
-      datos.xgb %>% e_charts(label) %>% e_bar(values, name = var) %>% 
-        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
-        e_flip_coords()%>% 
+      datos.xgb |>  e_charts(label) |>  e_bar(values, name = var) |>  
+        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>  
+        e_flip_coords()|>  
         e_y_axis(inverse = TRUE)
     }, error = function(e) {
       showNotification(paste0("Error :",e), duration = 15, type = "error")

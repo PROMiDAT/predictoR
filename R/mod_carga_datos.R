@@ -10,7 +10,7 @@
 mod_carga_datos_ui <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
+    div(
       col_5(tabBox(
       id = "tabs",
       title = NULL, width = 12,
@@ -138,16 +138,16 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
   
   #' Load Button Function
   observeEvent(input$loadButton, {
-    modelos$mdls <-   list(svm      = NULL,
-                           knn      = NULL,
-                           bayes    = NULL,
-                           rl       = NULL,
-                           rlr      = NULL,
-                           xgb      = NULL,
-                           boosting = NULL,
-                           rf       = NULL,
-                           nn       = NULL,
-                           dt       = NULL)
+    for (nom in names(modelos)) {
+      modelos[[nom]] <- NULL
+    }
+    
+    updateData$datos               <- NULL
+    updateData$originales          <- NULL
+    updateData$datos.prueba        <- NULL
+    updateData$datos.aprendizaje   <- NULL
+    updateData$variable.predecir   <- NULL
+
     rowname    <- isolate(input$rowname)
     ruta       <- isolate(input$archivo)
     sep        <- isolate(input$sep)
@@ -187,16 +187,13 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
   
   #' Transform Button Function
   observeEvent(input$transButton, {
-    modelos$mdls <-   list(svm      = NULL,
-                           knn      = NULL,
-                           bayes    = NULL,
-                           rl       = NULL,
-                           rlr      = NULL,
-                           xgb      = NULL,
-                           boosting = NULL,
-                           rf       = NULL,
-                           nn       = NULL,
-                           dt       = NULL)
+    for (nom in names(modelos)) {
+      modelos[[nom]] <- NULL
+    }
+    updateData$datos.prueba        <- NULL
+    updateData$datos.aprendizaje   <- NULL
+    updateData$variable.predecir   <- NULL
+    
     datos <- updateData$originales
     cod = ""
     borrar.modelos(updateData)
@@ -233,16 +230,13 @@ mod_carga_datos_server <- function(input, output, session,  updateData, modelos)
   
   #' Segment Button Function
   observeEvent(input$segmentButton, {
-    modelos$mdls <-   list(svm      = NULL,
-                           knn      = NULL,
-                           bayes    = NULL,
-                           rl       = NULL,
-                           rlr      = NULL,
-                           xgb      = NULL,
-                           boosting = NULL,
-                           rf       = NULL,
-                           nn       = NULL,
-                           dt       = NULL)
+    for (nom in names(modelos)) {
+      modelos[[nom]] <- NULL
+    }
+    updateData$datos.prueba        <- NULL
+    updateData$datos.aprendizaje   <- NULL
+    updateData$variable.predecir   <- NULL
+    
     porcentaje       <- isolate(input$segmentacionDatosA)
     variable         <- isolate(input$sel.predic.var)
     semilla          <- isolate(input$semilla)

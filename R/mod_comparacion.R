@@ -51,9 +51,9 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     isolate(test <- updateData$datos.prueba)
     isolate(var  <- updateData$variable.predecir)
     tryCatch({
-    for (modelo in modelos$mdls) {
-      if(!is.null(modelo)){
-          for (alg in modelo) {
+    for (nom in names(modelos)) {
+      if(!is.null(modelos[[nom]])){
+          for (alg in modelos[[nom]]) {
             ind <- general.indexes(mc = alg$mc)
             new <- data.frame(
               OAccuracy = ind$overall.accuracy,
@@ -65,9 +65,9 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
             }
             if(length(ind$category.accuracy) ==2){
               if(!startsWith(alg$nombre, "rlr")){
-                new$roc <- areaROC(alg$prob$prediction[,category], test[,var])
+                new$roc <- ROC.area(alg$prob$prediction[,category], test[,var])
               }else{
-                new$roc <- areaROC(alg$prob$prediction[,category,], test[,var])
+                new$roc <- ROC.area(alg$prob$prediction[,category,], test[,var])
               }
             }else{
               new$roc <- NULL
@@ -99,49 +99,66 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
     output$plot_roc <- renderEcharts4r({
       idioma        <- updateData$idioma
       category      <- input$roc.sel
+      mdls          <- modelos
       isolate(test  <- updateData$datos.prueba)
       isolate(var   <- updateData$variable.predecir)
+      tryCatch({
       if(!is.null(test) & length(levels(test[,var])) == 2) {
-        clase      <- test[,var]
-        y <- c(0, 1)
-        x <- c(1, 0)
-        nombre <- "roc"
-        res    <- data.frame(x, y, nombre = nombre)
-        for (modelo in modelos$mdls) {
-          if(!is.null(modelo)){
-            for (alg in modelo) {
-             if(!startsWith(alg$nombre, "rlr")){
-               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category], direction= "<" )
-             }else{
-               roc.data <- pROC::roc(test[,var], alg$prob$prediction[,category,], direction= "<" )
-             }
-             y   <- roc.data$sensitivities
-             x   <- roc.data$specificities
-             res <- rbind(res,data.frame(x= x, y = y, nombre = split_name(alg$nombre, idioma)))
+        res    <- list(list(type = "line", color = "#5F5C5C" , data = list(c(1,0), c(0,1))))
+        n2     <- 0
+        i      <- 2
+        for (nom in names(mdls)) {
+          if(!is.null(mdls[[nom]])){
+            for (alg in mdls[[nom]]) {
+              n2 <- n2 + 1
+            } 
+          }
+        }   
+        colores    <- gg_color_hue(n2)
+        for (nom in names(mdls)) {
+          if(!is.null(mdls[[nom]])){
+            for (alg in mdls[[nom]]) {
+              if(!startsWith(alg$nombre, "rlr")){
+                roc.data <- roc.values( alg$prob$prediction[,category], test[,var])
+              }else{
+                roc.data <- roc.values(alg$prob$prediction[,category,], test[,var])
+              }
+              res[[i]] <- list(type = "line", 
+                               data = roc.data,  
+                               color = colores[i - 1],
+                               name = split_name(alg$nombre, idioma),
+                               tooltip = list(formatter = e_JS(paste0("function(params){",
+                                                                      "return('<b>X: </b>' +",
+                                                                      "Number.parseFloat(params.value[0]).toFixed(4) +", 
+                                                                      "'<br/><b>Y: </b>' +",
+                                                                      "Number.parseFloat(params.value[1]).toFixed(4))}"))))
+              i <- i + 1
             } 
           }
         }
         
-        res$nombre <- as.factor(res$nombre)
-        colores    <- gg_color_hue(length(unique(res$nombre)))
-        plotroc    <- res %>%
-          group_by(nombre) %>%
-          e_charts(x) %>%
-          e_line(y) %>%
-          e_legend(type = "scroll", bottom = 1) %>% 
-          e_color(c(colores))    %>% 
-          e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
-        plotroc$x$opts$color[[which(plotroc$x$opts$legend$data == "roc")]] <- "#5F5C5C"
-        plotroc$x$opts$legend$data[[which(plotroc$x$opts$legend$data == "roc")]] <- NULL
-        plotroc$x$opts$xAxis[[1]]$inverse <- TRUE
-        plotroc
+        opts <- list(
+          xAxis = list(show = TRUE, inverse = TRUE),
+          yAxis = list(show = TRUE),
+          series = res)
+        
+        comp_plot <- e_charts() |>  
+                          e_list(opts) |>  
+                          e_legend(type = "scroll", bottom = 1) |>  
+                          e_datazoom(show = F) |>  
+                          e_tooltip() |>  
+                          e_show_loading()
+        comp_plot
       } else {
         showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
         return(NULL)
-      }
+      }}, error = function(e) {
+        showNotification(e, duration = 15, type = "warning")
+        return(NULL)
+      })
     })
 }
-    
+
 ## To be copied in the UI
 # mod_comparacion_ui("comparacion_ui_1")
     

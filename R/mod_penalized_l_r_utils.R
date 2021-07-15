@@ -48,30 +48,30 @@ e_posib_lambda <- function(cv.glm, labels = c("Valor Superior", "Valor Inferior"
   lower <- cv.glm$cvlo
   name  <- cv.glm$name[[1]]
   data.lambda <- data.frame(x, y, upper, lower, name)
-  plot  <- data.lambda %>%
-    e_charts(x) %>%
-    e_scatter(y, symbol_size = 7) %>%
+  plot  <- data.lambda |> 
+    e_charts(x) |> 
+    e_scatter(y, symbol_size = 7) |> 
     e_error_bar(lower, upper, 
                 tooltip = list(formatter = e_JS(paste0("function(params){",
                                                        "return('<b>", labels[1], ": </b>' + ",
                                                        "Number.parseFloat(params.value[2]).toFixed(3) + ",
                                                        "'<br/><b>", labels[2], ": </b>' + ",
-                                                       "Number.parseFloat(params.value[1]).toFixed(3))}")))) %>%
+                                                       "Number.parseFloat(params.value[1]).toFixed(3))}")))) |> 
     e_mark_line(data = list(xAxis = x1,
                 tooltip = list(formatter = e_JS(paste0("function(params){",
                                                         "return('<b>Log(lambda.min): </b>' + ",
-                                                        "Number.parseFloat(params.value).toFixed(4))}"))))) %>%
+                                                        "Number.parseFloat(params.value).toFixed(4))}"))))) |> 
     e_mark_line(data = list(xAxis = x2,
                 tooltip = list(formatter = e_JS(paste0("function(params){",
                                                        "return('<b>Log(lambda.1se): </b>' + ",
-                                                       "Number.parseFloat(params.value).toFixed(4))}"))))) %>%
+                                                       "Number.parseFloat(params.value).toFixed(4))}"))))) |> 
     e_axis_labels(
       x = labels[3],
-      y = name)%>%
+      y = name)|> 
     e_x_axis(
-      formatter = e_axis_formatter(digits = 1))  %>% 
-    e_legend(FALSE) %>% 
-    e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()
+      formatter = e_axis_formatter(digits = 1))  |>  
+    e_legend(FALSE) |>  
+    e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()
   plot$x$opts$xAxis[[1]]$type <- "value"
   plot
 }
@@ -101,7 +101,6 @@ e_coeff_landa <- function(model, category, sel.lambda = NULL, label = 'Log Lambd
   x          <- round(log(model$lambda), 5)
   data       <- cbind(x = x, data)
   data       <- data[order(data$x),]
-  sel.lambda <- sel.lambda
   new        <- data.frame()
   for (nom in colnames(data)[-1]) {
     x      <- data[["x"]]
@@ -110,23 +109,45 @@ e_coeff_landa <- function(model, category, sel.lambda = NULL, label = 'Log Lambd
     new.   <- data.frame(x = x, y = y, nombre = nombre)
     new    <- rbind(new, new.)
   }
-  coeff_landa_plot <- new %>%
-                        group_by(nombre) %>%
-                        e_charts(x) %>%
-                        e_line(y, bind = nombre)%>%
+  #rlr <<- data
+  # new        <- list()
+  # for (i in 1:length(colnames(rlr)[-1])) {
+  #   y      <- rlr[[i + 1]]
+  #   nom    <- colnames(rlr)[i+1]
+  #   new[[i]] <- list(
+  #     type = "line", data = y, name = nom
+  #   )
+  # }
+  # 
+  # series.tiempo[[2]] <- list(
+  #   type = "line", data = rlr$cuadro.superior.mediox, name = colnames(rlr)[4]
+  # )
+  # opts <- list(
+  #   xAxis = list(
+  #     type = "value", data = rlr$x),
+  #   yAxis = list(show = TRUE),
+  #   series = new
+  # )
+  # e_charts() |> e_list(opts) |> e_legend() |> e_datazoom() |>
+  #   e_tooltip(trigger = 'axis') |> e_show_loading()
+  
+  coeff_landa_plot <- new |> 
+                        group_by(nombre) |> 
+                        e_charts(x) |> 
+                        e_line(y, bind = nombre)|> 
                         e_axis_labels(
                           x = label,
-                          y = paste0('Coefficients: Response ', category)) %>%
-                        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>% 
+                          y = paste0('Coefficients: Response ', category)) |> 
+                        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>  
                         e_labels(position = 'left',formatter = e_JS("
                                                             function(params){
                                                             if(params.dataIndex==0){
                                                             return(params.name)
                                                             }else
-                                                            {return('')}}"))%>%
+                                                            {return('')}}"))|> 
                         e_legend(show = FALSE)
   if(!is.null(sel.lambda)){
-    coeff_landa_plot <- coeff_landa_plot %>%
+    coeff_landa_plot <- coeff_landa_plot |> 
                         e_mark_line(data = list(xAxis = sel.lambda,
                                                 tooltip = list(formatter = e_JS(paste0("function(params){",
                                                                                        "return('<b>",label,": </b>' + ",

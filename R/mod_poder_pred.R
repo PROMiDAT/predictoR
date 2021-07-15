@@ -89,9 +89,9 @@ mod_poder_pred_server <- function(input, output, session, updateData){
         value = value,
         color = color
       )
-      datos %>% e_charts(label) %>% e_bar(value, name = var)  %>%
-        e_tooltip() %>% e_datazoom(show = F) %>% e_show_loading()%>%
-        e_add("itemStyle", color) %>% e_legend(FALSE)
+      datos |> e_charts(label) |> e_bar(value, name = var)  |>
+        e_tooltip() |> e_datazoom(show = F) |> e_show_loading()|>
+        e_add("itemStyle", color) |> e_legend(FALSE)
     }, error = function(e) {
       showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
       return(NULL)

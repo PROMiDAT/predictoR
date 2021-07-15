@@ -27,7 +27,7 @@ boxplot.stats <- function (x, coef = 1.5, do.conf = TRUE, do.out = TRUE)
 ########################### echarts4r #########################################
 
 get_data <- function (e, serie, i = 1) {
-  e$x$data[[i]][, 2] %>% unname()
+  e$x$data[[i]][, 2] |> unname()
 }
 
 get_outliers <- function (e, serie, i) {

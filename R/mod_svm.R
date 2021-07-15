@@ -111,7 +111,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
+    isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){
@@ -124,25 +124,25 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$svm[[nombre.modelo$x]]$pred,idioma = idioma, test, var)  
+    obj.predic(modelos$svm[[nombre.modelo$x]]$pred,idioma = idioma, test, var)  
     },server = FALSE)
   
   # Update confusion matrix text
   output$txtSvmMC    <- renderPrint({
-    print(modelos$mdls$svm[[nombre.modelo$x]]$mc)
+    print(modelos$svm[[nombre.modelo$x]]$mc)
   })
   
   # Update confusion matrix plot
   output$plot_svm_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$svm[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$svm[[nombre.modelo$x]]$mc)
   })
   
   # Update indexes table
   output$svmIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
+    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma))
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -151,7 +151,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   # Update error table
   output$svmIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.svm <- indices.generales(modelos$mdls$svm[[nombre.modelo$x]]$mc)
+    indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
     output$svmPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.svm[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$svmErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.svm[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))

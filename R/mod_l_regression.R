@@ -99,7 +99,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob, mc = mc))
+    isolate(modelos$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {
@@ -112,25 +112,25 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$rl[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
+    obj.predic(modelos$rl[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   #Texto de la Matríz de Confusión
   output$txtrlMC    <- renderPrint({
-    print(modelos$mdls$rl[[nombre.modelo$x]]$mc)
+    print(modelos$rl[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_rl_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$rl[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$rl[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$rlIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rl <- indices.generales(modelos$mdls$rl[[nombre.modelo$x]]$mc)
+    indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rl,"rl", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -139,7 +139,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
   #Tabla de Errores por Categoría
   output$rlIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.rl <- indices.generales(modelos$mdls$rl[[nombre.modelo$x]]$mc)
+    indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$rlPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rl[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$rlErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.rl[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))

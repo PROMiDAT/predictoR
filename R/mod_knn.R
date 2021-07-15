@@ -101,7 +101,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate(modelos$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){
@@ -114,27 +114,27 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$knn[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
+    obj.predic(modelos$knn[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
   
   #Texto de la Matríz de Confusión
   output$txtknnMC    <- renderPrint({
-    print(modelos$mdls$knn[[nombre.modelo$x]]$mc)
+    print(modelos$knn[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_knn_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$knn[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$knn[[nombre.modelo$x]]$mc)
   })
   
   
   #Tabla de Indices por Categoría 
   output$knnIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.knn <- indices.generales(modelos$mdls$knn[[nombre.modelo$x]]$mc)
+    indices.knn <- indices.generales(modelos$knn[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.knn,"KNN", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -143,7 +143,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
   #Tabla de Errores por Categoría
   output$knnIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.knn <- indices.generales(modelos$mdls$knn[[nombre.modelo$x]]$mc)
+    indices.knn <- indices.generales(modelos$knn[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$knnPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.knn[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$knnErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.knn[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))

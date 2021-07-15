@@ -87,8 +87,9 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
     modelo <- traineR::train.bayes(as.formula(var), data = train)
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
+    
     mc     <- confusion.matrix(test, pred)
-    isolate(modelos$mdls$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
+    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)    
     },error = function(e){
@@ -101,25 +102,25 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
     idioma <- updateData$idioma
-    obj.predic(modelos$mdls$bayes[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
+    obj.predic(modelos$bayes[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
   },server = FALSE)
   
   #Texto de la Matríz de Confusión
   output$txtbayesMC    <- renderPrint({
-    print(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
+    print(modelos$bayes[[nombre.modelo$x]]$mc)
   })
   
   #Gráfico de la Matríz de Confusión
   output$plot_bayes_mc <- renderPlot({
     idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
-    plot.MC(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
+    plot.MC(modelos$bayes[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$bayesIndPrecTable <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.bayes <- indices.generales(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
+    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.bayes,"bayes", idioma = idioma))
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
@@ -128,7 +129,8 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
   #Tabla de Errores por Categoría
   output$bayesIndErrTable  <- shiny::renderTable({
     idioma <- updateData$idioma
-    indices.bayes <- indices.generales(modelos$mdls$bayes[[nombre.modelo$x]]$mc)
+    indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
+
     #Gráfico de Error y Precisión Global
     output$bayesPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.bayes[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
     output$bayesErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.bayes[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
