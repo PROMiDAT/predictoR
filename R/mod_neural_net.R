@@ -264,17 +264,6 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
       return(NULL)
     })
   })
-  
-  # Limpia los datos 
-  limpia.nn <- function() {
-        output$plot_nn        <- renderPlot(NULL)
-        output$nnPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_nn_mc     <- renderPlot(NULL)
-        output$txtNnMC        <- renderPrint(invisible(NULL))
-        output$nnIndPrecTable <- shiny::renderTable(NULL)
-        output$nnIndErrTable  <- shiny::renderTable(NULL)
-  }
-  
 }
     
 ## To be copied in the UI

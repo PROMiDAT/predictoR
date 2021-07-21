@@ -21,6 +21,9 @@ select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "
          "cv.glm.",type," <<- glmnet::cv.glmnet(x, y, standardize = ",escalar,", alpha = ",alpha,",family = 'multinomial')\n",
          "e_posib_lambda(cv.glm.",type,")")
 }
+coeff.values <- function(data, name ){
+  lapply(1:length(data[["x"]]), function(i) c(data[["x"]][[i]], data[[name]][[i]]))
+}
 
 #' Possible lambda
 #' 
@@ -101,57 +104,40 @@ e_coeff_landa <- function(model, category, sel.lambda = NULL, label = 'Log Lambd
   x          <- round(log(model$lambda), 5)
   data       <- cbind(x = x, data)
   data       <- data[order(data$x),]
-  new        <- data.frame()
-  for (nom in colnames(data)[-1]) {
-    x      <- data[["x"]]
-    y      <- data[[nom]]
-    nombre <- nom
-    new.   <- data.frame(x = x, y = y, nombre = nombre)
-    new    <- rbind(new, new.)
+  new        <- list()
+  for (i in 1:length(colnames(data)[-1])) {
+    nom      <- colnames(data)[i+1]
+    new[[i]] <- list(
+      type     = "line", 
+      data     = coeff.values(data, nom), 
+      name     = nom, 
+      label    = list(show      = TRUE, 
+                      position  = 'left',
+                      formatter = e_JS(paste0("function(params){
+                                              if(params.dataIndex == 0){
+                                                return('",nom,"')
+                                              }else{return('')}}")))
+    )
   }
-  #rlr <<- data
-  # new        <- list()
-  # for (i in 1:length(colnames(rlr)[-1])) {
-  #   y      <- rlr[[i + 1]]
-  #   nom    <- colnames(rlr)[i+1]
-  #   new[[i]] <- list(
-  #     type = "line", data = y, name = nom
-  #   )
-  # }
-  # 
-  # series.tiempo[[2]] <- list(
-  #   type = "line", data = rlr$cuadro.superior.mediox, name = colnames(rlr)[4]
-  # )
-  # opts <- list(
-  #   xAxis = list(
-  #     type = "value", data = rlr$x),
-  #   yAxis = list(show = TRUE),
-  #   series = new
-  # )
-  # e_charts() |> e_list(opts) |> e_legend() |> e_datazoom() |>
-  #   e_tooltip(trigger = 'axis') |> e_show_loading()
-  
-  coeff_landa_plot <- new |> 
-                        group_by(nombre) |> 
-                        e_charts(x) |> 
-                        e_line(y, bind = nombre)|> 
-                        e_axis_labels(
-                          x = label,
-                          y = paste0('Coefficients: Response ', category)) |> 
-                        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>  
-                        e_labels(position = 'left',formatter = e_JS("
-                                                            function(params){
-                                                            if(params.dataIndex==0){
-                                                            return(params.name)
-                                                            }else
-                                                            {return('')}}"))|> 
-                        e_legend(show = FALSE)
+  opts <- list(xAxis = list(show = TRUE, 
+                            type = "value"),
+               yAxis = list(show = TRUE, 
+                            type = "value"),
+               series = new)
+  coeff_plot <- e_charts() |> 
+    e_list(opts) |>
+    e_axis_labels(x = label,
+                  y = paste0('Coefficients: Response ', category)) |> 
+    e_tooltip() |>  
+    e_datazoom(show = F) |> 
+    e_show_loading()|> 
+    e_legend(show = FALSE)
   if(!is.null(sel.lambda)){
-    coeff_landa_plot <- coeff_landa_plot |> 
-                        e_mark_line(data = list(xAxis = sel.lambda,
-                                                tooltip = list(formatter = e_JS(paste0("function(params){",
-                                                                                       "return('<b>",label,": </b>' + ",
-                                                                                       "Number.parseFloat(params.value).toFixed(4))}")))))
+    coeff_plot <- coeff_plot |> 
+      e_mark_line(data = list(xAxis   = sel.lambda,
+                              tooltip = list(formatter = e_JS(paste0("function(params){",
+                                                                     "return('<b>",label,": </b>' + ",
+                                                                     "Number.parseFloat(params.value).toFixed(4))}")))))
   }
-  coeff_landa_plot
+  coeff_plot
 }

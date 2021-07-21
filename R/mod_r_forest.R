@@ -250,17 +250,6 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRfIG", value = codigo)
   }
-
-  # Limpia los datos 
-  limpia.rf <- function(capa = NULL){
-        output$txtRf          <- renderPrint(invisible(""))
-        output$rfPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_rf_mc     <- renderPlot(NULL)
-        output$txtRfMC        <- renderPrint(invisible(NULL))
-        output$rfIndPrecTable <- shiny::renderTable(NULL)
-        output$rfIndErrTable  <- shiny::renderTable(NULL) 
-  }
-
 }
     
 ## To be copied in the UI

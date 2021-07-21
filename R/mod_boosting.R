@@ -240,15 +240,6 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     })
   })
 
-  # Limpia los datos al ejecutar el botón run
-  limpia.boosting <- function() {
-        output$plot_boosting_error  <- renderEcharts4r(NULL)
-        output$plot_boosting_import <- renderEcharts4r(NULL)
-        output$plot_boosting_mc     <- renderPlot(NULL)
-        output$boostingIndPrecTable <- renderEcharts4r(NULL)
-        output$boostingIndErrTable  <- renderEcharts4r(NULL)
-  }
-  
 }
     
 ## To be copied in the UI

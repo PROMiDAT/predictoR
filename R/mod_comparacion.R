@@ -123,12 +123,13 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
               }else{
                 roc.data <- roc.values(alg$prob$prediction[,category,], test[,var])
               }
-              res[[i]] <- list(type = "line", 
-                               data = roc.data,  
+              res[[i]] <- list(type  = "line", 
+                               data  = roc.data,  
                                color = colores[i - 1],
-                               name = split_name(alg$nombre, idioma),
+                               name  = split_name(alg$nombre, idioma),
                                tooltip = list(formatter = e_JS(paste0("function(params){",
-                                                                      "return('<b>X: </b>' +",
+                                                                      "return('<b>", split_name(alg$nombre, idioma), ": </b><br/>' +",
+                                                                      "'<b>X: </b>' +",
                                                                       "Number.parseFloat(params.value[0]).toFixed(4) +", 
                                                                       "'<br/><b>Y: </b>' +",
                                                                       "Number.parseFloat(params.value[1]).toFixed(4))}"))))
@@ -136,7 +137,6 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
             } 
           }
         }
-        
         opts <- list(
           xAxis = list(show = TRUE, inverse = TRUE),
           yAxis = list(show = TRUE),
@@ -153,7 +153,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos){
         showNotification(tr("RocNo", idioma), duration = 15, type = "warning")
         return(NULL)
       }}, error = function(e) {
-        showNotification(e, duration = 15, type = "warning")
+        showNotification(e, duration = 15, type = "error")
         return(NULL)
       })
     })

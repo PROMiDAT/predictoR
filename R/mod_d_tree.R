@@ -207,18 +207,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeDtIG", value = codigo)
   }
-
-  # Limpia los datos al ejecutar el botón run
-  limpia.dt <- function() {
-        output$txtDt          <- renderPrint(invisible(""))
-        output$plot_dt        <- renderPlot(NULL)
-        output$dtPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_dt_mc     <- renderPlot(NULL)
-        output$txtDtMC        <- renderPrint(invisible(NULL))
-        output$dtIndPrecTable <- shiny::renderTable(NULL)
-        output$dtIndErrTable  <- shiny::renderTable(NULL)
-  }
-  
 }
     
 ## To be copied in the UI

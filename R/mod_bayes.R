@@ -157,17 +157,6 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
   }
-  
-  # Limpia los datos al ejecutar el botón run
-  limpia.bayes.run <- function() {
-        output$txtbayes          <- renderPrint(invisible(""))
-        output$bayesPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_bayes_mc     <- renderPlot(NULL)
-        output$txtbayesMC        <- renderPrint(invisible(NULL))
-        output$bayesIndPrecTable <- shiny::renderTable(NULL)
-        output$bayesIndErrTable  <- shiny::renderTable(NULL)
-  }
-
 }
     
 ## To be copied in the UI

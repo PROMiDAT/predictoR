@@ -178,17 +178,6 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     codigo       <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeKnnIG", value = codigo)
   }
-
-  # Limpia los datos al ejecutar el botón run
-  limpia.knn <- function() {
-        output$txtknn          <- renderPrint(invisible(""))
-        output$knnPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_knn_mc     <- renderPlot(NULL)
-        output$txtknnMC        <- renderPrint(invisible(NULL))
-        output$knnIndPrecTable <- shiny::renderTable(NULL)
-        output$knnIndErrTable  <- shiny::renderTable(NULL)
-  }
-  
 }   
   
 ## To be copied in the UI

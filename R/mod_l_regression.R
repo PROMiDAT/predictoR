@@ -167,18 +167,6 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos)
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeRlIG", value = codigo)
   }
-  
-  # Limpia los outputs
-  limpia.rl <- function() {
-        output$txtrl          <- renderPrint(invisible(""))
-        output$rlPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_rl_mc     <- renderPlot(NULL)
-        output$txtrlMC        <- renderPrint(invisible(NULL))
-        output$rlIndPrecTable <- shiny::renderTable(NULL)
-        output$rlIndErrTable  <- shiny::renderTable(NULL)
-  }
-  
-
 }
     
 ## To be copied in the UI

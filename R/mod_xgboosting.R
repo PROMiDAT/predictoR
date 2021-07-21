@@ -201,16 +201,6 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
     codigo <- extract.code("indices.generales")
     updateAceEditor(session, "fieldCodeXgbIG", value = codigo)
   }
-  
-  # Limpia los datos 
-  limpia.xgb.run <- function() {
-        output$txtxgb          <- renderPrint(invisible(""))
-        output$xgbPrediTable   <- DT::renderDataTable(NULL)
-        output$plot_xgb_mc     <- renderPlot(NULL)
-        output$txtxgbMC        <- renderPrint(invisible(NULL))
-        output$xgbIndPrecTable <- shiny::renderTable(NULL)
-        output$xgbIndErrTable  <- shiny::renderTable(NULL)
-  }
 }
     
 ## To be copied in the UI

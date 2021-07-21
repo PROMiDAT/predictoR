@@ -200,15 +200,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     idioma <- updateData$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
         if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
-          landa <- input$landa
-
+          isolate(landa <- input$landa)
         }
         else{
+          landa <- round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5)
+          updateNumericInput(session,
+                             "landa",
+                             value = landa)
           showNotification(tr("limitLambda",idioma), duration = 10, type = "message")
-          updateNumericInput(session, 
-                             "landa", 
-                             value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
-          landa <- input$landa
         }
       pred   <- predict(modelo , updateData$datos.prueba, type = 'class', s = exp(landa) )
       mc     <- confusion.matrix( updateData$datos.prueba, pred)
@@ -287,18 +286,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   rlr.type <- function(){
     ifelse(isolate(input$alpha.rlr) == 0, "ridge", "lasso")
   }
-  
-  # Limpia los datos al ejecutar el botón run
-  limpia.rlr <- function() {
-    output$txtDt          <- renderPrint(invisible(""))
-    output$plot_dt        <- renderPlot(NULL)
-    output$dtPrediTable   <- DT::renderDataTable(NULL)
-    output$plot_dt_mc     <- renderPlot(NULL)
-    output$txtDtMC        <- renderPrint(invisible(NULL))
-    output$dtIndPrecTable <- shiny::renderTable(NULL)
-    output$dtIndErrTable  <- shiny::renderTable(NULL)
-  }
-  
 }
     
 ## To be copied in the UI
