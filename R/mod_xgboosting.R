@@ -162,10 +162,13 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
       variables.importantes     <- na.omit(variables.importantes) 
       label                     <- variables.importantes$Feature
       values                    <- variables.importantes[,2]
+      color                     <- gg_color_hue(length(label))
       datos.xgb <- data.frame(label  = label, 
-                              values = values) 
+                              values = values, 
+                              color  = color) 
       datos.xgb |>  e_charts(label) |>  e_bar(values, name = var) |>  
-        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>  
+        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>
+        e_add("itemStyle", color)|>  
         e_flip_coords()|>  
         e_y_axis(inverse = TRUE)
     }, error = function(e) {

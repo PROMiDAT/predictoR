@@ -189,10 +189,11 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
       aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)
       aux   <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
       label <- row.names(aux)
-      aux   <- cbind(aux,label = label)
-      
+      color <- gg_color_hue(length(label))
+      aux   <- cbind(aux,label = label, color = color)
       aux |>  e_charts(label) |>  e_bar(MeanDecreaseAccuracy, name = var) |>  
-        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() |>  
+        e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>
+        e_add("itemStyle", color) |>  
         e_flip_coords() |> 
         e_y_axis(inverse = TRUE) 
     }, error = function(e) {

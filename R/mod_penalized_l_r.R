@@ -200,7 +200,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     idioma <- updateData$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
         if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
-          isolate(landa <- input$landa)
+           landa <- input$landa
         }
         else{
           landa <- round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5)
