@@ -171,7 +171,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
     names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),updateData$idioma)
     
-    
     updateSelectInput(session, "selectModelsPred", choices = nombres, selected = input$selectModelsPred)
   })
  

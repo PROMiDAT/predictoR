@@ -18,22 +18,25 @@ e_histnormal <- function(data, colorbar = "steelblue", colorline = "gray",
                          nombres = c("Histograma", "Curva Normal")) {
   h <- hist(data, plot = F)
   x <- seq(min(h$mids, na.rm = T), max(h$mids, na.rm = T), length = length(h$mids))
-  promedio <- mean(data, na.rm = T)
+  promedio   <- mean(data, na.rm = T)
   desviacion <- sd(data, na.rm = T)
   normalidad <- dnorm(x, promedio, desviacion)
   
   d <- diff(h$breaks)[1]
-  n <- round(normalidad, 3)
-  distribu <- data.frame(
-    x = round(h$mids, 3), d = round(h$density, 3), n = n,
-    name = paste0("(", h$mids - d / 2, " - ", h$mids + d / 2, ")")
-  )
-  
-  distribu |>  e_charts(x) |>  e_bar(d, name = nombres[1]) |>  
-    e_line(n, name = nombres[2]) |>  e_x_axis(scale = T) |> 
-    e_axis_labels(x = "", y = "Densidad") |>  
-    e_color(c(colorbar, colorline)) |>  e_tooltip() |>  
-    e_datazoom(show = F) |>  e_show_loading()
+  n <- normalidad
+  distribu <- data.frame(x = h$mids, 
+                         d = h$density, 
+                         n = n,
+                         name = paste0("(", h$mids - d / 2, " - ", h$mids + d / 2, ")"))
+  distribu |>  
+    e_charts(x) |>  
+    e_bar(d,  name = nombres[1]) |>  
+    e_line(n, name = nombres[2]) |>  
+    e_x_axis(scale = T) |> 
+    e_axis_labels(x = "", 
+                  y = "Densidad") |>  
+    e_color(c(colorbar, colorline)) |>  
+    e_tooltip() |> e_datazoom(show = F) |>  e_show_loading()
 }
 
 #' Qplot + Qline
@@ -56,14 +59,18 @@ e_qq <- function(data, colorpoint = "steelblue", colorline = "gray") {
   y <- quantile(data$y, c(0.25, 0.75), names = F, na.rm = T)
   x <- qnorm(c(0.25, 0.75))
   slope <- diff(y)/diff(x)
-  int <- y[1L] - slope * x[1L]
+  int   <- y[1L] - slope * x[1L]
   
   data$z <- data$x * slope + int
   data <- round(data, 3)
   
-  data |>  e_charts(x) |>  e_scatter(y, name = "QQplot", symbol_size = 8) |> 
-    e_line(z, name = "QQline", symbol = 'none') |>  e_x_axis(scale = T) |> 
-    e_y_axis(scale = T) |>  e_tooltip() |>  e_datazoom(show = F) |>  
+  data |>  
+    e_charts(x) |>  
+    e_scatter(y, name = "QQplot", symbol_size = 8) |> 
+    e_line(z, name = "QQline", symbol = 'none') |>  
+    e_x_axis(scale = T) |> 
+    e_y_axis(scale = T) |> 
+    e_tooltip() |>  e_datazoom(show = F) |>  
     e_color(c(colorpoint, colorline)) |>  e_show_loading()
 }
 

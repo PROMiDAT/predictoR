@@ -126,13 +126,16 @@ mod_distribuciones_server <- function(input, output, session, updateData){
       
       label <- levels(datos.plot)
       value <- summary(datos.plot, maxsum = length(levels(datos.plot)))
+      color <- gg_color_hue(length(label))
       datos.plot <- data.frame (
         label = label,
-        value = value
+        value = value,
+        color = color
       )
       
       datos.plot |> e_charts(label) |> e_bar(value, name = var) |>
-        e_tooltip() |> e_datazoom(show = F) |> e_show_loading()
+        e_tooltip() |> e_datazoom(show = F) |> e_show_loading()|>
+        e_add("itemStyle", color)|> e_legend(FALSE)
     }, error = function(e) {
       showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
       return(NULL)

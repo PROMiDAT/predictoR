@@ -216,13 +216,13 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
       imp <- modelos$boosting[[nombre.modelo$x]]$modelo$importance
       aux <- data.frame(importancia = imp) 
       col <- gg_color_hue(length(row.names(aux)))
+      aux <- cbind(aux, col = col)
       aux$nombre      <- row.names(aux) 
-      aux$color       <- col
       aux$importancia <- abs(aux$importancia) 
       aux <- aux[order(aux$importancia, decreasing = T), ]
       aux |>  e_charts(nombre) |>  e_bar(importancia, name = var) |>   
         e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>
-        e_add("itemStyle", color) |>   
+        e_add("itemStyle", col) |>   
         e_flip_coords() |>  
         e_y_axis(inverse = TRUE)
     }, error = function(e) {
