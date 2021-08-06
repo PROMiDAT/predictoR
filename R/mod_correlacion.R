@@ -23,13 +23,13 @@ mod_correlacion_ui <- function(id){
         list(
           options.base(), tags$hr(style = "margin-top: 0px;"),
           colourpicker::colourInput(
-            ns("col_min"), labelInput("selcolor"), "#FF5733", 
+            ns("col_max"), labelInput("selcolor"), "#2E86C1", 
             allowTransparent = T),
           colourpicker::colourInput(
             ns("col_med"), labelInput("selcolor"), "#F8F5F5", 
             allowTransparent = T),
           colourpicker::colourInput(
-            ns("col_max"), labelInput("selcolor"), "#2E86C1", 
+            ns("col_min"), labelInput("selcolor"), "#FF5733", 
             allowTransparent = T)
         ),
         list(
@@ -59,30 +59,13 @@ mod_correlacion_server <- function(input, output, session, updateData) {
   #' Gráfico de Correlaciones
   output$plot_cor <- renderEcharts4r({
     datos <- var.numericas(updateData$datos)
-    col_min <- input$col_min
-    col_med <- input$col_med
-    col_max <- input$col_max
-    colores <- list(list(0, col_min), list(0.5, col_med), list(1, col_max))
+    colores <- c(input$col_min, input$col_med, input$col_max)
     
     tryCatch({
-      cod <- code.cor(col_min, col_med, col_max)
+      cod <- code.cor(colores)
       updateAceEditor(session, "fieldCodeCor", value = cod)
       datos.plot <- round(cor(datos), 3)
-      label      <- colnames(datos.plot)
-      plot.corr  <- datos.plot |>  
-                        e_charts() |>  
-                        e_correlations(order = "hclust", 
-                                       label = list(show = T),
-                                       inRange   = list(color = c(col_min, col_med, col_max)),
-                                       itemStyle = list(borderWidth = 2, 
-                                                        borderColor = "#fff")) |>  
-                        e_datazoom(show = F) |>  e_show_loading() |>  
-                        e_tooltip(formatter =  e_JS(paste0("function(params) {\n",
-                                                            "  return(params.value[1] + ' ~ ' + params.value[0] + ': ' + parseFloat(params.value[2]).toFixed(3))\n", 
-                                                            "}")))
-      plot.corr$x$opts$xAxis[[1]]$data <- label
-      plot.corr$x$opts$yAxis[[1]]$data <- rev(label)
-      plot.corr
+      e_cor(datos.plot, colores)
     }, error = function(e) {
       showNotification(paste0("ERROR: ", e), duration = 10, type = "error")
       return(NULL)
