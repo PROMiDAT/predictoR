@@ -213,16 +213,15 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   output$plot_boosting_import <- renderEcharts4r({
     cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
     tryCatch({
-      imp <- modelos$boosting[[nombre.modelo$x]]$modelo$importance
-      aux <- data.frame(importancia = imp) 
-      col <- gg_color_hue(length(row.names(aux)))
-      aux <- cbind(aux, col = col)
+      imp   <- modelos$boosting[[nombre.modelo$x]]$modelo$importance
+      color <- gg_color_hue(length(row.names(aux)))
+      aux   <- data.frame(importancia = imp, color = color) 
       aux$nombre      <- row.names(aux) 
       aux$importancia <- abs(aux$importancia) 
       aux <- aux[order(aux$importancia, decreasing = T), ]
       aux |>  e_charts(nombre) |>  e_bar(importancia, name = var) |>   
         e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()|>
-        e_add("itemStyle", col) |>   
+        e_add("itemStyle", color) |>   
         e_flip_coords() |>  
         e_y_axis(inverse = TRUE)
     }, error = function(e) {
