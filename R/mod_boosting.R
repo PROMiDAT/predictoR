@@ -214,7 +214,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     cod <- ifelse(input$fieldCodeBoostingPlotImport == "",boosting.plot.import(),input$fieldCodeBoostingPlotImport)
     tryCatch({
       imp   <- modelos$boosting[[nombre.modelo$x]]$modelo$importance
-      color <- gg_color_hue(length(row.names(aux)))
+      color <- gg_color_hue(length(imp))
       aux   <- data.frame(importancia = imp, color = color) 
       aux$nombre      <- row.names(aux) 
       aux$importancia <- abs(aux$importancia) 
