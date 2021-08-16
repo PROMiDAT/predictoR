@@ -122,7 +122,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     tipo   <- rlr.type()
     alpha  <- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     prob   <- predict(modelo , test, type = 'prob')
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
