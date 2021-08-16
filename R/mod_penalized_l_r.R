@@ -128,8 +128,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
-    pred   <- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
-    mc     <- confusion.matrix(test, pred)
+    pred      <- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
+    mc        <- confusion.matrix(test, pred)
     updateNumericInput(session, 
                        "landa", 
                        max   =  round(max(log(modelo$lambda)), 5), 
