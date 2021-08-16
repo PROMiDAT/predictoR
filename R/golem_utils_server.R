@@ -94,12 +94,11 @@ cambiar.labels <- function() {
       'varImp', 'rfl', 'NoDRule', 'xgb', 'selbooster', 'selnrounds', 'bl', 'selectAlg', 'nn', 'redPlot', 'threshold',
       'selectCapas', 'stepmax', 'nnWar', 'bigPlot', 'rl', 'rlr', 'landa', 'automatico', 'posibLanda', 'gcoeff', 'limitModel', 'aROC', 'RocNo',
       'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras',
-      'resultados', 'lambda', 'limitLambda', 'superior', 'inferior')
-  
+      'resultados', 'lambda', 'limitLambda', 'superior', 'inferior', 'cargarComp', 'betas')
   return(x)
 }
 
-# # Función para generar diccionario.
+# Función para generar diccionario.
 # crear.traslation <- function() {
 #    library(plyr)
 #    archivo <- read.table("diccionario.csv", header = TRUE, sep = ";", as.is = TRUE)

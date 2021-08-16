@@ -42,7 +42,7 @@ mod_ind_nuevos_ui <- function(id){
             tabBoxPrmdt(
             id = "BoxModeloq", 
             tabPanel(
-            title = p(labelInput("cargar"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
+            title = p(labelInput("cargarComp"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
             collapsible = FALSE, collapsed = FALSE, value = "Cargar",
             fluidRow(
               col_5(
@@ -830,7 +830,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                                          choices =  list("gini" = "gini", "Entropia" = "information")))))
     opc_bayes <- list(tags$span())
     
-    opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), tr("numTree", idioma), 50, width = "100%",min = 1)),
+    opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), tr("numTree", idioma), 20, width = "100%",min = 1)),
                                       col_4(numericInput(ns("maxdepth.boosting.pred"),tr("maxdepth", idioma), 15, width = "100%",min = 1)),
                                       col_4(numericInput(ns("minsplit.boosting.pred"),tr("minsplit", idioma), 20, width = "100%",min = 1))))
     opc_rl  <- list(tags$span())

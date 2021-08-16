@@ -13,7 +13,9 @@ mod_penalized_l_r_ui <- function(id){
   codigo.rlr.run<- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
                                          codigo.monokai(ns("fieldCodeRlrLanda"), height = "10vh")),
                         conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo'",
-                                       codigo.monokai(ns("fieldCodeRlr"), height = "10vh")))
+                                         codigo.monokai(ns("fieldCodeRlr"), height = "10vh")),
+                        conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
+                                         codigo.monokai(ns("fieldCodeRlrBetas"), height = "10vh")))
   
   codigo.rlr  <- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPosibLanda'",
                                        codigo.monokai(ns("fieldCodeRlrPosibLanda"), height = "10vh")),
@@ -26,7 +28,7 @@ mod_penalized_l_r_ui <- function(id){
   
   opc_rlr  <-   div(
     conditionalPanel(
-      "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
+      "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
       tabsOptions(heights = c(70, 30), tabs.content = list(
         list(
           conditionalPanel(
@@ -36,17 +38,19 @@ mod_penalized_l_r_ui <- function(id){
                                        choices = list("Ridge" = 0, "Lasso" = 1))),
                      col_6(radioSwitch(ns("switch.scale.rlr"), "escal", c("si", "no"))))),
           conditionalPanel(
-            "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
+            "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'  || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
                                         choices =  "", width = "100%"))),
-            fluidRow(col_6(id = ns("colManualLanda"),br(),
+            conditionalPanel(
+              "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'" ,
+              fluidRow(col_6(id = ns("colManualLanda"),br(),
                            numericInput(ns("landa"), labelInput("landa"),value = 0, width = "100%")), br(),
-                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F))))),
+                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F)))))),
         codigo.rlr.run
       ))),
     conditionalPanel(
-      "input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrModelo' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrLanda'",
+      "input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrModelo' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrLanda' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrBetas'",
       tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
         codigo.rlr
       )))
@@ -61,6 +65,10 @@ mod_penalized_l_r_ui <- function(id){
       tabPanel(title = labelInput("posibLanda"),value = "tabRlrPosibLanda",
                withLoader(echarts4rOutput(ns('plot_rlr_posiblanda'), height = "55vh"), 
                type = "html", loader = "loader4")),
+      
+      tabPanel(title = labelInput("betas"),value = "tabRlrBetas",
+               withLoader(verbatimTextOutput(ns('txtBetas')), 
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("gcoeff"),value = "tabRlrLanda",
                withLoader(echarts4rOutput(ns('plot_rlr_landa'), height = "55vh"), 
@@ -114,7 +122,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     tipo   <- rlr.type()
     alpha  <- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     prob   <- predict(modelo , test, type = 'prob')
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
@@ -144,6 +152,15 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Texto de la Matríz de Confusión
   output$txtrlrMC    <- renderPrint({
     print(modelos$rlr[[nombre.modelo$x]]$mc)
+  })
+  
+  #Texto de los Betas
+  output$txtBetas    <- renderPrint({
+    category <- input$coeff.sel
+    modelo   <- modelos$rlr[[nombre.modelo$x]]$modelo
+    tipo     <- rlr.type()
+    updateAceEditor(session, "fieldCodeRlrBetas", value = paste0("modelo.rlr.",tipo,"$beta[['",category,"']]"))
+    print(modelo$beta[[category]])
   })
   
   #Gráfico de la Matríz de Confusión
@@ -210,7 +227,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
           showNotification(tr("limitLambda",idioma), duration = 10, type = "message")
         }
       pred   <- predict(modelo , updateData$datos.prueba, type = 'class', s = exp(landa) )
-      mc     <- confusion.matrix( updateData$datos.prueba, pred)
+      mc     <- confusion.matrix(updateData$datos.prueba, pred)
       
       isolate(modelos$rlr[[nombre.modelo$x]]$pred <- pred)
       isolate(modelos$rlr[[nombre.modelo$x]]$mc   <- mc)

@@ -14,8 +14,10 @@ basico;Estadísticas Básicas;Basic Statistics
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
 bl;Potenciación;Boosting
 buscar;Buscar:;Search: 
+betas;Coeficientes de Regresión;Regression Coefficients
 cargar;Cargar;Load
 cargarchivo;Cargar Archivo;Load Archive 
+cargarComp;Cargar Tabla Completa;Load Full Data
 cargarNuev;Cargar Individuos Nuevos;Load New Cases
 categorico;Categórico;Categorical
 categoricas;Categóricas;Categoricals
