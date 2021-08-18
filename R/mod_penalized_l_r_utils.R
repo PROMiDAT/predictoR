@@ -15,6 +15,26 @@ rlr.MC <- function(type = "ridge"){
   return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
 }
 
+select.beta <- function(modelo, lambda){
+  menor   <- 0
+  mayor   <- 0
+  cercano <- 0
+  for (n in modelo$lambda) {
+    if(n == exp(lambda)){
+      cercano <- n
+    }else if (n < exp(lambda)){
+      menor <- n
+    }else if (n > exp(lambda)){
+      mayor <- n
+    }
+  }
+  if((mayor - exp(lambda)) < (exp(lambda) - menor)){
+    cercano <- mayor
+  }else{
+    cercano <- menor
+  }
+  return(which(modelo$lambda == cercano))
+}
 select.landa <- function(variable.pr = NULL, alpha = 0, escalar = TRUE, type = "ridge"){
   paste0("x <- model.matrix(",variable.pr,"~., datos.aprendizaje)[, -1]\n",
          "y <- datos.aprendizaje[, '",variable.pr,"']\n",

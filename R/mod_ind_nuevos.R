@@ -103,10 +103,10 @@ mod_ind_nuevos_ui <- function(id){
                                                     choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%"))
                                 ), hr(style = "border-top: 2px solid #cccccc;" ),
                               uiOutput(ns('opcModelsPredN')),
-                              withLoader(verbatimTextOutput(ns("txtPredNuevos")), 
-                                         type = "html", loader = "loader4"),
                               
-                              actionButton(ns("PredNuevosBttnModelo"), labelInput("generarM"), width  = "100%" ),br()),
+                              actionButton(ns("PredNuevosBttnModelo"), labelInput("generarM"), width  = "100%" ),br(),br(),
+                              withLoader(verbatimTextOutput(ns("txtPredNuevos")), 
+                                         type = "html", loader = "loader4")),
                      conditionalPanel("input.BoxModelo == 'predicModelo'",tabs.modelos)
 
                  )),
@@ -182,12 +182,17 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     dec        <- isolate(input$decNPred)
     encabezado <- isolate(input$headerNPred)
     deleteNA   <- isolate(input$deleteNAnPred)
-    borrar.datos(newCases)
+    newCases$originales        <- NULL
+    newCases$variable.predecir <- NULL
+    newCases$datos.aprendizaje <- NULL
+    newCases$variable.predecir <- NULL
+    newCases$modelo            <- NULL
+    newCases$m.seleccionado    <- NULL
+    newCases$datos.prueba      <- NULL
+    newCases$prediccion        <- NULL
     
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-      newCases$variable.predecir <- NULL
-      
       newCases$originales <- carga.datos(
         rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
       
@@ -198,14 +203,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
         
       } else {
         newCases$datos.aprendizaje <- newCases$originales
-        newCases$datos.prueba <- NULL
-        
         tabla.trans()
       }
     }, error = function(e) {
-      newCases$datos.aprendizaje <- NULL
-      
-      borrar.datos(newCases)
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
   })
@@ -220,7 +220,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     deleteNA   <- isolate(input$deleteNAnPred2)
     variable   <- newCases$variable.predecir
     originales <- newCases$originales
-
+    newCases$datos.prueba      <- NULL
+    newCases$prediccion        <- NULL
+    
     if(!is.null(variable)){
     tryCatch({
       codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
@@ -247,18 +249,21 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
       if(ncol(test) <= 1) {
         showNotification(
           "ERROR: Check Separators", duration = 10, type = "error")
-        borrar.datos(newCases,  prueba = TRUE)
+        newCases$datos.prueba      <- NULL
+        newCases$prediccion        <- NULL
         
       } 
     }, error = function(e) {
-      borrar.datos(newCases,  prueba = TRUE)
+      newCases$datos.prueba      <- NULL
+      newCases$prediccion        <- NULL
       showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
     })
   }
     else {
       showNotification(
         paste0("Error :", tr("ErrorModelo", updateData$idioma)), duration = 10, type = "error")
-      borrar.datos(newCases,  prueba = TRUE)
+      newCases$datos.prueba      <- NULL
+      newCases$prediccion        <- NULL
       
     }
   })
@@ -331,7 +336,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   
   #Tabla de datos de prueba
   output$contentsPred3 <- DT::renderDataTable({
-    datos  <- newCases$datos.prueba
+    datos  <<- newCases$datos.prueba
     tipos  <- c(
       tr("numerico",   isolate(updateData$idioma)),
       tr("categorico", isolate(updateData$idioma))
@@ -399,6 +404,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     newCases$variable.predecir <- NULL
     newCases$modelo            <- NULL
     newCases$m.seleccionado    <- NULL
+    newCases$datos.prueba      <- NULL
+    newCases$prediccion        <- NULL
     
     for (var in colnames(datos)) {
       if(!input[[paste0("del", var)]]) {
@@ -497,11 +504,11 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     train                      <- newCases$datos.aprendizaje
     variable                   <- isolate(input$sel.predic.var.nuevos)
     m.seleccionado             <- isolate(input$selectModelsPred)
+    newCases$variable.predecir <- NULL
+    newCases$modelo            <- NULL
+    newCases$m.seleccionado    <- NULL
     newCases$datos.prueba      <- NULL
     newCases$prediccion        <- NULL
-    newCases$modelo            <- NULL
-    newCases$variable.predecir <- variable
-    newCases$m.seleccionado    <- m.seleccionado
     codigo                     <- ""
     cont                       <- 1
     if(m.seleccionado == "rl")
@@ -571,7 +578,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                           isolate(modelo)
                         },
                         rl    = {
-                          isolate(modelo <<- traineR::train.glm(as.formula(var), data = train))
+                          isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
                           updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
                           isolate(modelo)
                           
@@ -626,6 +633,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                           isolate(modelo)
                         }
       )
+      newCases$variable.predecir <- variable
+      newCases$m.seleccionado    <- m.seleccionado
       newCases$modelo      <- codigo
       print(codigo)
       
@@ -671,12 +680,17 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     model<- newCases$modelo
     sel  <- newCases$m.seleccionado
     vari <- newCases$variable.predecir
+    newCases$prediccion        <- NULL
     tipos  <- c(
         tr("numerico",   isolate(updateData$idioma)),
         tr("categorico", isolate(updateData$idioma))
     )
       tryCatch({
+        if(sel == "svm")
+        pred                <- predict(model, test[,-which(colnames(test) == vari)], type = 'class')       
+        else
         pred                <- predict(model, test, type = 'class')
+        
         datos               <- test
         datos[,vari]        <- pred$prediction
         newCases$prediccion <- pred
@@ -723,6 +737,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
                                                              levels(aprendizaje[,nombre])))
       }
     }
+    newCases$datos.prueba <- prueba
   }
   
   # Habilita o deshabilita la semilla RLR

@@ -66,12 +66,12 @@ mod_penalized_l_r_ui <- function(id){
                withLoader(echarts4rOutput(ns('plot_rlr_posiblanda'), height = "55vh"), 
                type = "html", loader = "loader4")),
       
-      tabPanel(title = labelInput("betas"),value = "tabRlrBetas",
-               withLoader(verbatimTextOutput(ns('txtBetas')), 
-                          type = "html", loader = "loader4")),
-      
       tabPanel(title = labelInput("gcoeff"),value = "tabRlrLanda",
                withLoader(echarts4rOutput(ns('plot_rlr_landa'), height = "55vh"), 
+                          type = "html", loader = "loader4")),
+      
+      tabPanel(title = labelInput("betas"),value = "tabRlrBetas",
+               withLoader(verbatimTextOutput(ns('txtBetas')), 
                           type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("predm"), value = "tabRlrPred",
@@ -153,16 +153,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   output$txtrlrMC    <- renderPrint({
     print(modelos$rlr[[nombre.modelo$x]]$mc)
   })
-  
-  #Texto de los Betas
-  output$txtBetas    <- renderPrint({
-    category <- input$coeff.sel
-    modelo   <- modelos$rlr[[nombre.modelo$x]]$modelo
-    tipo     <- rlr.type()
-    updateAceEditor(session, "fieldCodeRlrBetas", value = paste0("modelo.rlr.",tipo,"$beta[['",category,"']]"))
-    print(modelo$beta[[category]])
-  })
-  
+
   #Gráfico de la Matríz de Confusión
   output$plot_rlr_mc <- renderPlot({
     idioma <- updateData$idioma
@@ -234,6 +225,20 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     }
     return(landa)
   }
+  
+  
+  #Texto de los Betas
+  output$txtBetas    <- renderPrint({
+    category <- input$coeff.sel
+    modelo   <- modelos$rlr[[nombre.modelo$x]]$modelo
+    tipo     <- rlr.type()
+    lambda   <- input$landa
+    cv.glm   <- cv$cv.glm
+    lambda   <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
+    pos      <- select.beta(modelo, lambda)
+    updateAceEditor(session, "fieldCodeRlrBetas", value = paste0("modelo.rlr.",tipo,"$beta[['",category,"']][,",pos,"]"))
+    print(modelo$beta[[category]][,pos])
+  })
   
   # Actualiza el código a la versión por defecto
   default.codigo.rlr <- function(){
