@@ -5,16 +5,14 @@
 #' @import shiny
 #' @keywords internal
 app_server <- function( input, output, session ) {
-
   
   ##################################  Options  ################################
   options(shiny.maxRequestSize = 200*1024^2)
   options(
     DT.options = list(
       aLengthMenu = c(10, 30, 50), iDisplayLength = 10,
-      scrollX = TRUE, language = list(
-        search = shiny::HTML('<i class="fa fa-search"></i>'),
-        info = "", emptyTable = "", zeroRecords = "",
+      language = list(
+        search = shiny::HTML('<i class="fa fa-search"></i>'), emptyTable = "", zeroRecords = "",
         paginate = list(
           "previous" = shiny::HTML('<i class="fa fa-backward"></i>'),
           "next"     = shiny::HTML('<i class="fa fa-forward"></i>'),
@@ -26,12 +24,18 @@ app_server <- function( input, output, session ) {
   onStop(function() stopApp())
   exe(paste0("library(traineR)"))
   ##################################  Variables  ##############################
-  updateData <- rv(datos                = NULL, 
-                   originales           = NULL, 
-                   idioma               = NULL,
-                   datos.prueba         = NULL, 
-                   datos.aprendizaje    = NULL,
-                   variable.predecir    = NULL)
+  updateData <- rv(datos              = NULL, 
+                   originales         = NULL, 
+                   datos.tabla        = NULL, 
+                   idioma             = NULL,
+                   datos.prueba       = NULL, 
+                   datos.aprendizaje  = NULL,
+                   variable.predecir  = NULL,
+                   indices            = NULL, 
+                   numGrupos          = NULL, 
+                   numValC            = NULL, 
+                   grupos             = NULL, 
+                   code = list())
   
   newCases   <-     rv(originales        = NULL, 
                        datos.prueba      = NULL, 
@@ -55,8 +59,40 @@ app_server <- function( input, output, session ) {
   #' Update on Language
   observeEvent(input$idioma, {
     updateData$idioma = input$idioma
-    updateLabelInput(session, cambiar.labels(), tr(cambiar.labels(), input$idioma))
+    etiquetas <- c(readeR::labels_readeR(), cambiar.labels())
+    updateLabelInput(session, etiquetas, tr(etiquetas, input$idioma))
   })
+  
+  # Update Code
+  observeEvent(c(updateData$code, input$idioma), {
+    codigo <- updateData$code
+    lg <- input$idioma
+    
+    keys <- c(
+      'doccarga', 'doctt', 'doccv', 'docresumen', 'dochist', 'docqq', 
+      'docnormal', 'docdisp', 'docdistnum', 'docdistcat', 'doccor',
+      'docrename', 'doctrans', 'doceliminar')
+    
+    for (k in keys) {
+      codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
+    }
+    
+    codigo.completo <- paste0(
+      "library(XLConnect)\n", "library(caret)\n",
+      "library(echarts4r)\n", "library(readeR)\n\n"
+    )
+    for (cod in codigo) {
+      codigo.completo <- paste0(codigo.completo, "\n", cod)
+    }
+    updateAceEditor(session, "fieldCode", value = codigo.completo)
+  })
+  
+  output$btn_code <- downloadHandler(
+    filename = "codigo.R",
+    content = function(con) {
+      write(input$fieldCode, con)
+    }
+  )
   
   #' Enable/disable on load data
   observe({
@@ -87,21 +123,22 @@ app_server <- function( input, output, session ) {
         shinyjs::enable(selector = 'a[href^="#shiny-tab-comparar"]')
         
       }
+      
     })
   })
   
   
   ###################################  Modules  ###############################
   #Carga de Datos
-  callModule(mod_carga_datos_server,    "carga_datos_ui_1",    updateData, modelos)
+  readeR::mod_carga_datos_server("carga_datos_ui_1", updateData, modelos, "predictoR")
   
   #Estadísticas Básicas
-  callModule(mod_r_numerico_server,     "r_numerico_ui_1",     updateData)
-  callModule(mod_normal_server,         "normal_ui_1",         updateData)
-  callModule(mod_dispersion_server,     "dispersion_ui_1",     updateData)
-  callModule(mod_distribuciones_server, "distribuciones_ui_1", updateData)
-  callModule(mod_correlacion_server,    "correlacion_ui_1",    updateData)
-  callModule(mod_poder_pred_server,     "poder_pred_ui_1",     updateData)
+  readeR::mod_r_numerico_server("r_numerico_ui_1",         updateData)
+  readeR::mod_normal_server("normal_ui_1",                 updateData)
+  readeR::mod_dispersion_server("dispersion_ui_1",         updateData)
+  readeR::mod_distribuciones_server("distribuciones_ui_1", updateData)
+  readeR::mod_correlacion_server("correlacion_ui_1",       updateData)
+  mod_poder_pred_server("poder_pred_ui_1",             updateData)
   
   #Aprendizaje Supervisado
   callModule(mod_knn_server,            "knn_ui_1",            updateData, modelos)
@@ -117,6 +154,7 @@ app_server <- function( input, output, session ) {
   
   #Comparación de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos)
+  
   
   #Predicción de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases)
