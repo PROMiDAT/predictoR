@@ -37,6 +37,19 @@ app_server <- function( input, output, session ) {
                    grupos             = NULL, 
                    code = list())
   
+  updateData2 <- rv(datos              = NULL, 
+                   originales         = NULL, 
+                   datos.tabla        = NULL, 
+                   idioma             = NULL,
+                   datos.prueba       = NULL, 
+                   datos.aprendizaje  = NULL,
+                   variable.predecir  = NULL,
+                   indices            = NULL, 
+                   numGrupos          = NULL, 
+                   numValC            = NULL, 
+                   grupos             = NULL, 
+                   code = list())
+  
   newCases   <-     rv(originales        = NULL, 
                        datos.prueba      = NULL, 
                        datos.aprendizaje = NULL,
@@ -71,7 +84,8 @@ app_server <- function( input, output, session ) {
     keys <- c(
       'doccarga', 'doctt', 'doccv', 'docresumen', 'dochist', 'docqq', 
       'docnormal', 'docdisp', 'docdistnum', 'docdistcat', 'doccor',
-      'docrename', 'doctrans', 'doceliminar')
+      'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
+      'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol')
     
     for (k in keys) {
       codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
@@ -131,7 +145,6 @@ app_server <- function( input, output, session ) {
   ###################################  Modules  ###############################
   #Carga de Datos
   readeR::mod_carga_datos_server("carga_datos_ui_1", updateData, modelos, "predictoR")
-  
   #Estadísticas Básicas
   readeR::mod_r_numerico_server("r_numerico_ui_1",         updateData)
   readeR::mod_normal_server("normal_ui_1",                 updateData)

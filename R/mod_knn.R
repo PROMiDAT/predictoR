@@ -82,7 +82,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxKnn",selected = "tabKknModelo")
-    default.codigo.knn(k.def = TRUE)
+    #default.codigo.knn(k.def = TRUE)
   })
 
   # Genera el texto del modelo, predicción y mc de knn
@@ -161,22 +161,31 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     }else{
       k.value <- isolate(input$kmax.knn)
     }
-    
+
     kernel <-  isolate(input$kernel.knn)
     codigo <- code.kkn.modelo(updateData$variable.predecir, isolate(input$switch.scale.knn), k.value, kernel = kernel)
     updateAceEditor(session, "fieldCodeKnn", value = codigo)
-
+    
+    cod  <- paste0("### knnl\n",codigo)
+    
     # Se genera el código de la prediccion
     codigo       <- kkn.prediccion(kernel = kernel)
     updateAceEditor(session, "fieldCodeKnnPred", value = codigo)
-
+    
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la matriz
     codigo       <- knn.MC(kernel = kernel)
     updateAceEditor(session, "fieldCodeKnnMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la indices
     codigo       <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.knn.",kernel,")\n")
     updateAceEditor(session, "fieldCodeKnnIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    isolate(updateData$code <- append(updateData$code, cod))
+    
   }
 }   
   

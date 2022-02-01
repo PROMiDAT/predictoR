@@ -80,7 +80,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
-    default.codigo.dt()
+    #default.codigo.dt()
   })
 
   
@@ -175,6 +175,9 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     var   <- model$prmdt$var.pred
     updateAceEditor(session, "fieldCodeDtRule", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
                             response.name ='",paste0("Rule Number - ", var),"')"))
+    cod <- paste0("### reglas\n", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
+                            response.name ='",paste0("Rule Number - ", var),"')\n"))
+    isolate(updateData$code <- append(updateData$code, cod))
     
     rpart.plot::rpart.rules(model, cover = TRUE,nn = TRUE ,roundint=FALSE, style = "tall", digits=3, 
                             response.name = paste0("Rule Number - ", var))
@@ -189,23 +192,35 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
                         minsplit = isolate(input$minsplit.dt),
                         maxdepth = isolate(input$maxdepth.dt),
                         split = tipo)
+    cod  <- paste0("### dtl\n",codigo)
     
     updateAceEditor(session, "fieldCodeDt", value = codigo)
 
-    # Cambia el código del gráfico del árbol
-    updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
-    
     # Se genera el código de la predicción
     codigo <- dt.prediccion(tipo)
     updateAceEditor(session, "fieldCodeDtPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la matriz
     codigo <- dt.MC(tipo)
     updateAceEditor(session, "fieldCodeDtMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.dt.",tipo,")\n")
+    cod  <- paste0(cod,codigo)
+    
     updateAceEditor(session, "fieldCodeDtIG", value = codigo)
+    
+    
+    # Cambia el código del gráfico del árbol
+    updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
+    codigo <- paste0("### garbol\n", dt.plot(tipo))
+    cod  <- paste0(cod,codigo)
+    
+    isolate(updateData$code <- append(updateData$code, cod))
+    
   }
 }
     

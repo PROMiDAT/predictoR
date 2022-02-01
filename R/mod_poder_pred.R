@@ -78,8 +78,10 @@ mod_poder_pred_server <- function(id,       updateData){
       
       tryCatch({
         data <- updateData$datos[, var]
-        cod  <- code.dist.varpred(var)
+        cod  <- paste0("### distpred\n",code.dist.varpred(var))
         updateAceEditor(session, "fieldCodeDistpred", value = cod)
+        
+        isolate(updateData$code <- append(updateData$code, cod))
         label   <- levels(data) 
         color   <- gg_color_hue(length(levels(data)))
         value   <- summary(data, maxsum = length(levels(data)))
@@ -128,6 +130,9 @@ mod_poder_pred_server <- function(id,       updateData){
         idioma    <- updateData$idioma
         res       <-    NULL
         updateAceEditor(session, "fieldCodePares", value = cod.pairs)
+        cod  <- paste0("### pares\n",cod.pairs)
+        
+        isolate(updateData$code <- append(updateData$code, cod))
         if (ncol(var.numericas(datos)) >= 2) {
           if(ncol(var.numericas(datos)) <= 25){
             pairs.poder(datos,variable)
@@ -164,7 +169,9 @@ mod_poder_pred_server <- function(id,       updateData){
         
         if (ncol(var.numericas(datos)) >= 1) {
           cod <- paste0("e_numerico_dens(datos, '", variable.num,
-                        "', '", variable.pred, "', label = '",tr("denspodlab",idioma) ,"' ))")
+                        "', '", variable.pred, "', label = '",tr("denspodlab",idioma) ,"' ))\n")
+          cod  <- paste0("### denspred\n",cod)
+          isolate(updateData$code <- append(updateData$code, cod))
           updateAceEditor(session, "fieldCodeDenspred", value = cod)
           e_numerico_dens(datos, variable.num, variable.pred, label=tr("denspodlab", idioma))
         }else{#No retorna nada porque el grafico de error es con PLOT no ECHARTS4R
@@ -191,7 +198,10 @@ mod_poder_pred_server <- function(id,       updateData){
       tryCatch({
         if (ncol(var.categoricas(datos)) > 1) {
           cod <- paste0("e_categorico_dist(datos, '", variable.cat,
-                        "', '", variable.pred, "', label = '",tr("distpodcat",idioma) ,"' ))")
+                        "', '", variable.pred, "', label = '",tr("distpodcat",idioma) ,"' ))\n")
+          cod  <- paste0("### docpredcat\n",cod)
+          
+          isolate(updateData$code <- append(updateData$code, cod))
           updateAceEditor(session, "fieldCodeDistpredcat", value = cod)
           e_categorico_dist(datos, variable.cat, variable.pred, 
                             label = tr("distpodcat",idioma),labels = c(tr("porcentaje", idioma),tr("cant", idioma) ))

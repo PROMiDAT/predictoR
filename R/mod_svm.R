@@ -93,7 +93,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
     updateTabsetPanel(session, "BoxSvm",selected = "tabSvmModelo")
-    default.codigo.svm()
+    #default.codigo.svm()
   })
 
   # Update model text
@@ -169,19 +169,26 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
                          kernel = kernel)
     
     updateAceEditor(session, "fieldCodeSvm", value = codigo)
-
+    cod  <- paste0("### svml\n",codigo)
+    
     # Se genera el código de la predicción
     codigo <- svm.prediccion(kernel)
     updateAceEditor(session, "fieldCodeSvmPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la matriz
     codigo <- svm.MC(kernel)
     updateAceEditor(session, "fieldCodeSvmMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
     updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
+    isolate(updateData$code <- append(updateData$code, cod))
+    
   }
   
   # Update SVM plot
@@ -195,8 +202,12 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
       var       <- paste0(isolate(updateData$variable.predecir), "~",paste(variables, collapse = "+") )
       var2      <- paste(variables, collapse = "~") 
       k         <- isolate(input$kernel.svm)
-      updateAceEditor(session, "fieldCodeSvmPlot", value = svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k))
+      cod       <- svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k)
+      updateAceEditor(session, "fieldCodeSvmPlot", value = cod)
+      cod  <- paste0("### gclasificacion\n",cod)
+      
       if (length(variables) == 2){
+      isolate(updateData$code <- append(updateData$code, cod))
       modelo.svm.temp <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
       slices <- lapply(1:(ncol(datos)-1),function(i) i)
       names(slices) <- colnames(datos[, -which(colnames(datos) == variable)])

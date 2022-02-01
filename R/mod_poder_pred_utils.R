@@ -109,10 +109,10 @@ code.dist.varpred <- function(var) {
 
 #Gráfica el pairs
 code.pairs.poder <- function(variable.predecir){
-  return(paste0("vars.p <- datos[,'",variable.predecir,"']
-                col <- rainbow((length(unique(vars.p)) + 1)*2)[seq(2,(length(unique(vars.p)) + 1)*2,2)]
-                col <- col[2:length(col)]
-                pairs.panels(var.numericas(datos),bg = col[datos[,'",variable.predecir,"']],
+  return(paste0("vars.p <- datos[,'",variable.predecir,"']\n",
+                "col <- rainbow((length(unique(vars.p)) + 1)*2)[seq(2,(length(unique(vars.p)) + 1)*2,2)]\n",
+                "col <- col[2:length(col)]\n",
+                "pairs.panels(var.numericas(datos),bg = col[datos[,'",variable.predecir,"']],
                 pch= 22, main='', hist.col = gg_color_hue(1), ellipses = FALSE, oma=c(3,3,3,15))
-                legend('topright', fill = unique(col[datos[,'",variable.predecir,"']]), legend = c(levels(datos[,'",variable.predecir,"'])))"))
+                legend('topright', fill = unique(col[datos[,'",variable.predecir,"']]), legend = c(levels(datos[,'",variable.predecir,"'])))\n"))
 }
