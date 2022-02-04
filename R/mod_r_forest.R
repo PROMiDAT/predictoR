@@ -90,13 +90,13 @@ mod_r_forest_ui <- function(id){
 #' r_forest Server Function
 #'
 #' @noRd 
-mod_r_forest_server <- function(input, output, session, updateData, modelos){
+mod_r_forest_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    default.codigo.rf(rf.def = TRUE)
+    #default.codigo.rf(rf.def = TRUE)
     updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
   })
   
@@ -128,7 +128,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   output$rfPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$rf[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
@@ -139,14 +139,14 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   
   #Gráfico de la Matríz de Confusión
   output$plot_rf_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$rf[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$rfIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rf,"rf", idioma = idioma))
@@ -155,7 +155,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Errores por Categoría
   output$rfIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.rf <- indices.generales(modelos$rf[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$rfPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rf[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -168,12 +168,14 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
   
   #Mostrar Reglas
   output$rulesRf <- renderPrint({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     n      <- input$rules.rf.n
     modelo <- modelos$rf[[nombre.modelo$x]]$modelo
     modelo$call$data <- updateData$datos.aprendizaje
     tryCatch({
-      updateAceEditor(session,"fieldCodeRfRules",paste0("rulesRandomForest(modelo.rf, ",n,")"))
+      updateAceEditor(session,"fieldCodeRfRules",paste0("rulesRandomForest(modelo.rf, ",n,")\n"))
+      isolate(codedioma$code <- append(codedioma$code, paste0("### reglas\n", "rulesRandomForest(modelo.rf, ",n,")\n")))
+      
       rulesRandomForest(modelo, n)
     },error = function(e){
              stop(tr("NoDRule", idioma))
@@ -230,6 +232,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
     codigo <- rf.modelo(variable.pr = updateData$variable.predecir,
                         ntree = isolate(input$ntree.rf),
                         mtry = mtry.value)
+    cod  <- paste0("### rfl\n",codigo)
     
     updateAceEditor(session, "fieldCodeRf", value = codigo)
 
@@ -241,15 +244,24 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos){
     # Se genera el código de la predicción
     codigo <- rf.prediccion()
     updateAceEditor(session, "fieldCodeRfPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
 
     # Se genera el código de la matriz
     codigo <- rf.MC()
     updateAceEditor(session, "fieldCodeRfMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.rf)\n")
+    
     updateAceEditor(session, "fieldCodeRfIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    cod  <- paste0(cod,"### evolerror\n", plot.rf.error())
+    cod  <- paste0(cod,"### docImpV\n", rf.importance.plot())
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
   }
 }
     

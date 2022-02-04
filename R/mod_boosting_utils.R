@@ -6,13 +6,13 @@ boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minspli
   maxdepth <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
   codigo   <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje, mfinal = ",iter,",
-                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))")
+                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))\n")
   return(codigo)
 }
 
 #Código de la prediccion de boosting
 boosting.prediccion <- function() {
-  return(paste0("prediccion.boosting <<- predict(modelo.boosting, datos.prueba, type = 'class')"))
+  return(paste0("prediccion.boosting <<- predict(modelo.boosting, datos.prueba, type = 'class')\n"))
 }
 
 
@@ -24,7 +24,7 @@ boosting.MC <- function(){
 #Código del grafico de boosting
 boosting.plot <- function(){
   return(paste0("error(modelo.boosting, datos.aprendizaje) -> evol.train\n",
-                 "e_evol_error(evol.train)"))
+                 "e_evol_error(evol.train)\n"))
 }
 
 #Código del grafico de importancia de variables
@@ -64,6 +64,6 @@ e_evol_error <- function(x) {
 
 #Reglas de boosting
 rules.boosting <- function(i){
-  return(paste0("rules(modelo.boosting$trees[[",i,"]])"))
+  return(paste0("rules(modelo.boosting$trees[[",i,"]])\n"))
 }
 

@@ -95,7 +95,7 @@ mod_penalized_l_r_ui <- function(id){
 #' penalized_l_r Server Function
 #'
 #' @noRd 
-mod_penalized_l_r_server <- function(input, output, session, updateData, modelos){
+mod_penalized_l_r_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   cv            <- rv(cv.glm = NULL)
@@ -107,7 +107,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     choices      <- unique(datos[, variable])
     updateSelectInput(session, "coeff.sel", choices = choices, selected = choices[1])
     updateTabsetPanel(session, "BoxRlr",selected = "tabRlrModelo")
-    default.codigo.rlr()
+    #default.codigo.rlr()
   })
   
   # Genera el texto del modelo, predicción y mc de RLR
@@ -145,7 +145,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   output$rlrPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$rlr[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
@@ -156,14 +156,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
 
   #Gráfico de la Matríz de Confusión
   output$plot_rlr_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$rlr[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$rlrIndPrecTable <- shiny::renderTable({
-    idioma      <- updateData$idioma
+    idioma      <- codedioma$idioma
     indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rlr,"rlr", idioma = idioma))
@@ -172,7 +172,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   #Tabla de Errores por Categoría
   output$rlrIndErrTable  <- shiny::renderTable({
-    idioma      <- updateData$idioma
+    idioma      <- codedioma$idioma
     indices.rlr <- indices.generales(modelos$rlr[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$rlrPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rlr[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -205,7 +205,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   get_lambda_rlr <- function(){
     landa  <- NULL
     modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     if (!is.na(input$landa) && (input$permitir.landa=="TRUE")) {
         if(input$landa <= round(max(log(modelo$lambda)), 5) && input$landa >= round(min(log(modelo$lambda)), 5)){
            landa <- input$landa
@@ -250,33 +250,42 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                          type        = tipo,
                          isolate(input$alpha.rlr),
                          isolate(input$switch.scale.rlr))
+    cod  <- paste0("### plr\n",codigo)
     
     updateAceEditor(session, "fieldCodeRlr", value = codigo)
 
+    # Se genera el código de la predicción
+    codigo <- rlr.prediccion(tipo)
+    updateAceEditor(session, "fieldCodeRlrPred", value = codigo)
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código de la matriz
+    codigo <- rlr.MC(tipo)
+    updateAceEditor(session, "fieldCodeRlrMC", value = codigo)
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código de los indices
+    codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.Rlr.",tipo,")\n")
+    updateAceEditor(session, "fieldCodeRlrIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código del posible lambda
     codigo <- select.landa(updateData$variable.predecir,
                            isolate(input$alpha.rlr),
                            isolate(input$switch.scale.rlr),
                            tipo)
-
+    
     updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
-
-    # Se genera el código de la predicción
-    codigo <- rlr.prediccion(tipo)
-    updateAceEditor(session, "fieldCodeRlrPred", value = codigo)
-
-    # Se genera el código de la matriz
-    codigo <- rlr.MC(tipo)
-    updateAceEditor(session, "fieldCodeRlrMC", value = codigo)
-
-    # Se genera el código de los indices
-    codigo <- extract.code("indices.generales")
-    updateAceEditor(session, "fieldCodeRlrIG", value = codigo)
+    
+    cod  <- paste0(cod, "### posibLanda\n",codigo)
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
   }
   
   #Gráfica de los Lambdas
   output$plot_rlr_posiblanda <- renderEcharts4r({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     tryCatch({  
       e_posib_lambda(cv$cv.glm, labels = c(tr("superior", idioma),tr("inferior", idioma),tr("lambda", idioma)))
     },
@@ -297,7 +306,11 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
       lambda <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
       updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
-      e_coeff_landa(modelo, coeff, lambda, tr("lambda", updateData$idioma))
+      
+      cod  <- paste0("### gcoeff\n",paste0("e_coeff_landa(modelo.Rlr.",tipo,", '",coeff,"', ",lambda,")\n"))
+      
+      isolate(codedioma$code <- append(codedioma$code, cod))
+      e_coeff_landa(modelo, coeff, lambda, tr("lambda", codedioma$idioma))
     },
     error = function(e){ 
       showNotification(paste0("Error (R/L) : ", e), duration = 15, type = "error")

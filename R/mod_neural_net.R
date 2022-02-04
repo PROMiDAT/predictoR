@@ -87,14 +87,14 @@ mod_neural_net_ui <- function(id){
 #' neural_net Server Function
 #'
 #' @noRd 
-mod_neural_net_server <- function(input, output, session, updateData, modelos){
+mod_neural_net_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   # Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
-    default.codigo.nn()
+    #default.codigo.nn()
   })
 
   
@@ -119,7 +119,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
     test       <- updateData$datos.prueba
     form       <- paste0(updateData$variable.predecir, "~.")
     nombre     <- paste0("nn")
-    idioma     <- updateData$idioma
+    idioma     <- codedioma$idioma
     threshold  <- isolate(input$threshold.nn)
     stepmax    <- isolate(input$stepmax.nn)
     tryCatch({
@@ -162,7 +162,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   output$nnPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$nn[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
@@ -173,7 +173,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   
   #Gráfico de la Matríz de Confusión
   output$plot_nn_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     tryCatch({  
       exe(plot.MC.code(idioma = idioma))
       plot.MC(modelos$nn[[nombre.modelo$x]]$mc)
@@ -187,7 +187,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Indices por Categoría 
   output$nnIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.nn,"nn", idioma = idioma))
@@ -196,7 +196,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Errores por Categoría
   output$nnIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.nn <- indices.generales(modelos$nn[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
     output$nnPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.nn[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -220,26 +220,36 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos){
                         isolate(input$nn.cap.9),isolate(input$nn.cap.10))
 
     updateAceEditor(session, "fieldCodeNn", value = codigo)
-
+    cod  <- paste0("### nn\n",codigo)
+    
     #Neuralnet PLot
     updateAceEditor(session, "fieldCodeNnPlot", value = nn.plot())
 
     #Predicción
     codigo <- nn.prediccion()
     updateAceEditor(session, "fieldCodeNnPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Matriz de Confusión
     codigo <- nn.MC()
     updateAceEditor(session, "fieldCodeNnMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Indices Generales
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.nn)\n")
     updateAceEditor(session, "fieldCodeNnIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    
+    cod  <- paste0(cod,"### redPlot\n", nn.plot())
+    
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
   }
   
   #Genera el gráfico de la red neuronal
   output$plot_nn <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     tryCatch({
       capas <- c(input$nn.cap.1, input$nn.cap.2,
                  input$nn.cap.3, input$nn.cap.4,

@@ -15,7 +15,7 @@ nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, ca
 
 #Código de la prediccion de nn
 nn.prediccion <- function() {
-  return(paste0("prediccion.nn <<- predict(modelo.nn, datos.prueba, type = 'class')"))
+  return(paste0("prediccion.nn <<- predict(modelo.nn, datos.prueba, type = 'class')\n"))
 }
 
 #Código de la matriz de confucion de xgb
@@ -27,5 +27,5 @@ nn.MC <- function(){
 nn.plot <- function(){
   paste0("plot(modelo.nn,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t",
          "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t",
-         "dimension=15, radius = 0.2, fontsize = 10)")
+         "dimension=15, radius = 0.2, fontsize = 10)\n")
 }

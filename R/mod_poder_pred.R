@@ -68,20 +68,20 @@ mod_poder_pred_ui <- function(id){
 #' poder_pred Server Functions
 #'
 #' @noRd 
-mod_poder_pred_server <- function(id,       updateData){
+mod_poder_pred_server <- function(id,       updateData, codedioma){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
     # Gráfico de Distribución Variable a Predecir 
     output$hc_distpred = renderEcharts4r({
       var  <- updateData$variable.predecir
-      validate(need(var != "", tr("errorcat", isolate(updateData$idioma))))
+      validate(need(var != "", tr("errorcat", isolate(codedioma$idioma))))
       
       tryCatch({
         data <- updateData$datos[, var]
         cod  <- paste0("### distpred\n",code.dist.varpred(var))
         updateAceEditor(session, "fieldCodeDistpred", value = cod)
         
-        isolate(updateData$code <- append(updateData$code, cod))
+        isolate(codedioma$code <- append(codedioma$code, cod))
         label   <- levels(data) 
         color   <- gg_color_hue(length(levels(data)))
         value   <- summary(data, maxsum = length(levels(data)))
@@ -99,8 +99,8 @@ mod_poder_pred_server <- function(id,       updateData){
           e_bar(value, prop, name = var) |> 
           e_tooltip(formatter = e_JS(paste0("function(params){
                                       return('<strong>' +  params.value[0] +
-                                             '</strong><br />", tr("porcentaje", updateData$idioma) ,": ' + parseFloat(params.name * 100).toFixed(2)+
-                                             '%<br /> ' + '", tr("cant", updateData$idioma),": ' + params.value[1])}"))) |> 
+                                             '</strong><br />", tr("porcentaje", codedioma$idioma) ,": ' + parseFloat(params.name * 100).toFixed(2)+
+                                             '%<br /> ' + '", tr("cant", codedioma$idioma),": ' + params.value[1])}"))) |> 
           e_legend(FALSE)|> e_show_loading()|>        
           e_datazoom(show = F) |> e_add_nested("itemStyle", color)
       }, error = function(e) {
@@ -127,12 +127,12 @@ mod_poder_pred_server <- function(id,       updateData){
         variable  <- updateData$variable.predecir
         datos     <- updateData$datos
         cod.pairs <- code.pairs.poder(variable)
-        idioma    <- updateData$idioma
+        idioma    <- codedioma$idioma
         res       <-    NULL
         updateAceEditor(session, "fieldCodePares", value = cod.pairs)
         cod  <- paste0("### pares\n",cod.pairs)
         
-        isolate(updateData$code <- append(updateData$code, cod))
+        isolate(codedioma$code <- append(codedioma$code, cod))
         if (ncol(var.numericas(datos)) >= 2) {
           if(ncol(var.numericas(datos)) <= 25){
             pairs.poder(datos,variable)
@@ -161,7 +161,7 @@ mod_poder_pred_server <- function(id,       updateData){
     # Hace el gráfico de densidad de variables númericas
     output$plot_density_poder <- renderEcharts4r({
       variable.num  <- input$sel_dens_pred
-      idioma        <- updateData$idioma
+      idioma        <- codedioma$idioma
       variable.pred <- updateData$variable.predecir
       datos         <- updateData$datos
       
@@ -171,7 +171,7 @@ mod_poder_pred_server <- function(id,       updateData){
           cod <- paste0("e_numerico_dens(datos, '", variable.num,
                         "', '", variable.pred, "', label = '",tr("denspodlab",idioma) ,"' ))\n")
           cod  <- paste0("### denspred\n",cod)
-          isolate(updateData$code <- append(updateData$code, cod))
+          isolate(codedioma$code <- append(codedioma$code, cod))
           updateAceEditor(session, "fieldCodeDenspred", value = cod)
           e_numerico_dens(datos, variable.num, variable.pred, label=tr("denspodlab", idioma))
         }else{#No retorna nada porque el grafico de error es con PLOT no ECHARTS4R
@@ -191,7 +191,7 @@ mod_poder_pred_server <- function(id,       updateData){
     # Hace el gráfico de poder predictivo categórico
     output$plot_dist_poder <- renderEcharts4r({
       variable.cat  <- input$sel_pred_cat
-      idioma        <- updateData$idioma
+      idioma        <- codedioma$idioma
       variable.pred <- updateData$variable.predecir
       datos         <- updateData$datos
       
@@ -201,7 +201,7 @@ mod_poder_pred_server <- function(id,       updateData){
                         "', '", variable.pred, "', label = '",tr("distpodcat",idioma) ,"' ))\n")
           cod  <- paste0("### docpredcat\n",cod)
           
-          isolate(updateData$code <- append(updateData$code, cod))
+          isolate(codedioma$code <- append(codedioma$code, cod))
           updateAceEditor(session, "fieldCodeDistpredcat", value = cod)
           e_categorico_dist(datos, variable.cat, variable.pred, 
                             label = tr("distpodcat",idioma),labels = c(tr("porcentaje", idioma),tr("cant", idioma) ))

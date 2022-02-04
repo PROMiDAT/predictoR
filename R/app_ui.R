@@ -13,6 +13,7 @@
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
 #' @importFrom rpart path.rpart
+#' @importFrom DT tableHeader
 #' @importFrom glmnet cv.glmnet
 #' @importFrom utils read.table write.csv head
 #' @importFrom grDevices adjustcolor hcl rainbow 
@@ -108,7 +109,7 @@ app_ui <- function(request) {
           
           # Carga de Datos
           tabItem(tabName = "cargar",  
-                  readeR::mod_carga_datos_ui("carga_datos_ui_1")),
+                  readeR::mod_carga_datos_ui("carga_datos_ui_1", labelInput("data"))),
           # Resumen Numérico
           tabItem(tabName = "resumen", 
                   readeR::mod_r_numerico_ui("r_numerico_ui_1")),
@@ -210,17 +211,30 @@ library(readeR)
 #' @noRd
 golem_add_external_resources <- function(){
   
+  jsCode <- 'get_inputs = function() {
+  var rowname = $("#carga_datos_ui_2-rowname")[0].checked;
+  var header = $("#carga_datos_ui_2-header")[0].checked;
+  var sep = $("input[name=\'carga_datos_ui_2-sep\']:checked").val();
+  var dec = $("input[name=\'carga_datos_ui_2-dec\']:checked").val();
+  var nas = $("input[name=\'carga_datos_ui_2-deleteNA\']:checked").val();
+  Shiny.setInputValue("ind_nuevos_ui_1-jsrowname", rowname);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsheader", header);
+  Shiny.setInputValue("ind_nuevos_ui_1-jssep", sep);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsdec", dec);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsnas", nas);
+  }'
   add_resource_path('www', app_sys('app/www'))
   add_resource_path('img', app_sys('app/img'))
   add_resource_path('lang', app_sys('app/lang'))
-  
+
   tags$head(
     favicon(),
     bundle_resources(
       path = app_sys('app/www'),
       app_title = 'predictoR'
     ),
-    shinyjs::useShinyjs()
+    shinyjs::useShinyjs(),
+    tags$script(HTML(jsCode))
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert() 
   )

@@ -13,6 +13,7 @@ automatico;Automático;Automatic
 basico;Estadísticas Básicas;Basic Statistics
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
 bl;Potenciación;Boosting
+boost;Potenciación;Boosting
 buscar;Buscar:;Search: 
 betas;Coeficientes Beta;Beta Coefficients
 cant;Cantidad;Count
@@ -159,6 +160,7 @@ res;Reescalados;Rescaled
 rfl;Bosques Aleatorios;Random Forests
 rl;Regresión Logística;Logistic Regression
 rlr;Regresión Logística Penalizada;Penalized Logistic Regression
+plr;Regresión Logística Penalizada;Penalized Logistic Regression
 rocCurva;Curva ROC;ROC Curve
 RocNo;La curva ROC solo aplica para variables binarias;The ROC curve only applies to binary variables
 ruleNumTree;Reglas del árbol número:;Rules of the tree number:
@@ -171,6 +173,7 @@ trans;Transformar;Convert
 ultimo;Ultimo;Last
 variables;Variables;Variables
 varImp;Importancia de Variables;Variable Importance
+docImpV;Importancia de Variables;Variable Importance
 VarsPred;Variables Predictoras:;Predictor Variables:
 version;VERSIÓN DEL SISTEMA;SYSTEM VERSION
 xgb;XGPotenciación;XGBoosting

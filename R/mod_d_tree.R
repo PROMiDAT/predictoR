@@ -73,7 +73,7 @@ mod_d_tree_ui <- function(id){
 #' d_tree Server Function
 #'
 #' @noRd 
-mod_d_tree_server <- function(input, output, session, updateData, modelos){
+mod_d_tree_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
@@ -113,7 +113,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   output$dtPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$dt[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
@@ -125,14 +125,14 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   
   #Gráfico de la Matríz de Confusión
   output$plot_dt_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$dt[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$dtIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.dt,"dt", idioma = idioma))
@@ -141,7 +141,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Errores por Categoría
   output$dtIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.dt <- indices.generales(modelos$dt[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$dtPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.dt[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -177,7 +177,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
                             response.name ='",paste0("Rule Number - ", var),"')"))
     cod <- paste0("### reglas\n", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
                             response.name ='",paste0("Rule Number - ", var),"')\n"))
-    isolate(updateData$code <- append(updateData$code, cod))
+    isolate(codedioma$code <- append(codedioma$code, cod))
     
     rpart.plot::rpart.rules(model, cover = TRUE,nn = TRUE ,roundint=FALSE, style = "tall", digits=3, 
                             response.name = paste0("Rule Number - ", var))
@@ -219,7 +219,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos){
     codigo <- paste0("### garbol\n", dt.plot(tipo))
     cod  <- paste0(cod,codigo)
     
-    isolate(updateData$code <- append(updateData$code, cod))
+    isolate(codedioma$code <- append(codedioma$code, cod))
     
   }
 }

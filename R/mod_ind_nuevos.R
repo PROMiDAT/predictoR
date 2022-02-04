@@ -34,33 +34,36 @@ mod_ind_nuevos_ui <- function(id){
   
   tabs.modelos2  <- div(tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(40),
                                 tabs.content = list(list(codigo.monokai(ns("fieldCodePredPN"),height = "10vh")))))
-  
+
   tagList(
     div(id = ns("primera"),
-        fluidRow(
+        div(
           col_11(
-            tabBoxPrmdt(
-            id = "BoxModeloq",
-            tabPanel(
-            title = p(labelInput("cargarComp"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
-            collapsible = FALSE, collapsed = FALSE, value = "Cargar",
-            fluidRow(
-              col_5(
-                    checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
-                    checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
-                    radioButtons(
-                      ns('sepNPred'), labelInput("separador"), inline = T,
-                      choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
-                    ),
-                    radioButtons(ns('decNPred'), labelInput("separadordec"), c(',', '.'), inline = T),
-                    radioSwitch(ns("deleteNAnPred"), "eliminana", c("eliminar", "imputar")),
-                    fileInput(
-                      ns('archivoNPred'), labelInput("cargarchivo"), width = "100%",
-                      placeholder = "", buttonLabel = labelInput("subir"),
-                      accept = c('text/csv', '.csv', '.txt')), hr(),
-                    actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
-              col_7(br(),muestra.datos.pred)))
-            )),
+            # tabBoxPrmdt(
+            # id = "BoxModeloq",
+            # tabPanel(
+            # title = p(labelInput("cargarComp"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
+            # collapsible = FALSE, collapsed = FALSE, value = "Cargar",
+            # fluidRow(
+            #   col_5(
+            #         checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
+            #         checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
+            #         radioButtons(
+            #           ns('sepNPred'), labelInput("separador"), inline = T,
+            #           choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
+            #         ),
+            #         radioButtons(ns('decNPred'), labelInput("separadordec"), c(',', '.'), inline = T),
+            #         radioSwitch(ns("deleteNAnPred"), "eliminana", c("eliminar", "imputar")),
+            #         fileInput(
+            #           ns('archivoNPred'), labelInput("cargarchivo"), width = "100%",
+            #           placeholder = "", buttonLabel = labelInput("subir"),
+            #           accept = c('text/csv', '.csv', '.txt')), hr(),
+            #         actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
+            #   col_7(br(),muestra.datos.pred))
+            readeR::mod_carga_datos_ui("carga_datos_ui_2", p(labelInput("cargarComp"),class = "wrapper-tag"), "discoveR")
+            #)
+        #    )
+          ),
           col_1(
             actionButton(ns("cargarnext"), label = NULL, width = "100%",
                          icon = icon("forward"))
@@ -69,7 +72,7 @@ mod_ind_nuevos_ui <- function(id){
       ),
     div(id = ns("segundo"),
         style = "display:none",
-        fluidRow(
+        div(
           col_1(actionButton (ns("transback"), label = NULL, width = "100%",
                               icon = icon("backward"))),
           col_10(
@@ -78,9 +81,9 @@ mod_ind_nuevos_ui <- function(id){
             tabPanel(
               title = p(labelInput("trans"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
               collapsible = FALSE, collapsed = FALSE, value = "Trasformar",
-              fluidRow(
+              div(
                 col_5(
-                      uiOutput(ns('transDataPredN')), hr(), 
+                      uiOutput(ns('transDataPredN')), hr(),
                       actionButton(ns('transButton'), labelInput("aplicar"), width = "100%"), hr()
                 ),
                 col_7(br(),muestra.datos.pred2)), hr())
@@ -91,13 +94,13 @@ mod_ind_nuevos_ui <- function(id){
     ),
     div(id = ns("tercera"),
         style = "display:none",
-        fluidRow(col_1(actionButton(ns("modelback"), label = NULL, width = "100%",
+        div(col_1(actionButton(ns("modelback"), label = NULL, width = "100%",
                                           icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
                      id = "BoxModeloa",opciones = conditionalPanel("input.BoxModelo == 'predicModelo'", tabs.modelos),
                      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag") ,solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
-                                fluidRow(
+                                div(
                                   col_6(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
                                   col_6(selectInput(inputId = ns("selectModelsPred"), label = labelInput("selectMod"),
                                                     choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%"))
@@ -115,7 +118,7 @@ mod_ind_nuevos_ui <- function(id){
         ),
     div(id = ns("cuarta"),
         style = "display:none",
-        fluidRow(col_1(actionButton (ns("nuevosback"), label = NULL, width = "100%",
+        div(col_1(actionButton (ns("nuevosback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
@@ -123,7 +126,7 @@ mod_ind_nuevos_ui <- function(id){
                      tabPanel(
                        title = p(labelInput("cargarNuev"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
                        collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
-                       fluidRow(
+                       div(
                          col_5(checkboxInput(ns('headerNPred2'), labelInput("header"), value = T),
                                checkboxInput(ns('rownameNPred2'), labelInput("Rownames"), value = T),
                                radioButtons(
@@ -145,7 +148,7 @@ mod_ind_nuevos_ui <- function(id){
     ),
     div(id = ns("quinta"),
         style = "display:none",
-        fluidRow(col_1(actionButton (ns("predicback"), label = NULL, width = "100%",
+        div(col_1(actionButton (ns("predicback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
@@ -164,108 +167,119 @@ mod_ind_nuevos_ui <- function(id){
 #' ind_nuevos Server Function
 #'
 #' @noRd 
-mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
+mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, updateData2, codedioma){
   ns <- session$ns
-  observeEvent(updateData$idioma, {
+  observeEvent(codedioma$idioma, {
     
     nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
-    names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),updateData$idioma)
+    names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),codedioma$idioma)
     
     updateSelectInput(session, "selectModelsPred", choices = nombres, selected = input$selectModelsPred)
   })
- 
+
   # Load Button Function
   observeEvent(input$loadButtonNPred, {
-    rowname    <- isolate(input$rownameNPred)
-    ruta       <- isolate(input$archivoNPred)
-    sep        <- isolate(input$sepNPred)
-    dec        <- isolate(input$decNPred)
-    encabezado <- isolate(input$headerNPred)
-    deleteNA   <- isolate(input$deleteNAnPred)
-    newCases$originales        <- NULL
-    newCases$variable.predecir <- NULL
-    newCases$datos.aprendizaje <- NULL
-    newCases$variable.predecir <- NULL
-    newCases$modelo            <- NULL
-    newCases$m.seleccionado    <- NULL
-    newCases$datos.prueba      <- NULL
-    newCases$prediccion        <- NULL
-    
-    tryCatch({
-      codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-      newCases$originales <- carga.datos(
-        rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
-      
-      if(ncol(newCases$originales) <= 1) {
-        showNotification(
-          "ERROR: Check Separators", duration = 10, type = "error")
-        borrar.datos(newCases)
-        
-      } else {
-        newCases$datos.aprendizaje <- newCases$originales
-        tabla.trans()
-      }
-    }, error = function(e) {
-      showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
-    })
+    # rowname    <- isolate(input$rownameNPred)
+    # ruta       <- isolate(input$archivoNPred)
+    # sep        <- isolate(input$sepNPred)
+    # dec        <- isolate(input$decNPred)
+    # encabezado <- isolate(input$headerNPred)
+    # deleteNA   <- isolate(input$deleteNAnPred)
+    # newCases$originales        <- NULL
+    # newCases$variable.predecir <- NULL
+    # newCases$datos.aprendizaje <- NULL
+    # newCases$variable.predecir <- NULL
+    # newCases$modelo            <- NULL
+    # newCases$m.seleccionado    <- NULL
+    # newCases$datos.prueba      <- NULL
+    # newCases$prediccion        <- NULL
+    # 
+    # tryCatch({
+    #   codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+    #   newCases$originales <- carga.datos(
+    #     rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
+    #   
+    #   if(ncol(newCases$originales) <= 1) {
+    #     showNotification(
+    #       "ERROR: Check Separators", duration = 10, type = "error")
+    #     borrar.datos(newCases)
+    #     
+    #   } else {
+    #     newCases$datos.aprendizaje <- newCases$originales
+    #     tabla.trans()
+    #   }
+    # }, error = function(e) {
+    #   showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
+    # })
   })
   
-  # Load Button Function (New Cases)
-  observeEvent(input$loadButtonNPred2, {
-    rowname    <- isolate(input$rownameNPred2)
+  observeEvent(c(input$jsheader,input$jsrowname), {
+    print(input$jsheader)
+    print(input$jsrowname)
+    print(input$jssep)
+    print(input$jsdec)
+    print(input$jsnas)
+    
+    rowname    <- isolate(input$jsrowname)
     ruta       <- isolate(input$archivoNPred2)
-    sep        <- isolate(input$sepNPred2)
-    dec        <- isolate(input$decNPred2)
-    encabezado <- isolate(input$headerNPred2)
-    deleteNA   <- isolate(input$deleteNAnPred2)
+    sep        <- isolate(input$jssep)
+    dec        <- isolate(input$jsdec)
+    encabezado <- isolate(input$jsheader)
+    deleteNA   <- isolate(input$jsnas)
     variable   <- newCases$variable.predecir
     originales <- newCases$originales
     newCases$datos.prueba      <- NULL
     newCases$prediccion        <- NULL
     
     if(!is.null(variable)){
-    tryCatch({
-      codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-      
-      test                  <- carga.datos.np(rowname, 
-                                              ruta$datapath, 
-                                              sep, 
-                                              dec, 
-                                              encabezado)
-      
-      #Verifica que los datos contengan las mismas columnas
-      if(any(!(c(colnames(test),variable) %in% colnames(originales))))
-        stop(tr("NoTamColum", updateData$idioma))
-      
-      test[,variable]       <- NULL
-      test                  <- accion.NAs(test, deleteNA)
-      test[,variable]       <- NA
-      newCases$datos.prueba <- test
-      newCases$datos.prueba[,variable] <- NA
-      
-      validar()
-      unificar.factores()
-      
-      if(ncol(test) <= 1) {
-        showNotification(
-          "ERROR: Check Separators", duration = 10, type = "error")
+      tryCatch({
+        #codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        
+        test                  <- carga.datos.np(rowname, 
+                                                ruta$datapath, 
+                                                sep, 
+                                                dec, 
+                                                encabezado)
+        
+        #Verifica que los datos contengan las mismas columnas
+        if(any(!(c(colnames(test),variable) %in% colnames(originales))))
+          stop(tr("NoTamColum", codedioma$idioma))
+        
+        test[,variable]       <- NULL
+        test                  <- accion.NAs(test, deleteNA)
+        test[,variable]       <- NA
+        newCases$datos.prueba <- test
+        newCases$datos.prueba[,variable] <- NA
+        
+        # validar()
+        # unificar.factores()
+        # 
+        if(ncol(test) <= 1) {
+          showNotification(
+            "ERROR: Check Separators", duration = 10, type = "error")
+          newCases$datos.prueba      <- NULL
+          newCases$prediccion        <- NULL
+          
+        } 
+      }, error = function(e) {
         newCases$datos.prueba      <- NULL
         newCases$prediccion        <- NULL
-        
-      } 
-    }, error = function(e) {
-      newCases$datos.prueba      <- NULL
-      newCases$prediccion        <- NULL
-      showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
-    })
-  }
+        showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
+      })
+    }
     else {
       showNotification(
-        paste0("Error :", tr("ErrorModelo", updateData$idioma)), duration = 10, type = "error")
+        paste0("Error :", tr("ErrorModelo", codedioma$idioma)), duration = 10, type = "error")
       newCases$datos.prueba      <- NULL
       newCases$prediccion        <- NULL
       
     }
+  })
+  
+  # Load Button Function (New Cases)
+  observeEvent(input$loadButtonNPred2, {
+    runjs('get_inputs()')
+    
   })
   
   #Tabla de datos de aprendizaje
@@ -273,8 +287,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
     datos  <- newCases$datos.aprendizaje
     tipos  <- c(
-      tr("numerico",   isolate(updateData$idioma)),
-      tr("categorico", isolate(updateData$idioma))
+      tr("numerico",   isolate(codedioma$idioma)),
+      tr("categorico", isolate(codedioma$idioma))
     )
 
     tryCatch({
@@ -305,8 +319,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     output$contentsPred2 <- DT::renderDataTable({
       datos  <- newCases$datos.aprendizaje
       tipos  <- c(
-        tr("numerico",   isolate(updateData$idioma)),
-        tr("categorico", isolate(updateData$idioma))
+        tr("numerico",   isolate(codedioma$idioma)),
+        tr("categorico", isolate(codedioma$idioma))
       )
       
       tryCatch({
@@ -338,8 +352,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   output$contentsPred3 <- DT::renderDataTable({
     datos  <<- newCases$datos.prueba
     tipos  <- c(
-      tr("numerico",   isolate(updateData$idioma)),
-      tr("categorico", isolate(updateData$idioma))
+      tr("numerico",   isolate(codedioma$idioma)),
+      tr("categorico", isolate(codedioma$idioma))
     )
     
     tryCatch({
@@ -368,7 +382,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   # Update Transform Table
   output$transDataPredN = renderUI({
     datos  <- newCases$originales
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     
     res <- list(fluidRow(
       column(4, tags$span(tags$b("Variable"))),
@@ -457,30 +471,66 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     
     tryCatch(
       
-    for (var in colnames(originales)) {
-      if(!input[[paste0("del", var)]]) {
-        datos[, var] <- NULL
-        cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
-        
-      } else {
-        if(input[[paste0("sel", var)]] == "categorico" &
-           class(datos[, var]) %in% c("numeric","integer")) {
-          datos[, var] <- as.factor(datos[, var])
-          cod <- paste0(cod, code.trans(var, "categorico"))
-        }
-        
-        if(input[[paste0("sel", var)]] == "numerico" &
-           !(class(datos[, var]) %in% c("numeric","integer"))) {
-          datos[, var] <- as.numeric(datos[, var])
-          cod <- paste0(cod, code.trans(var, "numerico"))
-        }
-        if(input[[paste0("sel", var)]] == "disyuntivo") {
-          datos <- datos.disyuntivos(datos, var)
+      for (var in colnames(originales)) {
+        if(!input[[paste0("del", var)]]) {
           datos[, var] <- NULL
-          cod <- paste0(cod, code.trans(var, "disyuntivo"))
+          cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
+          
+        } else {
+          if(input[[paste0("sel", var)]] == "categorico" &
+             class(datos[, var]) %in% c("numeric","integer")) {
+            datos[, var] <- as.factor(datos[, var])
+            cod <- paste0(cod, code.trans(var, "categorico"))
+          }
+          
+          if(input[[paste0("sel", var)]] == "numerico" &
+             !(class(datos[, var]) %in% c("numeric","integer"))) {
+            datos[, var] <- as.numeric(datos[, var])
+            cod <- paste0(cod, code.trans(var, "numerico"))
+          }
+          if(input[[paste0("sel", var)]] == "disyuntivo") {
+            datos <- datos.disyuntivos(datos, var)
+            datos[, var] <- NULL
+            cod <- paste0(cod, code.trans(var, "disyuntivo"))
+          }
         }
       }
-    }
+    )
+    newCases$datos.prueba <- datos
+  }
+  
+  #Valida que los datos contengan la misma cantidad de columnas 
+  validar2 <- function() {
+    cod        <- ""
+    originales <-  newCases$originales
+    datos      <-  newCases$datos.prueba
+    
+    tryCatch(
+      
+      for (var in colnames(originales)) {
+        if(!var %in%  colnames(datos)) {
+          datos[, var] <- NULL
+          cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
+          
+        } else {
+          if(input[[paste0("sel", var)]] == "categorico" &
+             class(datos[, var]) %in% c("numeric","integer")) {
+            datos[, var] <- as.factor(datos[, var])
+            cod <- paste0(cod, code.trans(var, "categorico"))
+          }
+          
+          if(input[[paste0("sel", var)]] == "numerico" &
+             !(class(datos[, var]) %in% c("numeric","integer"))) {
+            datos[, var] <- as.numeric(datos[, var])
+            cod <- paste0(cod, code.trans(var, "numerico"))
+          }
+          if(input[[paste0("sel", var)]] == "disyuntivo") {
+            datos <- datos.disyuntivos(datos, var)
+            datos[, var] <- NULL
+            cod <- paste0(cod, code.trans(var, "disyuntivo"))
+          }
+        }
+      }
     )
     newCases$datos.prueba <- datos
   }
@@ -513,7 +563,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     cont                       <- 1
     if(m.seleccionado == "rl")
       if(length(levels(train[,variable])) != 2)
-        stop(tr("limitModel", updateData$idioma), call. = FALSE)
+        stop(tr("limitModel", codedioma$idioma), call. = FALSE)
     
     tryCatch({
       var    <- paste0(variable, "~.")
@@ -646,7 +696,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     },
     warning = function(w){
       if(m.seleccionado == "nn"){
-        showNotification(paste0(tr("nnWar", updateData$idioma)," (NN-01) : ",w), duration = 20, type = "warning")
+        showNotification(paste0(tr("nnWar", codedioma$idioma)," (NN-01) : ",w), duration = 20, type = "warning")
         return(invisible(""))
         
       }        
@@ -682,8 +732,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     vari <- newCases$variable.predecir
     newCases$prediccion        <- NULL
     tipos  <- c(
-        tr("numerico",   isolate(updateData$idioma)),
-        tr("categorico", isolate(updateData$idioma))
+        tr("numerico",   isolate(codedioma$idioma)),
+        tr("categorico", isolate(codedioma$idioma))
     )
       tryCatch({
         if(sel == "svm")
@@ -750,8 +800,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   })
   
   # Wizard Opts Ind.Nuevos--------------------------------------------------------------------------------------------------
-  observeEvent(newCases$datos.aprendizaje, {
-    if(!is.null(newCases$datos.aprendizaje)){
+  observeEvent(updateData2$datos, {
+    if(!is.null(updateData2$datos)){
+      newCases$originales <- updateData2$originales
+      newCases$datos.aprendizaje <- updateData2$datos
       shinyjs::show("cargarnext", anim = TRUE, animType = "slide" )
     }
     else{
@@ -781,7 +833,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
   observeEvent(input$cargarnext, {
     tabla.trans()
     shinyjs::hide("primera", anim = TRUE )
-    shinyjs::show("segundo", anim = TRUE)
+    shinyjs::show("tercera", anim = TRUE)
   })
   
   observeEvent(input$transback, {
@@ -819,10 +871,13 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases){
     shinyjs::show("cuarta", anim = TRUE)
     shinyjs::hide("quinta", anim = TRUE)
   })
+  
+  
+  
   # Update Models Options
   output$opcModelsPredN = renderUI({
     datos   <- newCases$datos.aprendizaje
-    idioma  <- updateData$idioma
+    idioma  <- codedioma$idioma
     modelo  <- input$selectModelsPred 
     
     opc_knn <- list(fluidRow(col_4(numericInput(ns("kmax.knn.pred"), tr("kmax", idioma), min = 1,step = 1, value = 7)),

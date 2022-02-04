@@ -89,14 +89,14 @@ mod_boosting_ui <- function(id){
 #' boosting Server Function
 #'
 #' @noRd 
-mod_boosting_server <- function(input, output, session, updateData, modelos){
+mod_boosting_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxB",selected = "tabBModelo")
-    default.codigo.boosting()
+    #default.codigo.boosting()
   })
   
   # Genera el texto del modelo, predicción y mc de boosting
@@ -128,7 +128,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   output$boostingPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$boosting[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
@@ -140,14 +140,14 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   
   #Gráfico de la Matríz de Confusión
   output$plot_boosting_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$boostingIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.boosting,"boosting", idioma = idioma))
@@ -156,7 +156,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Errores por Categoría
   output$boostingIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$boostingPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -175,7 +175,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
       updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
       rules(modelos$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
     },error = function(e) {
-      stop(tr("NoDRule", updateData$idioma))
+      stop(tr("NoDRule", codedioma$idioma))
     }
   )})
   
@@ -189,11 +189,13 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
                               minsplit    = isolate(input$minsplit.boosting))
     
     updateAceEditor(session, "fieldCodeBoosting", value = codigo)
-
+    cod  <- paste0("### boost\n",codigo)
+    
     # Se genera el código de la predicción
     codigo <- boosting.prediccion()
     updateAceEditor(session, "fieldCodeBoostingPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Cambia el código del gráfico del modelo
     updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
 
@@ -203,10 +205,18 @@ mod_boosting_server <- function(input, output, session, updateData, modelos){
     # Se genera el código de la matriz
     codigo <- boosting.MC()
     updateAceEditor(session, "fieldCodeBoostingMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
+    codigo <- paste0(codigo,"\nindices.generales(MC.boosting)\n")
     updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
+    cod  <- paste0(cod, codigo)
+    cod  <- paste0(cod, "### evolerror\n",boosting.plot())
+    cod  <- paste0(cod, "### docImpV\n",boosting.plot.import())
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
+    
   }
   
   # Gráfico de importancia boosting

@@ -74,14 +74,14 @@ mod_xgboosting_ui <- function(id){
 #' xgboosting Server Function
 #'
 #' @noRd 
-mod_xgboosting_server <- function(input, output, session, updateData, modelos){
+mod_xgboosting_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxXgb",selected = "tabXgbModelo")
-    default.codigo.xgb()
+    #default.codigo.xgb()
   })
   
   # Update model text
@@ -114,7 +114,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   output$xgbPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$xgb[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
@@ -125,14 +125,14 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   
   # Update confusion matrix plot
   output$plot_xgb_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$xgb[[nombre.modelo$x]]$mc)
   })
   
   # Update indexes table
   output$xgbIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.xgb <- indices.generales(modelos$xgb[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.xgb,"xgb", idioma = idioma))
@@ -141,7 +141,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
   
   # Update error table
   output$xgbIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.xgb <- indices.generales(modelos$xgb[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
     output$xgbPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.xgb[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -188,21 +188,29 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos){
                               max.depth = isolate(input$maxdepthXgb),
                               n.rounds  = isolate(input$nroundsXgb))
     updateAceEditor(session, "fieldCodeXgb", value = codigo)
-
+    cod  <- paste0("### xgb\n",codigo)
+    
     #Código de importancia de variables
     updateAceEditor(session, "fieldCodeXgbImp", value = e_xgb_varImp(booster = tipo))
     
     #Predicción 
     codigo <- xgb.prediccion(booster = tipo)
     updateAceEditor(session, "fieldCodeXgbPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Matriz de confusión
     codigo <- xgb.MC(booster = tipo)
     updateAceEditor(session, "fieldCodeXgbMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Indices Generales
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.xgb.",tipo,")\n")
     updateAceEditor(session, "fieldCodeXgbIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    cod  <- paste0(cod,"### docImpV\n", e_xgb_varImp(booster = tipo))
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
   }
 }
     

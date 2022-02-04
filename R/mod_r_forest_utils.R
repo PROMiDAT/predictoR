@@ -4,13 +4,13 @@
 rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
   ntree   <- ifelse(!is.numeric(ntree), 500, ntree)
   Codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
-                    " ntree =",ntree,",mtry =",mtry,")")
+                    " ntree =",ntree,",mtry =",mtry,")\n")
   return(Codigo)
 }
 
 #Código de la predicción de rf
 rf.prediccion <- function() {
-  return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')"))
+  return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')\n"))
 }
 
 #Código de la matriz de confución de rf

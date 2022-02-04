@@ -83,7 +83,7 @@ mod_svm_ui <- function(id){
 #' svm Server Function
 #'
 #' @noRd 
-mod_svm_server <- function(input, output, session, updateData, modelos){
+mod_svm_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   
   nombre.modelo <- rv(x = NULL)
@@ -123,7 +123,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   output$svmPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$svm[[nombre.modelo$x]]$pred,idioma = idioma, test, var)  
     },server = FALSE)
   
@@ -134,14 +134,14 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   
   # Update confusion matrix plot
   output$plot_svm_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$svm[[nombre.modelo$x]]$mc)
   })
   
   # Update indexes table
   output$svmIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma))
@@ -150,7 +150,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
   
   # Update error table
   output$svmIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
     # Overall accuracy and overall error plot
     output$svmPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.svm[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -187,14 +187,14 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
     updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
     cod  <- paste0(cod,codigo)
     
-    isolate(updateData$code <- append(updateData$code, cod))
+    isolate(codedioma$code <- append(codedioma$code, cod))
     
   }
   
   # Update SVM plot
   output$plot_svm <- renderPlot({
     tryCatch({
-      idioma    <- updateData$idioma
+      idioma    <- codedioma$idioma
       train     <- updateData$datos.aprendizaje
       datos     <- isolate(updateData$datos)
       variable  <- isolate(updateData$variable.predecir)
@@ -207,7 +207,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos){
       cod  <- paste0("### gclasificacion\n",cod)
       
       if (length(variables) == 2){
-      isolate(updateData$code <- append(updateData$code, cod))
+      isolate(codedioma$code <- append(codedioma$code, cod))
       modelo.svm.temp <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
       slices <- lapply(1:(ncol(datos)-1),function(i) i)
       names(slices) <- colnames(datos[, -which(colnames(datos) == variable)])

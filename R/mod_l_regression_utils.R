@@ -2,12 +2,12 @@
 
 #Crea el modelo RL
 rl.modelo <- function(variable.predecir = NULL){
-  return(paste0("modelo.rl <<- train.glm(",variable.predecir,"~., data = datos.aprendizaje, family = binomial)"))
+  return(paste0("modelo.rl <<- train.glm(",variable.predecir,"~., data = datos.aprendizaje, family = binomial)\n"))
 }
 
 #Código de la prediccion de rl
 rl.prediccion <- function() {
-  return(paste0("prediccion.rl <<- predict(modelo.rl, datos.prueba, type = 'class')"))
+  return(paste0("prediccion.rl <<- predict(modelo.rl, datos.prueba, type = 'class')\n"))
 }
 
 #Código de la matriz de confucion de rl

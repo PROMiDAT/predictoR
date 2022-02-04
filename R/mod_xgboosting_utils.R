@@ -2,12 +2,12 @@
 
 #Crea el modelo
 xgb.modelo <- function(variable.pr = NULL, booster = "gbtree",max.depth = 6, n.rounds = 60){
-  return(paste0("modelo.xgb.",booster," <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")"))
+  return(paste0("modelo.xgb.",booster," <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")\n"))
 }
 
 #Código de la predicción de xgb
 xgb.prediccion <- function(booster = "gbtree") {
-  return(paste0("prediccion.xgb.",booster," <<- predict(modelo.xgb.",booster,", datos.prueba, type = 'class')"))
+  return(paste0("prediccion.xgb.",booster," <<- predict(modelo.xgb.",booster,", datos.prueba, type = 'class')\n"))
 }
 
 

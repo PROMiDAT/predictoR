@@ -65,14 +65,14 @@ mod_bayes_ui <- function(id){
 #' bayes Server Function
 #'
 #' @noRd 
-mod_bayes_server <- function(input, output, session, updateData, modelos){
+mod_bayes_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
-    default.codigo.bayes()
+    #default.codigo.bayes()
   })
   
   # Genera el texto del modelo, predicción y mc de bayes
@@ -101,7 +101,7 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
   output$bayesPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     obj.predic(modelos$bayes[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
   },server = FALSE)
   
@@ -112,14 +112,14 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
   
   #Gráfico de la Matríz de Confusión
   output$plot_bayes_mc <- renderPlot({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$bayes[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$bayesIndPrecTable <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.bayes,"bayes", idioma = idioma))
@@ -128,7 +128,7 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
   
   #Tabla de Errores por Categoría
   output$bayesIndErrTable  <- shiny::renderTable({
-    idioma <- updateData$idioma
+    idioma <- codedioma$idioma
     indices.bayes <- indices.generales(modelos$bayes[[nombre.modelo$x]]$mc)
 
     #Gráfico de Error y Precisión Global
@@ -140,22 +140,29 @@ mod_bayes_server <- function(input, output, session, updateData, modelos){
   
   #Código por defecto de bayes
   default.codigo.bayes <- function() {
-
+    
     #Modelo
     codigo <- bayes.modelo(updateData$variable.predecir)
+    cod    <- paste0("### Bayes\n",codigo)
     updateAceEditor(session, "fieldCodeBayes", value = codigo)
 
     #Predicción
     codigo <- bayes.prediccion()
     updateAceEditor(session, "fieldCodeBayesPred", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Matríz de Confusión
     codigo <- bayes.MC()
     updateAceEditor(session, "fieldCodeBayesMC", value = codigo)
-
+    cod  <- paste0(cod,codigo)
+    
     #Indices generales
     codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.bayes)\n")
     updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
+    cod  <- paste0(cod,codigo)
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
   }
 }
     

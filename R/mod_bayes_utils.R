@@ -2,12 +2,12 @@
 
 #Crea el modelo Bayes
 bayes.modelo <- function(variable.pr = NULL){
-  return(paste0("modelo.bayes <<- train.bayes(",variable.pr,"~., data = datos.aprendizaje)"))
+  return(paste0("modelo.bayes <<- train.bayes(",variable.pr,"~., data = datos.aprendizaje)\n"))
 }
 
 #Codigo de la prediccion de Bayes
 bayes.prediccion <- function() {
-  return(paste0("prediccion.bayes <<- predict(modelo.bayes, datos.prueba, type = 'class')"))
+  return(paste0("prediccion.bayes <<- predict(modelo.bayes, datos.prueba, type = 'class')\n"))
 }
 
 #Codigo de la matriz de confucion de Bayes

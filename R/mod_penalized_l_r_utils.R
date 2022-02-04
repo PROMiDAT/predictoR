@@ -2,17 +2,17 @@
 
 #Crea el modelo RLR
 rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE){
-  return(paste0("modelo.rlr.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')"))
+  return(paste0("modelo.Rlr.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')\n"))
 }
 
 #Código de la prediccion de rlr
 rlr.prediccion <- function(type = "ridge") {
-  return(paste0("prediccion.rlr.",type," <<- predict(modelo.rlr.",type,", datos.prueba, type = 'class')"))
+  return(paste0("prediccion.Rlr.",type," <<- predict(modelo.Rlr.",type,", datos.prueba, type = 'class')\n"))
 }
 
 #Código de la matriz de confución de rlr
 rlr.MC <- function(type = "ridge"){
-  return(paste0("MC.rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.rlr.",type,")","\n"))
+  return(paste0("MC.Rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.Rlr.",type,")","\n"))
 }
 
 select.beta <- function(modelo, lambda){
