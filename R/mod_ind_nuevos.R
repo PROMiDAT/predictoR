@@ -19,11 +19,11 @@ mod_ind_nuevos_ui <- function(id){
                              withLoader(DT::dataTableOutput(ns('contentsPred2'))), 
                              type = "html", loader = "loader4")  
   
-  muestra.datos.pred3 <- box(title = labelInput("data"), status = "primary", width = 12, 
-                             solidHeader = TRUE, collapsible = TRUE,
-                             withLoader(DT::dataTableOutput(ns('contentsPred3'))), 
-                             type = "html", loader = "loader4")
-
+  muestra.datos.pred3 <- tabPanel(title = labelInput("data"),
+                                  div(style = "height: 72vh; overflow: auto;",
+                                      withLoader(DT::dataTableOutput(ns('contentsPred3')), 
+                                                 type = "html", loader = "loader4")))
+  
   cod_modelos         <- list(conditionalPanel("input.BoxModelo == 'crearModelo'",
                                       codigo.monokai(ns("fieldPredNuevos"),height = "10vh")),
                               conditionalPanel("input.BoxModelo == 'crearModelo'",
@@ -39,30 +39,7 @@ mod_ind_nuevos_ui <- function(id){
     div(id = ns("primera"),
         div(
           col_11(
-            # tabBoxPrmdt(
-            # id = "BoxModeloq",
-            # tabPanel(
-            # title = p(labelInput("cargarComp"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
-            # collapsible = FALSE, collapsed = FALSE, value = "Cargar",
-            # fluidRow(
-            #   col_5(
-            #         checkboxInput(ns('headerNPred'), labelInput("header"), value = T),
-            #         checkboxInput(ns('rownameNPred'), labelInput("Rownames"), value = T),
-            #         radioButtons(
-            #           ns('sepNPred'), labelInput("separador"), inline = T,
-            #           choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
-            #         ),
-            #         radioButtons(ns('decNPred'), labelInput("separadordec"), c(',', '.'), inline = T),
-            #         radioSwitch(ns("deleteNAnPred"), "eliminana", c("eliminar", "imputar")),
-            #         fileInput(
-            #           ns('archivoNPred'), labelInput("cargarchivo"), width = "100%",
-            #           placeholder = "", buttonLabel = labelInput("subir"),
-            #           accept = c('text/csv', '.csv', '.txt')), hr(),
-            #         actionButton(ns("loadButtonNPred"), labelInput("cargar"), width = "100%"), hr()),
-            #   col_7(br(),muestra.datos.pred))
             readeR::mod_carga_datos_ui("carga_datos_ui_2", p(labelInput("cargarComp"),class = "wrapper-tag"), "discoveR")
-            #)
-        #    )
           ),
           col_1(
             actionButton(ns("cargarnext"), label = NULL, width = "100%",
@@ -121,30 +98,18 @@ mod_ind_nuevos_ui <- function(id){
         div(col_1(actionButton (ns("nuevosback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
                  col_10(
-                   tabBoxPrmdt(
-                     id = "BoxModelor",
-                     tabPanel(
+                     box(
                        title = p(labelInput("cargarNuev"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
                        collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
-                       div(
-                         col_5(checkboxInput(ns('headerNPred2'), labelInput("header"), value = T),
-                               checkboxInput(ns('rownameNPred2'), labelInput("Rownames"), value = T),
-                               radioButtons(
-                                 ns('sepNPred2'), labelInput("separador"), inline = T,
-                                 choiceNames = c(';', ',', 'TAB'), choiceValues = c(';', ',', '\t')
-                               ),
-                               radioButtons(ns('decNPred2'), labelInput("separadordec"), c(',', '.'), inline = T),
-                               radioSwitch(ns("deleteNAnPred2"), "eliminana", c("eliminar", "imputar")),
-                               fileInput(
-                                 ns('archivoNPred2'), labelInput("cargarchivo"), width = "100%",
-                                 placeholder = "", buttonLabel = labelInput("subir"),
-                                 accept = c('text/csv', '.csv', '.txt')), hr(),
-                               actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"), hr()),
-                         col_7(br(), muestra.datos.pred3)),br())
-                   )),
+                       footer = div(muestra.datos.pred3),
+                       div(fileInput(
+                         ns('archivoNPred2'), labelInput("cargarchivo"), width = "100%",
+                         placeholder = "", buttonLabel = labelInput("subir"),
+                         accept = c('text/csv', '.csv', '.txt')), hr(),
+                         actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"))))
+                   ),
                  col_1(actionButton(ns("nuevosnext"), label = NULL, width = "100%",
                                     icon = icon("forward")))
-        )
     ),
     div(id = ns("quinta"),
         style = "display:none",
@@ -177,49 +142,47 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
     updateSelectInput(session, "selectModelsPred", choices = nombres, selected = input$selectModelsPred)
   })
 
-  # Load Button Function
-  observeEvent(input$loadButtonNPred, {
-    # rowname    <- isolate(input$rownameNPred)
-    # ruta       <- isolate(input$archivoNPred)
-    # sep        <- isolate(input$sepNPred)
-    # dec        <- isolate(input$decNPred)
-    # encabezado <- isolate(input$headerNPred)
-    # deleteNA   <- isolate(input$deleteNAnPred)
-    # newCases$originales        <- NULL
-    # newCases$variable.predecir <- NULL
-    # newCases$datos.aprendizaje <- NULL
-    # newCases$variable.predecir <- NULL
-    # newCases$modelo            <- NULL
-    # newCases$m.seleccionado    <- NULL
-    # newCases$datos.prueba      <- NULL
-    # newCases$prediccion        <- NULL
-    # 
-    # tryCatch({
-    #   codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-    #   newCases$originales <- carga.datos(
-    #     rowname, ruta$datapath, sep, dec, encabezado, deleteNA)
-    #   
-    #   if(ncol(newCases$originales) <= 1) {
-    #     showNotification(
-    #       "ERROR: Check Separators", duration = 10, type = "error")
-    #     borrar.datos(newCases)
-    #     
-    #   } else {
-    #     newCases$datos.aprendizaje <- newCases$originales
-    #     tabla.trans()
-    #   }
-    # }, error = function(e) {
-    #   showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
-    # })
-  })
   
-  observeEvent(c(input$jsheader,input$jsrowname), {
-    print(input$jsheader)
-    print(input$jsrowname)
-    print(input$jssep)
-    print(input$jsdec)
-    print(input$jsnas)
+  #Valida que los datos contengan la misma cantidad de columnas 
+  validar <- function() {
+    cod        <- ""
+    originales        <-  newCases$originales
+    datos.aprendizaje <-  newCases$datos.aprendizaje
+    datos.prueba      <-  newCases$datos.prueba
+
+    tryCatch(
+      for (var in colnames(originales)) {
+        if(var %in% colnames(datos.aprendizaje)) {
+          if(class(datos.prueba[, var]) %not_in% c("numeric", "integer") & 
+             class(datos.aprendizaje[, var]) %in% c("numeric", "integer")) {
+            datos.prueba[, var]       <- as.numeric(datos.prueba[, var])
+          }
+          if(class(datos.prueba[, var]) %in% c("numeric", "integer") & 
+             class(datos.aprendizaje[, var]) %not_in% c("numeric", "integer")) {
+            datos.prueba[, var]       <- as.factor(datos.prueba[, var])
+          }
+        }
+        else{
+          if(paste0(var, ".", unique(originales[, var])[1]) %in% colnames(datos.aprendizaje)){
+            datos.prueba <- readeR::datos.disyuntivos(datos.prueba, var)
+            datos.prueba[, var]       <- NULL
+          }else{
+            datos.prueba[, var]       <- NULL
+          }
+        }
+      }
+    )
     
+    originales        <-  originales
+    datos.aprendizaje <-  datos.aprendizaje
+    datos.prueba      <-  datos.prueba
+    print(str(datos.prueba))
+    newCases$datos.prueba <- datos.prueba
+  }
+  
+  
+  # Load Button Function (New Cases)
+  observeEvent(input$loadButtonNPred2, {
     rowname    <- isolate(input$jsrowname)
     ruta       <- isolate(input$archivoNPred2)
     sep        <- isolate(input$jssep)
@@ -251,7 +214,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
         newCases$datos.prueba <- test
         newCases$datos.prueba[,variable] <- NA
         
-        # validar()
+        validar()
         # unificar.factores()
         # 
         if(ncol(test) <= 1) {
@@ -268,18 +231,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
       })
     }
     else {
-      showNotification(
-        paste0("Error :", tr("ErrorModelo", codedioma$idioma)), duration = 10, type = "error")
       newCases$datos.prueba      <- NULL
       newCases$prediccion        <- NULL
       
-    }
-  })
-  
-  # Load Button Function (New Cases)
-  observeEvent(input$loadButtonNPred2, {
-    runjs('get_inputs()')
-    
+    }    
   })
   
   #Tabla de datos de aprendizaje
@@ -350,7 +305,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
   
   #Tabla de datos de prueba
   output$contentsPred3 <- DT::renderDataTable({
-    datos  <<- newCases$datos.prueba
+    datos  <- newCases$datos.prueba
     tipos  <- c(
       tr("numerico",   isolate(codedioma$idioma)),
       tr("categorico", isolate(codedioma$idioma))
@@ -463,78 +418,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
     )
   }
   
-  #Valida que los datos contengan la misma cantidad de columnas 
-  validar <- function() {
-    cod        <- ""
-    originales <-  newCases$originales
-    datos      <-  newCases$datos.prueba
-    
-    tryCatch(
-      
-      for (var in colnames(originales)) {
-        if(!input[[paste0("del", var)]]) {
-          datos[, var] <- NULL
-          cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
-          
-        } else {
-          if(input[[paste0("sel", var)]] == "categorico" &
-             class(datos[, var]) %in% c("numeric","integer")) {
-            datos[, var] <- as.factor(datos[, var])
-            cod <- paste0(cod, code.trans(var, "categorico"))
-          }
-          
-          if(input[[paste0("sel", var)]] == "numerico" &
-             !(class(datos[, var]) %in% c("numeric","integer"))) {
-            datos[, var] <- as.numeric(datos[, var])
-            cod <- paste0(cod, code.trans(var, "numerico"))
-          }
-          if(input[[paste0("sel", var)]] == "disyuntivo") {
-            datos <- datos.disyuntivos(datos, var)
-            datos[, var] <- NULL
-            cod <- paste0(cod, code.trans(var, "disyuntivo"))
-          }
-        }
-      }
-    )
-    newCases$datos.prueba <- datos
-  }
-  
-  #Valida que los datos contengan la misma cantidad de columnas 
-  validar2 <- function() {
-    cod        <- ""
-    originales <-  newCases$originales
-    datos      <-  newCases$datos.prueba
-    
-    tryCatch(
-      
-      for (var in colnames(originales)) {
-        if(!var %in%  colnames(datos)) {
-          datos[, var] <- NULL
-          cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
-          
-        } else {
-          if(input[[paste0("sel", var)]] == "categorico" &
-             class(datos[, var]) %in% c("numeric","integer")) {
-            datos[, var] <- as.factor(datos[, var])
-            cod <- paste0(cod, code.trans(var, "categorico"))
-          }
-          
-          if(input[[paste0("sel", var)]] == "numerico" &
-             !(class(datos[, var]) %in% c("numeric","integer"))) {
-            datos[, var] <- as.numeric(datos[, var])
-            cod <- paste0(cod, code.trans(var, "numerico"))
-          }
-          if(input[[paste0("sel", var)]] == "disyuntivo") {
-            datos <- datos.disyuntivos(datos, var)
-            datos[, var] <- NULL
-            cod <- paste0(cod, code.trans(var, "disyuntivo"))
-          }
-        }
-      }
-    )
-    newCases$datos.prueba <- datos
-  }
-  
   #Actualiza la cantidad de capas ocultas (neuralnet)
   observeEvent(input$cant.capas.nn.pred, {
     if(!is.null(input$cant.capas.nn.pred)){
@@ -573,10 +456,12 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           scales <- isolate(input$switch.scale.knn.pred)
                           kernel <- isolate(input$kernel.knn.pred)
                           isolate(modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ))
-                          updateAceEditor(session, "fieldPredNuevos", value = kkn.modelo.np(variable.pr = variable,
-                                                                                            scale = scales,
-                                                                                            kmax = k.value,
-                                                                                            kernel = kernel))
+                          cod <- kkn.modelo.np(variable.pr = variable,
+                                               scale = scales,
+                                               kmax = k.value,
+                                               kernel = kernel)
+                          updateAceEditor(session, "fieldPredNuevos", value = cod)
+                          isolate(codedioma$code <- append(codedioma$code, cod))
                           isolate(modelo)
                         },
                         dt    = {
@@ -589,6 +474,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                                                                                            minsplit = minsplit,
                                                                                            maxdepth = maxdepth,
                                                                                            split = tipo))
+                          isolate(codedioma$code <- append(codedioma$code, dt.modelo.np(variable.pr = variable,
+                                                                                        minsplit = minsplit,
+                                                                                        maxdepth = maxdepth,
+                                                                                        split = tipo)))
                           isolate(modelo)
                         },
                         rf    = {
@@ -598,6 +487,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           updateAceEditor(session, "fieldPredNuevos", value = rf.modelo.np(variable.pr = variable,
                                                                                            ntree = ntree,
                                                                                            mtry  = mtry))
+                          isolate(codedioma$code <- append(codedioma$code, rf.modelo.np(variable.pr = variable,
+                                                                                        ntree = ntree,
+                                                                                        mtry  = mtry)))
                           isolate(modelo)
                         },
                         svm   = {
@@ -607,11 +499,15 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           updateAceEditor(session, "fieldPredNuevos", value = svm.modelo.np(variable.pr =variable,
                                                                                             scale  = scales,
                                                                                             kernel = k))
+                          isolate(codedioma$code <- append(codedioma$code, svm.modelo.np(variable.pr =variable,
+                                                                                         scale  = scales,
+                                                                                         kernel = k)))
                           isolate(modelo)
                         },
                         bayes = {
                           isolate(modelo <- traineR::train.bayes(as.formula(var), data = train))
                           updateAceEditor(session, "fieldPredNuevos", value = bayes.modelo.np(variable.pr=variable))
+                          isolate(codedioma$code <- append(codedioma$code, bayes.modelo.np(variable.pr=variable)))
                           isolate(modelo)
                           
                         },
@@ -625,11 +521,16 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                                                                                             booster   = tipo,
                                                                                             max.depth = max.depth,
                                                                                             n.rounds  = n.rounds))
+                          isolate(codedioma$code <- append(codedioma$code, xgb.modelo.np(variable.pr=variable,
+                                                                                         booster   = tipo,
+                                                                                         max.depth = max.depth,
+                                                                                         n.rounds  = n.rounds)))
                           isolate(modelo)
                         },
                         rl    = {
                           isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
                           updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
+                          isolate(codedioma$code <- append(codedioma$code, rl.modelo.np(variable.pr=variable)))
                           isolate(modelo)
                           
                           },
@@ -659,6 +560,15 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                                                                                            isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
                                                                                            isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
                                                                                            isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10)))
+                          isolate(codedioma$code <- append(codedioma$code, nn.modelo.np(variable.pr=variable,
+                                                                                        threshold,
+                                                                                        stepmax,
+                                                                                        cant.capas,
+                                                                                        isolate(input$nn.cap.pred.1),isolate(input$nn.cap.pred.2),
+                                                                                        isolate(input$nn.cap.pred.3),isolate(input$nn.cap.pred.4),
+                                                                                        isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
+                                                                                        isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
+                                                                                        isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10))))
                           isolate(modelo)
                         },
                         rlr    = {
@@ -668,6 +578,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           updateAceEditor(session, "fieldPredNuevos", value = rlr.modelo.np(variable.pr = variable,
                                                                                             alpha,
                                                                                             scales))
+                          isolate(codedioma$code <- append(codedioma$code, rlr.modelo.np(variable.pr = variable,
+                                                                                         alpha,
+                                                                                         scales)))
                           isolate(modelo)
                         },
                         ada    = {
@@ -680,6 +593,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                                                                                                  iter        = iter,
                                                                                                  maxdepth    = maxdepth,
                                                                                                  minsplit    = minsplit))
+                          isolate(codedioma$code <- append(codedioma$code, boosting.modelo.np(variable.pr = variable,
+                                                                                              iter        = iter,
+                                                                                              maxdepth    = maxdepth,
+                                                                                              minsplit    = minsplit)))
                           isolate(modelo)
                         }
       )
@@ -744,8 +661,9 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
         datos               <- test
         datos[,vari]        <- pred$prediction
         newCases$prediccion <- pred
-        updateAceEditor(session, "fieldCodePredPN", value = "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')")
         nombre.columnas <- c("ID", colnames(datos))
+        updateAceEditor(session, "fieldCodePredPN", value = "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')")
+        isolate(codedioma$code <- append(codedioma$code, "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
         tipo.columnas <- sapply(colnames(datos), function(i)
           ifelse(class(datos[,i]) %in% c("numeric", "integer"),
                  paste0("<span data-id='numerico'>", tipos[1], "</span>"),
@@ -802,9 +720,12 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
   # Wizard Opts Ind.Nuevos--------------------------------------------------------------------------------------------------
   observeEvent(updateData2$datos, {
     if(!is.null(updateData2$datos)){
+      shinyjs::runjs('get_inputs()')
+      
       newCases$originales <- updateData2$originales
       newCases$datos.aprendizaje <- updateData2$datos
-      shinyjs::show("cargarnext", anim = TRUE, animType = "slide" )
+      
+      shinyjs::show("cargarnext", anim = TRUE, animType = "slide")
     }
     else{
       shinyjs::hide("cargarnext", anim = TRUE, animType = "fade")
@@ -847,7 +768,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
   })
   
   observeEvent(input$modelback, {
-    shinyjs::show("segundo", anim = TRUE)
+    shinyjs::show("primera", anim = TRUE)
     shinyjs::hide("tercera", anim = TRUE)
   })
   

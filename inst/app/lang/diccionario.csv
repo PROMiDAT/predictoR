@@ -88,6 +88,7 @@ mediana;Mediana;Median
 minimo;Mínimo;Minimum
 minsplit;Mínimo para dividir un nodo:;Minimum to split a node:
 nn;Redes Neuronales;Neural Networks
+nN;Redes Neuronales;Neural Networks
 nnWar;El modelo no converge con los parámetros actuales, intente modificarlos;The model does not converge with the current parameters, try to modify them
 no;NO;NO
 nodata;No hay datos disponibles;No data available in table

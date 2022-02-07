@@ -220,7 +220,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
                         isolate(input$nn.cap.9),isolate(input$nn.cap.10))
 
     updateAceEditor(session, "fieldCodeNn", value = codigo)
-    cod  <- paste0("### nn\n",codigo)
+    cod  <- paste0("### nN\n",codigo)
     
     #Neuralnet PLot
     updateAceEditor(session, "fieldCodeNnPlot", value = nn.plot())

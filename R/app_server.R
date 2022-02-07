@@ -86,7 +86,7 @@ app_server <- function( input, output, session ) {
       'docnormal', 'docdisp', 'docdistnum', 'docdistcat', 'doccor',
       'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
       'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol', 
-      'xgb', 'docImpV', 'rfl', 'boost', 'evolerror', 'Bayes', 'redPlot', 'nn', 'rl', 'plr',
+      'xgb', 'docImpV', 'rfl', 'boost', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
       'posibLanda', 'gcoeff')
     
     for (k in keys) {
