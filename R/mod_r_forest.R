@@ -96,7 +96,6 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    #default.codigo.rf(rf.def = TRUE)
     updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
   })
   
@@ -173,7 +172,6 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     modelo <- modelos$rf[[nombre.modelo$x]]$modelo
     modelo$call$data <- updateData$datos.aprendizaje
     tryCatch({
-      updateAceEditor(session,"fieldCodeRfRules",paste0("rulesRandomForest(modelo.rf, ",n,")\n"))
       isolate(codedioma$code <- append(codedioma$code, paste0("### reglas\n", "rulesRandomForest(modelo.rf, ",n,")\n")))
       
       rulesRandomForest(modelo, n)
@@ -186,7 +184,8 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   # Gráfico de importancia
   output$plot_rf_importance <- renderEcharts4r({
     tryCatch({
-      updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
+      cod  <- paste0("### docImpV\n", rf.importance.plot())
+      isolate(codedioma$code <- append(codedioma$code, cod))
       aux <- data.frame(modelos$rf[[nombre.modelo$x]]$modelo$importance)
       aux$MeanDecreaseAccuracy <- abs(aux$MeanDecreaseAccuracy)
       aux   <- aux[order(aux$MeanDecreaseAccuracy, decreasing = T), ]
@@ -208,7 +207,8 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   output$plot_error_rf <- renderEcharts4r({
     tryCatch({
       modelo    <- modelos$rf[[nombre.modelo$x]]$modelo
-      updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
+      cod  <- paste0("### evolerror\n", plot.rf.error())
+      isolate(codedioma$code <- append(codedioma$code, cod))
       e_rf_error(modelo)
     }, error = function(e){
       return(NULL)
@@ -234,32 +234,22 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
                         mtry = mtry.value)
     cod  <- paste0("### rfl\n",codigo)
     
-    updateAceEditor(session, "fieldCodeRf", value = codigo)
-
-    # Cambia el código del gráfico de rf
-    updateAceEditor(session, "fieldCodeRfPlotError", value = plot.rf.error())
-    updateAceEditor(session, "fieldCodeRfPlot", value = rf.importance.plot())
-     
-
     # Se genera el código de la predicción
     codigo <- rf.prediccion()
-    updateAceEditor(session, "fieldCodeRfPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
 
     # Se genera el código de la matriz
     codigo <- rf.MC()
-    updateAceEditor(session, "fieldCodeRfMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.rf)\n")
     
-    updateAceEditor(session, "fieldCodeRfIG", value = codigo)
     cod  <- paste0(cod,codigo)
-    cod  <- paste0(cod,"### evolerror\n", plot.rf.error())
-    cod  <- paste0(cod,"### docImpV\n", rf.importance.plot())
+    
+    # Cambia el código del gráfico de rf
     
     isolate(codedioma$code <- append(codedioma$code, cod))
   }

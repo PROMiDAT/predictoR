@@ -1,3 +1,21 @@
+# Funciones tomadas del paquete htmlwidgets
+
+#' Eval character vectors to JS code
+#'
+#' @param ... character vectors to evaluate
+#'
+#' @author Joseline Quiros <joseline.quiros@promidat.com>
+#' @export e_JS
+#' @examples
+#' e_JS('5 * 3')
+#' 
+e_JS <- function (...) 
+{
+  vec <- c(...)
+  vec <- paste(vec, collapse = "\n")
+  structure(vec, class = unique(c("JS_EVAL", oldClass(vec))))
+}
+
 # Validacion comun para todos los modelos
 validar.datos <- function(print = TRUE,variable.predecir,datos.aprendizaje) {
   # Validaciones

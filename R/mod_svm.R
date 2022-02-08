@@ -9,26 +9,11 @@
 #' @importFrom shiny NS tagList 
 mod_svm_ui <- function(id){
   ns <- NS(id)
-  codigo.svm <- list(conditionalPanel("input['svm_ui_1-BoxSvm'] == 'tabSvmModelo'",
-                                      codigo.monokai(ns("fieldCodeSvm"),height = "10vh")),
-                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
-                                      codigo.monokai(ns("fieldCodeSvmPlot"),height = "10vh")),
-                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPred'",
-                                      codigo.monokai(ns("fieldCodeSvmPred"),height = "10vh")),
-                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmMC'",
-                                      codigo.monokai(ns("fieldCodeSvmMC"),height = "10vh")),
-                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmIndex'",
-                                      codigo.monokai(ns("fieldCodeSvmIG"),height = "10vh")))
-  
-  codigo.svm.run <- list(conditionalPanel("input['svm_ui_1-BoxSvm'] == 'tabSvmModelo'",
-                                      codigo.monokai(ns("fieldCodeSvm"),height = "10vh")),
-                     conditionalPanel("input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
-                                      codigo.monokai(ns("fieldCodeSvmPlot"),height = "10vh")))
   
   opc_svm <-     div(
     conditionalPanel(
       "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
-      tabsOptions(heights = c(70, 30), tabs.content = list(
+      tabsOptions(heights = c(70), tabs.content = list(
         list(
           conditionalPanel(
             "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo'",
@@ -42,13 +27,7 @@ mod_svm_ui <- function(id){
             "input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             selectizeInput(ns("select_var_svm_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
-                           options = list(maxItems = 2, placeholder = ""), width = "100%"))),
-        codigo.svm.run
-      ))),
-    conditionalPanel(
-      "input['svm_ui_1-BoxSvm']   != 'tabSvmModelo' && input['svm_ui_1-BoxSvm']  != 'tabSvmPlot'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        codigo.svm
+                           options = list(maxItems = 2, placeholder = ""), width = "100%")))
       )))
   )
   tagList(
@@ -93,7 +72,6 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     nombres <- colnames.empty(var.numericas(updateData$datos))
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
     updateTabsetPanel(session, "BoxSvm",selected = "tabSvmModelo")
-    #default.codigo.svm()
   })
 
   # Update model text
@@ -168,23 +146,19 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
                          scale = isolate(input$switch.scale.svm),
                          kernel = kernel)
     
-    updateAceEditor(session, "fieldCodeSvm", value = codigo)
     cod  <- paste0("### svml\n",codigo)
     
     # Se genera el código de la predicción
     codigo <- svm.prediccion(kernel)
-    updateAceEditor(session, "fieldCodeSvmPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- svm.MC(kernel)
-    updateAceEditor(session, "fieldCodeSvmMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
-    updateAceEditor(session, "fieldCodeSvmIG", value = codigo)
     cod  <- paste0(cod,codigo)
     
     isolate(codedioma$code <- append(codedioma$code, cod))
@@ -203,7 +177,6 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       var2      <- paste(variables, collapse = "~") 
       k         <- isolate(input$kernel.svm)
       cod       <- svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k)
-      updateAceEditor(session, "fieldCodeSvmPlot", value = cod)
       cod  <- paste0("### gclasificacion\n",cod)
       
       if (length(variables) == 2){

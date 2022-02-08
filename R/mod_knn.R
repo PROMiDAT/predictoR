@@ -19,18 +19,9 @@ mod_knn_ui <- function(id){
                            fluidRow(col_6(
                                           radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no"))))))
   
-  codigo.knn <- list(conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknPred'",
-                                      codigo.monokai(ns("fieldCodeKnnPred"),height = "10vh")),
-                     conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknMC'",
-                                      codigo.monokai(ns("fieldCodeKnnMC"),height = "10vh")),
-                     conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknIndex'",
-                                      codigo.monokai(ns("fieldCodeKnnIG"),height = "10vh")))  
-  codigo.knn.run <- list(conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
-                                      codigo.monokai(ns("fieldCodeKnn"), height = "10vh")))
-  
 opc_knn <- div(conditionalPanel(
   "input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
-  tabsOptions(heights = c(80, 30), tabs.content = list(
+  tabsOptions(heights = c(80), tabs.content = list(
     list(options.run(ns("runKnn")), tags$hr(style = "margin-top: 0px;"),
                           fluidRow(col_6(
                             numericInput(ns("kmax.knn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
@@ -39,12 +30,7 @@ opc_knn <- div(conditionalPanel(
                                           choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
                                                       "triweight", "cos","inv","gaussian")))),
                           fluidRow(col_6(
-                            radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no"))))),
-          codigo.knn.run))),
-  conditionalPanel(
-    "input['knn_ui_1-BoxKnn'] != 'tabKknModelo'",
-    tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-      codigo.knn))))
+                            radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no")))))))))
 
   tagList(
     tabBoxPrmdt(
@@ -82,7 +68,6 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxKnn",selected = "tabKknModelo")
-    #default.codigo.knn(k.def = TRUE)
   })
 
   # Genera el texto del modelo, predicción y mc de knn
@@ -164,25 +149,21 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
 
     kernel <-  isolate(input$kernel.knn)
     codigo <- code.kkn.modelo(updateData$variable.predecir, isolate(input$switch.scale.knn), k.value, kernel = kernel)
-    updateAceEditor(session, "fieldCodeKnn", value = codigo)
-    
+
     cod  <- paste0("### knnl\n",codigo)
     
     # Se genera el código de la prediccion
     codigo       <- kkn.prediccion(kernel = kernel)
-    updateAceEditor(session, "fieldCodeKnnPred", value = codigo)
-    
+
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo       <- knn.MC(kernel = kernel)
-    updateAceEditor(session, "fieldCodeKnnMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo       <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.knn.",kernel,")\n")
-    updateAceEditor(session, "fieldCodeKnnIG", value = codigo)
     cod  <- paste0(cod,codigo)
     isolate(codedioma$code <- append(codedioma$code, cod))
     
