@@ -106,6 +106,7 @@ pares;Gráfico de Pares;Pair Plot
 plotnormal;Gráfico Normalidad;Normal Plot
 poderpred;Poder Predictivo;Predictive Power
 posibLanda;Posibles lambda;Possible lambda
+docpot;Potenciación;Boosting
 primero;Primero;First
 prec;Precisión;Precision
 pred;Predicción;Prediction

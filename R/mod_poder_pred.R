@@ -11,19 +11,8 @@ mod_poder_pred_ui <- function(id){
   ns <- NS(id)
   opc_podpred <- div(
     conditionalPanel(
-      "input.BoxPodPred == 'tabDistpred' || input.BoxPodPred == 'tabPares'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        list(
-          conditionalPanel(
-            "input.BoxPodPred == 'tabDistpred'",
-            codigo.monokai(ns("fieldCodeDistpred"), height = "10vh")),
-          conditionalPanel(
-            "input.BoxPodPred == 'tabPares'",
-            codigo.monokai(ns("fieldCodePares"), height = "10vh")))
-      ))),
-    conditionalPanel(
       "input.BoxPodPred == 'tabDistpredcat' || input.BoxPodPred == 'tabDenspred'",
-      tabsOptions(heights = c(70, 30), tabs.content = list(
+      tabsOptions(heights = c(70), tabs.content = list(
         list(options.base(), tags$hr(style = "margin-top: 0px;"),
              conditionalPanel(
                "input.BoxPodPred == 'tabDistpredcat'",
@@ -32,14 +21,7 @@ mod_poder_pred_ui <- function(id){
              conditionalPanel(
                "input.BoxPodPred == 'tabDenspred'",
                selectInput(label = labelInput("selvar"), inputId = ns("sel_dens_pred"), choices = "")
-             )),
-        list(
-          conditionalPanel(
-            "input.BoxPodPred == 'tabDistpredcat'",
-            codigo.monokai(ns("fieldCodeDistpredcat"), height = "10vh")),
-          conditionalPanel(
-            "input.BoxPodPred == 'tabDenspred'",
-            codigo.monokai(ns("fieldCodeDenspred"), height = "10vh")))
+             ))
       ))))
   
   tagList(
@@ -79,8 +61,7 @@ mod_poder_pred_server <- function(id,       updateData, codedioma){
       tryCatch({
         data <- updateData$datos[, var]
         cod  <- paste0("### distpred\n",code.dist.varpred(var))
-        updateAceEditor(session, "fieldCodeDistpred", value = cod)
-        
+
         isolate(codedioma$code <- append(codedioma$code, cod))
         label   <- levels(data) 
         color   <- gg_color_hue(length(levels(data)))
@@ -129,7 +110,6 @@ mod_poder_pred_server <- function(id,       updateData, codedioma){
         cod.pairs <- code.pairs.poder(variable)
         idioma    <- codedioma$idioma
         res       <-    NULL
-        updateAceEditor(session, "fieldCodePares", value = cod.pairs)
         cod  <- paste0("### pares\n",cod.pairs)
         
         isolate(codedioma$code <- append(codedioma$code, cod))
@@ -172,7 +152,6 @@ mod_poder_pred_server <- function(id,       updateData, codedioma){
                         "', '", variable.pred, "', label = '",tr("denspodlab",idioma) ,"' ))\n")
           cod  <- paste0("### denspred\n",cod)
           isolate(codedioma$code <- append(codedioma$code, cod))
-          updateAceEditor(session, "fieldCodeDenspred", value = cod)
           e_numerico_dens(datos, variable.num, variable.pred, label=tr("denspodlab", idioma))
         }else{#No retorna nada porque el grafico de error es con PLOT no ECHARTS4R
           showNotification(paste0(tr("errornum",idioma)),
@@ -202,7 +181,6 @@ mod_poder_pred_server <- function(id,       updateData, codedioma){
           cod  <- paste0("### docpredcat\n",cod)
           
           isolate(codedioma$code <- append(codedioma$code, cod))
-          updateAceEditor(session, "fieldCodeDistpredcat", value = cod)
           e_categorico_dist(datos, variable.cat, variable.pred, 
                             label = tr("distpodcat",idioma),labels = c(tr("porcentaje", idioma),tr("cant", idioma) ))
           

@@ -9,31 +9,15 @@
 #' @importFrom shiny NS tagList 
 mod_bayes_ui <- function(id){
   ns <- NS(id)
-  codigo.run <- list(
-                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
-                                        codigo.monokai(ns("fieldCodeBayes"), height = "10vh")))
-  codigo.bayes <- list(conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesPred'",
-                                        codigo.monokai(ns("fieldCodeBayesPred"), height = "10vh")),
-                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesMC'",
-                                        codigo.monokai(ns("fieldCodeBayesMC"), height = "10vh")),
-                       conditionalPanel("input['bayes_ui_1-BoxBayes'] == 'tabBayesIndex'",
-                                        codigo.monokai(ns("fieldCodeBayesIG"), height = "10vh")))
   
-  opc_bayes <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
-                            tabs.content = list(codigo.bayes))
   opciones <-   
     div(
       conditionalPanel(
         "input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
-        tabsOptions(heights = c(70, 30), tabs.content = list(
+        tabsOptions(heights = c(70), tabs.content = list(
           list(
-            options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;")),
-          codigo.run
-        ))),
-      conditionalPanel(
-        "input['bayes_ui_1-BoxBayes'] != 'tabBayesModelo'",
-        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-          codigo.bayes
+            options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;"))
+          
         )))
     )
   
@@ -72,7 +56,6 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
-    #default.codigo.bayes()
   })
   
   # Genera el texto del modelo, predicción y mc de bayes
@@ -144,22 +127,18 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
     #Modelo
     codigo <- bayes.modelo(updateData$variable.predecir)
     cod    <- paste0("### Bayes\n",codigo)
-    updateAceEditor(session, "fieldCodeBayes", value = codigo)
 
     #Predicción
     codigo <- bayes.prediccion()
-    updateAceEditor(session, "fieldCodeBayesPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Matríz de Confusión
     codigo <- bayes.MC()
-    updateAceEditor(session, "fieldCodeBayesMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Indices generales
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.bayes)\n")
-    updateAceEditor(session, "fieldCodeBayesIG", value = codigo)
     cod  <- paste0(cod,codigo)
     
     isolate(codedioma$code <- append(codedioma$code, cod))

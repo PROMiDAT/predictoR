@@ -8,16 +8,6 @@
 #' @importFrom shiny NS tagList 
 mod_knn_ui <- function(id){
   ns <- NS(id)
-  opciones.knn <- list(options.run(ns("runKnn")), tags$hr(style = "margin-top: 0px;"),
-                       conditionalPanel("input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
-                           fluidRow(col_6(
-                                          numericInput(ns("kmax.knn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
-                                    col_6(
-                                          selectInput(inputId = ns("kernel.knn"), label = labelInput("selkernel"),selected = 1,
-                                                       choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
-                                                                   "triweight", "cos","inv","gaussian")))),
-                           fluidRow(col_6(
-                                          radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no"))))))
   
 opc_knn <- div(conditionalPanel(
   "input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",

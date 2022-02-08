@@ -16,31 +16,15 @@ mod_xgboosting_ui <- function(id){
                        fluidRow(col_6(numericInput(ns("maxdepthXgb"), labelInput("maxdepth"), min = 1,step = 1, value = 6)),
                                 col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50)))))
   
-  codigo.xgb.run <- list(conditionalPanel("input['xgboosting_ui_1-BoxXgb']  == 'tabXgbModelo'",
-                                      codigo.monokai(ns("fieldCodeXgb"), height = "10vh")))
-  
-  codigo.xgb <- list(conditionalPanel("input['xgboosting_ui_1-BoxXgb'] == 'tabXgbImp'",
-                                      codigo.monokai(ns("fieldCodeXgbImp"), height = "10vh")),
-                     conditionalPanel("input['xgboosting_ui_1-BoxXgb'] == 'tabXgbPred'",
-                                      codigo.monokai(ns("fieldCodeXgbPred"), height = "10vh")),
-                     conditionalPanel("input['xgboosting_ui_1-BoxXgb'] == 'tabXgbMC'",
-                                      codigo.monokai(ns("fieldCodeXgbMC"), height = "10vh")),
-                     conditionalPanel("input['xgboosting_ui_1-BoxXgb'] == 'tabXgbIndex'",
-                                      codigo.monokai(ns("fieldCodeXgbIG"), height = "10vh")))
-  
   opc_xgb <- div(conditionalPanel(
     "input['xgboosting_ui_1-BoxXgb']  == 'tabXgbModelo'",
-    tabsOptions(heights = c(70, 30), tabs.content = list(
+    tabsOptions(heights = c(70), tabs.content = list(
       list(options.run(ns("runXgb")), tags$hr(style = "margin-top: 0px;"),
            fluidRow(col_12(selectInput(inputId = ns("boosterXgb"), label = labelInput("selbooster"),selected = 1,
                                        choices = c("gbtree", "gblinear", "dart")))),
            fluidRow(col_6(numericInput(ns("maxdepthXgb"), labelInput("maxdepth"), min = 1,step = 1, value = 6)),
-                    col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50)))),
-      codigo.xgb.run))),
-    conditionalPanel(
-      "input['xgboosting_ui_1-BoxXgb']  != 'tabXgbModelo'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        codigo.xgb))))
+                    col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50))))
+      ))))
   
   tagList(
     tabBoxPrmdt(
@@ -187,27 +171,24 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
                               booster   = tipo,
                               max.depth = isolate(input$maxdepthXgb),
                               n.rounds  = isolate(input$nroundsXgb))
-    updateAceEditor(session, "fieldCodeXgb", value = codigo)
     cod  <- paste0("### xgb\n",codigo)
     
-    #Código de importancia de variables
-    updateAceEditor(session, "fieldCodeXgbImp", value = e_xgb_varImp(booster = tipo))
-    
+
     #Predicción 
     codigo <- xgb.prediccion(booster = tipo)
-    updateAceEditor(session, "fieldCodeXgbPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Matriz de confusión
     codigo <- xgb.MC(booster = tipo)
-    updateAceEditor(session, "fieldCodeXgbMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Indices Generales
     codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.xgb.",tipo,")\n")
-    updateAceEditor(session, "fieldCodeXgbIG", value = codigo)
+    codigo <- paste0(codigo,"\nindices.generales(MC.xgb.",tipo,")\n")
     cod  <- paste0(cod,codigo)
+    
+    #Código de importancia de variables
+    
     cod  <- paste0(cod,"### docImpV\n", e_xgb_varImp(booster = tipo))
     
     isolate(codedioma$code <- append(codedioma$code, cod))

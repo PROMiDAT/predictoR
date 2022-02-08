@@ -86,8 +86,8 @@ app_server <- function( input, output, session ) {
       'docnormal', 'docdisp', 'docdistnum', 'docdistcat', 'doccor',
       'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
       'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol', 
-      'xgb', 'docImpV', 'rfl', 'boost', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
-      'posibLanda', 'gcoeff')
+      'xgb', 'docImpV', 'rfl', 'docpot', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
+      'posibLanda', 'gcoeff', 'betas')
     
     for (k in keys) {
       codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
@@ -173,6 +173,6 @@ app_server <- function( input, output, session ) {
   
   
   #Predicción de Individuos Nuevos
-  callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",     updateData,  newCases, updateData2, codedioma)
+  callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",  newCases, updateData2, codedioma)
   
 }

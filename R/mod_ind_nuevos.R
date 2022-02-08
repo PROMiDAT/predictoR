@@ -20,20 +20,9 @@ mod_ind_nuevos_ui <- function(id){
                              type = "html", loader = "loader4")  
   
   muestra.datos.pred3 <- tabPanel(title = labelInput("data"),
-                                  div(style = "height: 72vh; overflow: auto;",
+                                  div(style = "height: 65vh; overflow: auto;",
                                       withLoader(DT::dataTableOutput(ns('contentsPred3')), 
                                                  type = "html", loader = "loader4")))
-  
-  cod_modelos         <- list(conditionalPanel("input.BoxModelo == 'crearModelo'",
-                                      codigo.monokai(ns("fieldPredNuevos"),height = "10vh")),
-                              conditionalPanel("input.BoxModelo == 'crearModelo'",
-                                      codigo.monokai(ns("fieldCodePredPN"),height = "10vh")))
- 
-  tabs.modelos   <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(40),
-                                tabs.content = list(list(codigo.monokai(ns("fieldPredNuevos"),height = "10vh"))))
-  
-  tabs.modelos2  <- div(tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(40),
-                                tabs.content = list(list(codigo.monokai(ns("fieldCodePredPN"),height = "10vh")))))
 
   tagList(
     div(id = ns("primera"),
@@ -75,7 +64,7 @@ mod_ind_nuevos_ui <- function(id){
                                           icon = icon("backward"))),
                  col_10(
                    tabBoxPrmdt(
-                     id = "BoxModeloa",opciones = conditionalPanel("input.BoxModelo == 'predicModelo'", tabs.modelos),
+                     id = "BoxModeloa",
                      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag") ,solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
                                 div(
                                   col_6(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
@@ -101,12 +90,11 @@ mod_ind_nuevos_ui <- function(id){
                      box(
                        title = p(labelInput("cargarNuev"),class = "wrapper-tag"), width = 12, solidHeader = FALSE,
                        collapsible = FALSE, collapsed = FALSE,value = "CargarNuevos",
-                       footer = div(muestra.datos.pred3),
-                       div(fileInput(
-                         ns('archivoNPred2'), labelInput("cargarchivo"), width = "100%",
-                         placeholder = "", buttonLabel = labelInput("subir"),
-                         accept = c('text/csv', '.csv', '.txt')), hr(),
-                         actionButton(ns("loadButtonNPred2"), labelInput("cargar"), width = "100%"))))
+                       footer = muestra.datos.pred3,
+                       div(col_12(
+                           fileInput(ns('archivoNPred2'), labelInput("cargarchivo"), 
+                                     width = "100%",placeholder = "", buttonLabel = labelInput("subir"),
+                                     accept = c('text/csv', '.csv', '.txt'))))))
                    ),
                  col_1(actionButton(ns("nuevosnext"), label = NULL, width = "100%",
                                     icon = icon("forward")))
@@ -115,9 +103,9 @@ mod_ind_nuevos_ui <- function(id){
         style = "display:none",
         div(col_1(actionButton (ns("predicback"), label = NULL, width = "100%",
                                      icon = icon("backward"))),
-                 col_10(
+                 col_11(
                    tabBoxPrmdt(
-                     id = "BoxModelo", opciones =  conditionalPanel("input.BoxModelo == 'predicModelo'", tabs.modelos2),
+                     id = "BoxModelo",
                      tabPanel(title = p(labelInput("predicnuevos"),class = "wrapper-tag"), value = "predicModelo",
                               DT::dataTableOutput(ns("PrediTablePN")),
                               hr(),
@@ -132,7 +120,7 @@ mod_ind_nuevos_ui <- function(id){
 #' ind_nuevos Server Function
 #'
 #' @noRd 
-mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, updateData2, codedioma){
+mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2, codedioma){
   ns <- session$ns
   observeEvent(codedioma$idioma, {
     
@@ -173,16 +161,12 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
       }
     )
     
-    originales        <-  originales
-    datos.aprendizaje <-  datos.aprendizaje
-    datos.prueba      <-  datos.prueba
-    print(str(datos.prueba))
     newCases$datos.prueba <- datos.prueba
   }
   
   
   # Load Button Function (New Cases)
-  observeEvent(input$loadButtonNPred2, {
+  observeEvent(input$archivoNPred2, {
     rowname    <- isolate(input$jsrowname)
     ruta       <- isolate(input$archivoNPred2)
     sep        <- isolate(input$jssep)
@@ -196,7 +180,10 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
     
     if(!is.null(variable)){
       tryCatch({
-        #codigo <- code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        codigo <- paste0(codigo, "datos.prueba.completos <<- datos\n")
+        
+        isolate(codedioma$code <- append(codedioma$code, codigo))
         
         test                  <- carga.datos.np(rowname, 
                                                 ruta$datapath, 
@@ -315,8 +302,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
       nombre.columnas <- c("ID", colnames(datos))
       tipo.columnas   <- sapply(colnames(datos), function(i)
         ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-               paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-               paste0("<span data-id='categorico'>", tipos[2], "</span>")))
+               paste0("<span data-id='numerico'><i class='fa fa-sort-numeric-up wrapper-tag'></i><br>", tipos[1], "</span>"),
+               paste0("<span data-id='categorico'><i class='fa fa-font wrapper-tag'></i><br>", tipos[2], "</span>")))
       sketch = htmltools::withTags(table(
         tableHeader(nombre.columnas),
         tags$tfoot(
@@ -326,7 +313,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
       ))
       DT::datatable(
         datos, selection = 'none', editable = TRUE,  container = sketch,
-        options = list(dom = 'frtip', scrollY = "40vh")
+        options = list(dom = 'frtip')
       )
     }, error = function(e) {
       showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
@@ -449,6 +436,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
         stop(tr("limitModel", codedioma$idioma), call. = FALSE)
     
     tryCatch({
+      
       var    <- paste0(variable, "~.")
       codigo <- switch (m.seleccionado ,
                         knn   = {
@@ -460,7 +448,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                                                scale = scales,
                                                kmax = k.value,
                                                kernel = kernel)
-                          updateAceEditor(session, "fieldPredNuevos", value = cod)
                           isolate(codedioma$code <- append(codedioma$code, cod))
                           isolate(modelo)
                         },
@@ -470,10 +457,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           maxdepth<-isolate(input$maxdepth.dt.pred)
                           isolate(modelo  <- traineR::train.rpart(as.formula(var), data = train,
                                                          control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo)))
-                          updateAceEditor(session, "fieldPredNuevos", value = dt.modelo.np(variable.pr = variable,
-                                                                                           minsplit = minsplit,
-                                                                                           maxdepth = maxdepth,
-                                                                                           split = tipo))
+                          
                           isolate(codedioma$code <- append(codedioma$code, dt.modelo.np(variable.pr = variable,
                                                                                         minsplit = minsplit,
                                                                                         maxdepth = maxdepth,
@@ -484,9 +468,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           mtry   <- isolate(input$mtry.rf.pred)
                           ntree  <- isolate(input$ntree.rf.pred)
                           isolate(modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE))
-                          updateAceEditor(session, "fieldPredNuevos", value = rf.modelo.np(variable.pr = variable,
-                                                                                           ntree = ntree,
-                                                                                           mtry  = mtry))
+                          
                           isolate(codedioma$code <- append(codedioma$code, rf.modelo.np(variable.pr = variable,
                                                                                         ntree = ntree,
                                                                                         mtry  = mtry)))
@@ -496,9 +478,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           scales <- isolate(input$switch.scale.svm.pred)
                           k      <- isolate(input$kernel.svm.pred)
                           isolate(modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k))
-                          updateAceEditor(session, "fieldPredNuevos", value = svm.modelo.np(variable.pr =variable,
-                                                                                            scale  = scales,
-                                                                                            kernel = k))
                           isolate(codedioma$code <- append(codedioma$code, svm.modelo.np(variable.pr =variable,
                                                                                          scale  = scales,
                                                                                          kernel = k)))
@@ -506,7 +485,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                         },
                         bayes = {
                           isolate(modelo <- traineR::train.bayes(as.formula(var), data = train))
-                          updateAceEditor(session, "fieldPredNuevos", value = bayes.modelo.np(variable.pr=variable))
                           isolate(codedioma$code <- append(codedioma$code, bayes.modelo.np(variable.pr=variable)))
                           isolate(modelo)
                           
@@ -517,10 +495,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           n.rounds <- isolate(input$nroundsXgb.pred)
                           isolate(modelo   <- traineR::train.xgboost(as.formula(var), data = train, booster = tipo, 
                                                            max_depth = max.depth, nrounds = n.rounds))
-                          updateAceEditor(session, "fieldPredNuevos", value = xgb.modelo.np(variable.pr=variable,
-                                                                                            booster   = tipo,
-                                                                                            max.depth = max.depth,
-                                                                                            n.rounds  = n.rounds))
                           isolate(codedioma$code <- append(codedioma$code, xgb.modelo.np(variable.pr=variable,
                                                                                          booster   = tipo,
                                                                                          max.depth = max.depth,
@@ -529,7 +503,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                         },
                         rl    = {
                           isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
-                          updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
                           isolate(codedioma$code <- append(codedioma$code, rl.modelo.np(variable.pr=variable)))
                           isolate(modelo)
                           
@@ -551,15 +524,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                             threshold = threshold,
                             stepmax   = stepmax,
                             hidden    = capas.np))
-                          updateAceEditor(session, "fieldPredNuevos", value = nn.modelo.np(variable.pr=variable,
-                                                                                           threshold,
-                                                                                           stepmax,
-                                                                                           cant.capas,
-                                                                                           isolate(input$nn.cap.pred.1),isolate(input$nn.cap.pred.2),
-                                                                                           isolate(input$nn.cap.pred.3),isolate(input$nn.cap.pred.4),
-                                                                                           isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
-                                                                                           isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
-                                                                                           isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10)))
                           isolate(codedioma$code <- append(codedioma$code, nn.modelo.np(variable.pr=variable,
                                                                                         threshold,
                                                                                         stepmax,
@@ -575,9 +539,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           scales <- isolate(input$switch.scale.rlr.pred)
                           alpha  <- isolate(input$alpha.rlr.pred)
                           isolate(modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' ))
-                          updateAceEditor(session, "fieldPredNuevos", value = rlr.modelo.np(variable.pr = variable,
-                                                                                            alpha,
-                                                                                            scales))
                           isolate(codedioma$code <- append(codedioma$code, rlr.modelo.np(variable.pr = variable,
                                                                                          alpha,
                                                                                          scales)))
@@ -589,10 +550,6 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
                           minsplit<-isolate(input$minsplit.boosting.pred)
                           isolate(modelo <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
                                                           control = rpart.control(minsplit =minsplit, maxdepth = maxdepth)))
-                          updateAceEditor(session, "fieldPredNuevos", value = boosting.modelo.np(variable.pr = variable,
-                                                                                                 iter        = iter,
-                                                                                                 maxdepth    = maxdepth,
-                                                                                                 minsplit    = minsplit))
                           isolate(codedioma$code <- append(codedioma$code, boosting.modelo.np(variable.pr = variable,
                                                                                               iter        = iter,
                                                                                               maxdepth    = maxdepth,
@@ -619,7 +576,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
       }        
       if(m.seleccionado == "rl"){
         isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
-        updateAceEditor(session, "fieldPredNuevos", value = rl.modelo.np(variable.pr=variable))
+        isolate(codedioma$code <- append(codedioma$code, rl.modelo.np(variable.pr=variable)))
         newCases$modelo      <- modelo
         print(modelo)
       }
@@ -633,7 +590,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
     },
     content = function(file) {
       if(!is.null(newCases$prediccion$prediction)){
-        write.csv(crear.datos.np(), file, row.names = input$rownameNPred2)
+        write.csv(crear.datos.np(), file, row.names = input$jsrowname)
       }
     }
   )
@@ -662,12 +619,11 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
         datos[,vari]        <- pred$prediction
         newCases$prediccion <- pred
         nombre.columnas <- c("ID", colnames(datos))
-        updateAceEditor(session, "fieldCodePredPN", value = "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')")
         isolate(codedioma$code <- append(codedioma$code, "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
         tipo.columnas <- sapply(colnames(datos), function(i)
           ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-                 paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-                 paste0("<span data-id='categorico'>", tipos[2], "</span>")))
+                 paste0("<span data-id='numerico'><i class='fa fa-sort-numeric-up wrapper-tag'></i><br>", tipos[1], "</span>"),
+                 paste0("<span data-id='categorico'><i class='fa fa-font wrapper-tag'></i><br>", tipos[2], "</span>")))
         sketch = htmltools::withTags(table(
           tableHeader(nombre.columnas),
           tags$tfoot(
@@ -677,7 +633,7 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
         ))
         DT::datatable(
           datos, selection = 'none', editable = TRUE,  container = sketch,
-          options = list(dom = 'frtip', scrollY = "40vh")
+          options = list(dom = 'frtip')
         )
       }, error = function(e) {
         showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
@@ -721,6 +677,8 @@ mod_ind_nuevos_server <- function(input, output, session, updateData, newCases, 
   observeEvent(updateData2$datos, {
     if(!is.null(updateData2$datos)){
       shinyjs::runjs('get_inputs()')
+      cod <-  "datos.aprendizaje.completos <<- datos\n"
+      isolate(codedioma$code <- append(codedioma$code, cod))
       
       newCases$originales <- updateData2$originales
       newCases$datos.aprendizaje <- updateData2$datos

@@ -9,31 +9,7 @@
 #' @importFrom shiny NS tagList 
 mod_neural_net_ui <- function(id){
   ns <- NS(id)
-  opciones.nn <- list(
-        conditionalPanel("input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
-                     options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
-
-                      fluidRow(col_6(numericInput(ns("threshold.nn"),labelInput("threshold"),
-                                                   min = 0, step = 0.01, value = 0.05)),
-                               col_6(numericInput(ns("stepmax.nn"),labelInput("stepmax"),
-                                                   min = 100, step = 100, value = 5000))),
-                      fluidRow(col_12(sliderInput(inputId = ns("cant.capas.nn"), min = 1, max = 10,
-                                                  label = labelInput("selectCapas"), value = 2))),
-                      fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
-                                                                                                min = 1, step = 1, value = 2),
-                                                                                   class = "mini-numeric-select"))))))
   
-  codigo.nn <- list(conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnPlot'",
-                                     codigo.monokai(ns("fieldCodeNnPlot"), height = "10vh")),
-                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnPred'",
-                                     codigo.monokai(ns("fieldCodeNnPred"), height = "10vh")),
-                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnMC'",
-                                     codigo.monokai(ns("fieldCodeNnMC"), height = "10vh")),
-                    conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnIndex'",
-                                     codigo.monokai(ns("fieldCodeNnIG"), height = "10vh")))
-  
-  codigo.nn.run <- list(conditionalPanel("input['neural_net_ui_1-BoxNn']  == 'tabNnModelo'",
-                                     codigo.monokai(ns("fieldCodeNn"), height = "10vh")))
   opc_nn <- div(
     conditionalPanel(
     "input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
@@ -48,12 +24,7 @@ mod_neural_net_ui <- function(id){
                                        label = labelInput("selectCapas"), value = 2))),
            fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
                                                                                                min = 1, step = 1, value = 2),
-                                                                                  class = "mini-numeric-select"))))),
-      codigo.nn.run))),
-    conditionalPanel(
-      "input['neural_net_ui_1-BoxNn']   != 'tabNnModelo'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        codigo.nn))))
+                                                                                  class = "mini-numeric-select")))))))))
   
   tagList(
     tabBoxPrmdt(
@@ -94,7 +65,6 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
   # Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
-    #default.codigo.nn()
   })
 
   
@@ -218,31 +188,23 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
                         isolate(input$nn.cap.5),isolate(input$nn.cap.6),
                         isolate(input$nn.cap.7),isolate(input$nn.cap.8),
                         isolate(input$nn.cap.9),isolate(input$nn.cap.10))
-
-    updateAceEditor(session, "fieldCodeNn", value = codigo)
     cod  <- paste0("### nN\n",codigo)
     
-    #Neuralnet PLot
-    updateAceEditor(session, "fieldCodeNnPlot", value = nn.plot())
-
     #Predicción
     codigo <- nn.prediccion()
-    updateAceEditor(session, "fieldCodeNnPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Matriz de Confusión
     codigo <- nn.MC()
-    updateAceEditor(session, "fieldCodeNnMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     #Indices Generales
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.nn)\n")
-    updateAceEditor(session, "fieldCodeNnIG", value = codigo)
     cod  <- paste0(cod,codigo)
     
+    #Neuralnet PLot
     cod  <- paste0(cod,"### redPlot\n", nn.plot())
-    
     
     isolate(codedioma$code <- append(codedioma$code, cod))
   }

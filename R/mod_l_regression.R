@@ -9,31 +9,14 @@
 #' @importFrom shiny NS tagList 
 mod_l_regression_ui <- function(id){
   ns <- NS(id)
-  codigo.run <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlModelo'",
-                                     codigo.monokai(ns("fieldCodeRl"), height = "10vh")))
-  
-  codigo.rl  <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlPred'",
-                                     codigo.monokai(ns("fieldCodeRlPred"), height = "10vh")),
-                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlMC'",
-                                     codigo.monokai(ns("fieldCodeRlMC"), height = "10vh")),
-                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlIndex'",
-                                     codigo.monokai(ns("fieldCodeRlIG"), height = "10vh")))
-  
-  opc_rl <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
-                         tabs.content = list(codigo.rl))
+
   opciones <-   
     div(
       conditionalPanel(
         "input['l_regression_ui_1-BoxRl'] == 'tabRlModelo'",
         tabsOptions(heights = c(70, 30), tabs.content = list(
           list(
-            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;")),
-          codigo.run
-        ))),
-      conditionalPanel(
-        "input['l_regression_ui_1-BoxRl'] != 'tabRlModelo'",
-        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-          codigo.rl
+            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;"))
         )))
     )
   
@@ -72,7 +55,6 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxRl",selected = "tabRlModelo")
-    #default.codigo.rl()
   })
 
   # Genera el texto del modelo, predicción y mc de rl
@@ -153,23 +135,19 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   default.codigo.rl <- function() {
     # Se actualiza el código del modelo
     codigo <- rl.modelo(updateData$variable.predecir)
-    updateAceEditor(session, "fieldCodeRl", value = codigo)
     cod  <- paste0("### rl\n",codigo)
     
     # Se genera el código de la prediccion
     codigo <- rl.prediccion()
-    updateAceEditor(session, "fieldCodeRlPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- rl.MC()
-    updateAceEditor(session, "fieldCodeRlMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.rl)\n")
-    updateAceEditor(session, "fieldCodeRlIG", value = codigo)
     cod  <- paste0(cod,codigo)
     isolate(codedioma$code <- append(codedioma$code, cod))
   }

@@ -10,32 +10,16 @@
 mod_d_tree_ui <- function(id){
   ns <- NS(id)
   
-  codigo.dt <- list(conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtPlot'",
-                                     codigo.monokai(ns("fieldCodeDtPlot"),height = "10vh")),
-                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtPred'",
-                                     codigo.monokai(ns("fieldCodeDtPred"),height = "10vh")),
-                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtMC'",
-                                     codigo.monokai(ns("fieldCodeDtMC"),height = "10vh")),
-                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtIndex'",
-                                     codigo.monokai(ns("fieldCodeDtIG"),height = "10vh")),
-                    conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtReglas'",
-                                     codigo.monokai(ns("fieldCodeDtRule"),height = "10vh")))  
-  codigo.dt.run<- list(conditionalPanel("input['d_tree_ui_1-BoxDt']  == 'tabDtModelo'",
-                                     codigo.monokai(ns("fieldCodeDt"),height = "10vh")))
   
   opc_dt <- div(conditionalPanel(
                         "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo'",
-                        tabsOptions(heights = c(70, 30), tabs.content = list(
+                        tabsOptions(heights = c(70), tabs.content = list(
                           list(options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
                                fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
                                         col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
                                fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
-                                                           choices =  list("gini" = "gini", "Entropia" = "information"))))),
-                          codigo.dt.run))),
-                      conditionalPanel(
-                        "input['d_tree_ui_1-BoxDt']   != 'tabDtModelo'",
-                        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-                          codigo.dt))))
+                                                           choices =  list("gini" = "gini", "Entropia" = "information")))))
+                          ))))
   
   tagList(
     tabBoxPrmdt(
@@ -80,7 +64,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
-    #default.codigo.dt()
   })
 
   
@@ -158,7 +141,11 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       var    <- updateData$variable.predecir
       num    <- length(levels(datos[,var]))
       modelo <- modelos$dt[[nombre.modelo$x]]$modelo
-      updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo, num))
+      
+      # Cambia el código del gráfico del árbol
+      codigo <- paste0("### garbol\n", dt.plot(tipo))
+      isolate(codedioma$code <- append(codedioma$code, cod))
+      
       prp(modelo, type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
           fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
           box.col = gg_color_hue(num)[modelo$frame$yval], roundint=FALSE)
@@ -173,8 +160,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     tipo  <- isolate(input$split.dt)
     model <- modelos$dt[[nombre.modelo$x]]$modelo
     var   <- model$prmdt$var.pred
-    updateAceEditor(session, "fieldCodeDtRule", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
-                            response.name ='",paste0("Rule Number - ", var),"')"))
     cod <- paste0("### reglas\n", paste0("rpart.rules(modelo.dt.",tipo,", cover = TRUE,nn = TRUE , style = 'tall', digits=3,
                             response.name ='",paste0("Rule Number - ", var),"')\n"))
     isolate(codedioma$code <- append(codedioma$code, cod))
@@ -194,29 +179,18 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
                         split = tipo)
     cod  <- paste0("### dtl\n",codigo)
     
-    updateAceEditor(session, "fieldCodeDt", value = codigo)
 
     # Se genera el código de la predicción
     codigo <- dt.prediccion(tipo)
-    updateAceEditor(session, "fieldCodeDtPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- dt.MC(tipo)
-    updateAceEditor(session, "fieldCodeDtMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.dt.",tipo,")\n")
-    cod  <- paste0(cod,codigo)
-    
-    updateAceEditor(session, "fieldCodeDtIG", value = codigo)
-    
-    
-    # Cambia el código del gráfico del árbol
-    updateAceEditor(session, "fieldCodeDtPlot", value = dt.plot(tipo))
-    codigo <- paste0("### garbol\n", dt.plot(tipo))
     cod  <- paste0(cod,codigo)
     
     isolate(codedioma$code <- append(codedioma$code, cod))

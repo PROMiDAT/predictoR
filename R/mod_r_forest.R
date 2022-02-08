@@ -10,26 +10,10 @@
 mod_r_forest_ui <- function(id){
   ns <- NS(id)
   
-  codigo.rf  <- list(conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRferror'",
-                                      codigo.monokai(ns("fieldCodeRfPlotError"), height = "10vh")),
-                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfImp'",
-                                      codigo.monokai(ns("fieldCodeRfPlot"), height = "10vh")),
-                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfPred'",
-                                      codigo.monokai(ns("fieldCodeRfPred"), height = "10vh")),
-                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfMC'",
-                                      codigo.monokai(ns("fieldCodeRfMC"), height = "10vh")),
-                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfIndex'",
-                                      codigo.monokai(ns("fieldCodeRfIG"), height = "10vh")))
-  
-  codigo.rf.run  <- list(conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfModelo'",
-                                      codigo.monokai(ns("fieldCodeRf"), height = "10vh")),
-                     conditionalPanel("input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
-                                      codigo.monokai(ns("fieldCodeRfRules"), height = "10vh")))
-  
   opc_rf  <-     div(
     conditionalPanel(
       "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo' || input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
-      tabsOptions(heights = c(70, 30), tabs.content = list(
+      tabsOptions(heights = c(70), tabs.content = list(
         list(
           conditionalPanel(
             "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo'",
@@ -39,13 +23,7 @@ mod_r_forest_ui <- function(id){
           conditionalPanel(
             "input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
-            numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1))),
-        codigo.rf.run
-      ))),
-    conditionalPanel(
-      "input['r_forest_ui_1-BoxRf'] != 'tabRfModelo' && input['r_forest_ui_1-BoxRf'] != 'tabRfRules'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        codigo.rf
+            numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
       )))
   )
   

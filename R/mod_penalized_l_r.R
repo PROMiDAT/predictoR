@@ -10,21 +10,6 @@
 mod_penalized_l_r_ui <- function(id){
   ns <- NS(id)
   
-  codigo.rlr.run<- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'",
-                                         codigo.monokai(ns("fieldCodeRlrLanda"), height = "10vh")),
-                        conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo'",
-                                         codigo.monokai(ns("fieldCodeRlr"), height = "10vh")),
-                        conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
-                                         codigo.monokai(ns("fieldCodeRlrBetas"), height = "10vh")))
-  
-  codigo.rlr  <- list(conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPosibLanda'",
-                                       codigo.monokai(ns("fieldCodeRlrPosibLanda"), height = "10vh")),
-                      conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrPred'",
-                                       codigo.monokai(ns("fieldCodeRlrPred"), height = "10vh")),
-                      conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrMC'",
-                                       codigo.monokai(ns("fieldCodeRlrMC"), height = "10vh")),
-                      conditionalPanel("input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrIndex'",
-                                       codigo.monokai(ns("fieldCodeRlrIG"), height = "10vh")))
   
   opc_rlr  <-   div(
     conditionalPanel(
@@ -46,15 +31,10 @@ mod_penalized_l_r_ui <- function(id){
               "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'" ,
               fluidRow(col_6(id = ns("colManualLanda"),br(),
                            numericInput(ns("landa"), labelInput("landa"),value = 0, width = "100%")), br(),
-                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F)))))),
-        codigo.rlr.run
-      ))),
-    conditionalPanel(
-      "input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrModelo' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrLanda' && input['penalized_l_r_ui_1-BoxRlr'] != 'tabRlrBetas'",
-      tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-        codigo.rlr
+                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F))))))
       )))
   )
+  
   tagList(
     tabBoxPrmdt(
       id = ns("BoxRlr"), opciones = opc_rlr,
@@ -107,7 +87,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     choices      <- unique(datos[, variable])
     updateSelectInput(session, "coeff.sel", choices = choices, selected = choices[1])
     updateTabsetPanel(session, "BoxRlr",selected = "tabRlrModelo")
-    #default.codigo.rlr()
   })
   
   # Genera el texto del modelo, predicción y mc de RLR
@@ -236,7 +215,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     cv.glm   <- cv$cv.glm
     lambda   <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
     pos      <- select.beta(modelo, lambda)
-    updateAceEditor(session, "fieldCodeRlrBetas", value = paste0("modelo.rlr.",tipo,"$beta[['",category,"']][,",pos,"]"))
+    isolate(codedioma$code <- append(codedioma$code, paste0("### betas\n","modelo.Rlr.",tipo,"$beta[['",category,"']][,",pos,"]")))
     print(modelo$beta[[category]][,pos])
   })
   
@@ -252,22 +231,17 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                          isolate(input$switch.scale.rlr))
     cod  <- paste0("### plr\n",codigo)
     
-    updateAceEditor(session, "fieldCodeRlr", value = codigo)
-
     # Se genera el código de la predicción
     codigo <- rlr.prediccion(tipo)
-    updateAceEditor(session, "fieldCodeRlrPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- rlr.MC(tipo)
-    updateAceEditor(session, "fieldCodeRlrMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de los indices
     codigo <- extract.code("indices.generales")
     codigo  <- paste0(codigo,"\nindices.generales(MC.Rlr.",tipo,")\n")
-    updateAceEditor(session, "fieldCodeRlrIG", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código del posible lambda
@@ -275,8 +249,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
                            isolate(input$alpha.rlr),
                            isolate(input$switch.scale.rlr),
                            tipo)
-    
-    updateAceEditor(session, "fieldCodeRlrPosibLanda", value = codigo)
     
     cod  <- paste0(cod, "### posibLanda\n",codigo)
     
@@ -305,8 +277,6 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       cv.glm <- cv$cv.glm
       modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
       lambda <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
-      updateAceEditor(session, "fieldCodeRlrLanda", value = paste0("e_coeff_landa(modelo.rlr.",tipo,", '",coeff,"', ",lambda,")"))
-      
       cod  <- paste0("### gcoeff\n",paste0("e_coeff_landa(modelo.Rlr.",tipo,", '",coeff,"', ",lambda,")\n"))
       
       isolate(codedioma$code <- append(codedioma$code, cod))

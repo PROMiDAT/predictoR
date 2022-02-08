@@ -9,26 +9,12 @@
 #' @importFrom shiny NS tagList 
 mod_boosting_ui <- function(id){
   ns <- NS(id)
-  codigo.run  <- list(conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBModelo'",
-                                       codigo.monokai(ns("fieldCodeBoosting"),     height = "10vh")),
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBRules'",
-                                       codigo.monokai(ns("fieldCodeBoostingRules"),height = "10vh")))
-  codigo       <- list(
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBError'",
-                                       codigo.monokai(ns("fieldCodeBoostingPlot"), height = "10vh")),
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBImp'",
-                                       codigo.monokai(ns("fieldCodeBoostingPlotImport"), height = "10vh")),
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBPred'",
-                                       codigo.monokai(ns("fieldCodeBoostingPred"), height = "10vh")),
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBMC'",
-                                       codigo.monokai(ns("fieldCodeBoostingMC"),   height = "10vh")),
-                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBIndex'",
-                                       codigo.monokai(ns("fieldCodeBoostingIG"),   height = "10vh")))  
+
   opciones <-   
     div(
       conditionalPanel(
         "input['boosting_ui_1-BoxB'] == 'tabBModelo' || input['boosting_ui_1-BoxB'] == 'tabBRules'",
-        tabsOptions(heights = c(70, 30), tabs.content = list(
+        tabsOptions(heights = c(70), tabs.content = list(
           list(
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBModelo'",
@@ -40,13 +26,8 @@ mod_boosting_ui <- function(id){
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBRules'",
               options.base(), tags$hr(style = "margin-top: 0px;"),
-              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1))),
-          codigo.run
-        ))),
-      conditionalPanel(
-        "input['boosting_ui_1-BoxB'] != 'tabBModelo' && input['boosting_ui_1-BoxB'] != 'tabBRules'",
-        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
-          codigo
+              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
+          
         )))
     )
 
@@ -172,7 +153,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     isolate(train   <- updateData$datos.aprendizaje)
     isolate(var.pred<- updateData$variable.predecir)
     tryCatch({
-      updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
+      isolate(codedioma$code <- append(codedioma$code, rules.boosting(n)))
       rules(modelos$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
     },error = function(e) {
       stop(tr("NoDRule", codedioma$idioma))
@@ -188,31 +169,26 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
                               maxdepth    = isolate(input$maxdepth.boosting),
                               minsplit    = isolate(input$minsplit.boosting))
     
-    updateAceEditor(session, "fieldCodeBoosting", value = codigo)
-    cod  <- paste0("### boost\n",codigo)
+    cod  <- paste0("### docpot\n",codigo)
     
     # Se genera el código de la predicción
     codigo <- boosting.prediccion()
-    updateAceEditor(session, "fieldCodeBoostingPred", value = codigo)
     cod  <- paste0(cod,codigo)
     
-    # Cambia el código del gráfico del modelo
-    updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
-
-    # Cambia el código del gráfico de importancia
-    updateAceEditor(session, "fieldCodeBoostingPlotImport", value = boosting.plot.import())
 
     # Se genera el código de la matriz
     codigo <- boosting.MC()
-    updateAceEditor(session, "fieldCodeBoostingMC", value = codigo)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
     codigo <- paste0(codigo,"\nindices.generales(MC.boosting)\n")
-    updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
+    
+    
     cod  <- paste0(cod, codigo)
+    # Cambia el código del gráfico del modelo
     cod  <- paste0(cod, "### evolerror\n",boosting.plot())
+    # Cambia el código del gráfico de importancia
     cod  <- paste0(cod, "### docImpV\n",boosting.plot.import())
     
     isolate(codedioma$code <- append(codedioma$code, cod))
