@@ -108,8 +108,6 @@ mod_ind_nuevos_ui <- function(id){
                      id = "BoxModelo",
                      tabPanel(title = p(labelInput("predicnuevos"),class = "wrapper-tag"), value = "predicModelo",
                               DT::dataTableOutput(ns("PrediTablePN")),
-                              hr(),
-                              downloadButton(ns("downloaDatosPred"), labelInput("descargar"), style = "width:100%;"),
                               actionButton(ns("predecirPromidat"), "preditc"),  br())
                    ))
         )
@@ -224,71 +222,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     }    
   })
   
-  #Tabla de datos de aprendizaje
-  output$contentsPred <- DT::renderDataTable({
-    
-    datos  <- newCases$datos.aprendizaje
-    tipos  <- c(
-      tr("numerico",   isolate(codedioma$idioma)),
-      tr("categorico", isolate(codedioma$idioma))
-    )
-
-    tryCatch({
-      nombre.columnas <- c("ID", colnames(datos))
-      tipo.columnas   <- sapply(colnames(datos), function(i)
-        ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-               paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-               paste0("<span data-id='categorico'>", tipos[2], "</span>")))
-      sketch = htmltools::withTags(table(
-        tableHeader(nombre.columnas),
-        tags$tfoot(
-          tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
-            tags$th(shiny::HTML(i))))
-        )
-      ))
-      DT::datatable(
-        datos, selection = 'none', editable = TRUE,  container = sketch,
-        options = list(dom = 'frtip', scrollY = "40vh")
-      )
-    }, error = function(e) {
-      showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
-      return(NULL)
-    })
-  }, server = T)  
   
-  #Tabla de transformar datos
-  tabla.trans <- function(){
-    output$contentsPred2 <- DT::renderDataTable({
-      datos  <- newCases$datos.aprendizaje
-      tipos  <- c(
-        tr("numerico",   isolate(codedioma$idioma)),
-        tr("categorico", isolate(codedioma$idioma))
-      )
-      
-      tryCatch({
-        nombre.columnas <- c("ID", colnames(datos))
-        tipo.columnas   <- sapply(colnames(datos), function(i)
-          ifelse(class(datos[,i]) %in% c("numeric", "integer"),
-                 paste0("<span data-id='numerico'>", tipos[1], "</span>"),
-                 paste0("<span data-id='categorico'>", tipos[2], "</span>")))
-        sketch = htmltools::withTags(table(
-          tableHeader(nombre.columnas),
-          tags$tfoot(
-            tags$tr(tags$th(), lapply(tipo.columnas, function(i) 
-              tags$th(shiny::HTML(i))))
-          )
-        ))
-        DT::datatable(
-          datos, selection = 'none', editable = TRUE,  container = sketch,
-          options = list(dom = 'frtip', scrollY = "40vh")
-        )
-      }, error = function(e) {
-        showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
-        return(NULL)
-      })
-    }, server = T)
-    
-  }
   
   #Tabla de datos de prueba
   output$contentsPred3 <- DT::renderDataTable({
@@ -313,97 +247,18 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
       ))
       DT::datatable(
         datos, selection = 'none', editable = TRUE,  container = sketch,
-        options = list(dom = 'frtip')
+        extensions = 'Buttons',
+        options = list(dom = 'Bfrtip', buttons = list(list(extend = "csv",   text = '<i class="fa fa-file-csv"></i>', filename = "dataTest",
+                                                           exportOptions = list(modifier = list(page = "all"))), 
+                                                      list(extend = "excel", text = '<i class="fa fa-file-excel"></i>', filename = "dataTest",
+                                                           exportOptions = list(modifier = list(page = "all")))))
       )
     }, error = function(e) {
       showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
       return(NULL)
     })
-  }, server = T)
+  }, server = F)
   
-  # Update Transform Table
-  output$transDataPredN = renderUI({
-    datos  <- newCases$originales
-    idioma <- codedioma$idioma
-    
-    res <- list(fluidRow(
-      column(4, tags$span(tags$b("Variable"))),
-      column(5, tags$b(tr("tipo", idioma))),
-      column(3, tags$b(tr("activa", idioma))),
-    ), hr(style = paste0("margin-top: 10px; margin-bottom: 10px;", 
-                         "border-top: 1px solid black;")))
-    
-    if(!is.null(datos) && ncol(datos) > 0) {
-      res <- list(res, lapply(colnames(datos), function(x) {
-        list(fluidRow(
-          column(4, tags$span(x)),
-          column(5, selectInputTrans(datos, x, idioma)),
-          column(3, tags$input(type = "checkbox", id = ns(paste0("del", x)), 
-                               checked = T))
-        ), hr(style = "margin-top: 10px; margin-bottom: 10px"))
-      }))
-    }
-    
-    res <- tags$div(
-      style = "height: 40vh; overflow-y: scroll;",
-      do.call(tagList, res)
-    )
-    return(res)
-  })
-
-  
-  # Transform Button Function
-  observeEvent(input$transButton, {
-    datos <- newCases$originales
-    cod = ""
-    borrar.datos(newCases,  prueba = TRUE)
-    newCases$variable.predecir <- NULL
-    newCases$modelo            <- NULL
-    newCases$m.seleccionado    <- NULL
-    newCases$datos.prueba      <- NULL
-    newCases$prediccion        <- NULL
-    
-    for (var in colnames(datos)) {
-      if(!input[[paste0("del", var)]]) {
-        datos[, var] <- NULL
-        cod <- paste0(cod, "datos[['", var, "']] <- NULL\n")
-        
-      } else {
-        if(input[[paste0("sel", var)]] == "categorico" &
-           class(datos[, var]) %in% c("numeric","integer")) {
-          datos[, var] <- as.factor(datos[, var])
-          cod <- paste0(cod, code.trans(var, "categorico"))
-        }
-        
-        if(input[[paste0("sel", var)]] == "numerico" &
-           !(class(datos[, var]) %in% c("numeric","integer"))) {
-          datos[, var] <- as.numeric(datos[, var])
-          cod <- paste0(cod, code.trans(var, "numerico"))
-        }
-        if(input[[paste0("sel", var)]] == "disyuntivo") {
-          datos <- datos.disyuntivos(datos, var)
-          datos[, var] <- NULL
-          cod <- paste0(cod, code.trans(var, "disyuntivo"))
-        }
-      }
-    }
-    newCases$datos.aprendizaje  <- datos
-  }) 
-  
-  #Crea las opciones de transformar para cada variable
-  selectInputTrans <- function(datos, var, idioma = "es") {
-    tags$select(
-      id = ns(paste0("sel", var)),
-      tags$option(value = "categorico", tr("categorico", idioma)),
-      if(class(datos[, var]) %in% c("numeric", "integer")) {
-        tags$option(value = "numerico", tr("numerico", idioma), 
-                    selected = 'selected')
-      } else {
-        tags$option(value = "numerico", tr("numerico", idioma))
-      },
-      tags$option(value = "disyuntivo", tr("disyuntivo", idioma))
-    )
-  }
   
   #Actualiza la cantidad de capas ocultas (neuralnet)
   observeEvent(input$cant.capas.nn.pred, {
@@ -583,17 +438,6 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     })
   })
   
-  #Download Prediction Result
-  output$downloaDatosPred <- downloadHandler(
-    filename = function() {
-      input$archivoNPred2$name
-    },
-    content = function(file) {
-      if(!is.null(newCases$prediccion$prediction)){
-        write.csv(crear.datos.np(), file, row.names = input$jsrowname)
-      }
-    }
-  )
   
   #Genera la tabla de predicciones
   prediccion <- function(){
@@ -632,14 +476,24 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
           )
         ))
         DT::datatable(
-          datos, selection = 'none', editable = TRUE,  container = sketch,
-          options = list(dom = 'frtip')
-        )
+          datos, selection = 'none', editable = TRUE,  
+          container = sketch, extensions = 'Buttons',
+          options = list(dom = 'Bfrtip', 
+                         buttons = list(list(extend   = "csv", 
+                                             text     = '<i class="fa fa-file-csv"></i>', 
+                                             filename = "dataPred",
+                                             exportOptions = list(modifier = list(page = "all"))), 
+                                        list(extend   = "excel",
+                                             text     = '<i class="fa fa-file-excel"></i>', 
+                                             filename = "dataPred",
+                                             exportOptions = list(modifier = list(page = "all")))
+                                        )))
+        
       }, error = function(e) {
         showNotification(paste0("ERROR al mostrar datos: ", e), type = "error")
         return(NULL)
       })
-    }, server = T)}
+    }, server = F)}
 
 
 
@@ -710,7 +564,6 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
   },ignoreNULL = FALSE)
   
   observeEvent(input$cargarnext, {
-    tabla.trans()
     shinyjs::hide("primera", anim = TRUE )
     shinyjs::show("tercera", anim = TRUE)
   })
@@ -787,11 +640,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = tr("selectAlg", idioma),selected = 1,
                                   choices = list("Ridge" = 0, "Lasso" = 1))),
                              col_6(radioSwitchNP(ns("switch.scale.rlr.pred"), "escal", c("si", "no"),idioma = idioma )))
-                    # ,
-                    # fluidRow(col_6(id = ns("colManualLanda"),br(),
-                    #                numericInput(ns("lambda.pred"), tr("landa", idioma),value = 2, min = 0, "NULL", width = "100%")), br(),
-                    #          col_6(radioSwitchNP(ns("permitir.lambda.pred"), "", c("manual", "automatico"),idioma = idioma )))
-                    )
+                   )
   
     opc_xgb <- list(fluidRow(col_4(selectInput(inputId = ns("boosterXgb.pred"), label = tr("selbooster", idioma), selected = 1,
                                                choices = c("gbtree", "gblinear", "dart"))),

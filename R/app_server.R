@@ -95,6 +95,9 @@ app_server <- function( input, output, session ) {
     
     codigo.completo <- paste0(
       "library(XLConnect)\n", "library(caret)\n",
+      "library(traineR)\n", "library(xgboost)\n",
+      "library(rpart)\n", "library(rpart.plot)\n",
+      "library(glmnet)\n", "library(predictoR)\n",
       "library(echarts4r)\n", "library(readeR)\n\n"
     )
     for (cod in codigo) {
