@@ -187,7 +187,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       modelo    <- modelos$rf[[nombre.modelo$x]]$modelo
       cod  <- paste0("### evolerror\n", plot.rf.error())
       isolate(codedioma$code <- append(codedioma$code, cod))
-      e_rf_error(modelo)
+      e_rf_error(modelo,strsplit(tr("numTree", codedioma$idioma), ':')[[1]])
     }, error = function(e){
       return(NULL)
     })

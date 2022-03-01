@@ -52,7 +52,7 @@ plot.rf.error <- function(){
 #' e_rf_error(model)
 #' 
 #' 
-e_rf_error <- function(model) {
+e_rf_error <- function(model, label = "Trees") {
   data <- data.frame(x = c(1:length(model$err.rate[,1])),cbind(model$err.rate))
   new  <- data.frame()
   for (nom in colnames(data)[-1]) {
@@ -70,7 +70,7 @@ e_rf_error <- function(model) {
     e_legend(orient = 'vertical',
              right = '20', top = '10%') |>  
     e_axis_labels(
-      x = 'Trees',
+      x = label,
       y = 'Error') |>   
     e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() 
   

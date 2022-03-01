@@ -222,7 +222,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
     tryCatch({
       error(modelo, train) -> evol.train
-      e_evol_error(evol.train)
+      e_evol_error(evol.train,strsplit(tr("numTree", codedioma$idioma), ':')[[1]])
     }, error = function(e) {
       return(NULL)
     })

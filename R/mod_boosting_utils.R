@@ -42,7 +42,7 @@ boosting.plot.import <- function() {
 }
 
 #Código del grafico de evolucion del error
-e_evol_error <- function(x) {
+e_evol_error <- function(x, label = "Iterations") {
   if (!((class(x) == "errorevol"))) 
     stop("x class should be errorevol")
   train    <- x$error
@@ -57,7 +57,7 @@ e_evol_error <- function(x) {
     e_legend(orient = 'vertical',
              right = '20', top = '10%') |> 
     e_axis_labels(
-      x = "Iterations",
+      x = label,
       y = "Error"
     )|>   e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()
 }
