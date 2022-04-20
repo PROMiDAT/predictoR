@@ -28,7 +28,7 @@ mod_comparacion_ui <- function(id){
 #' comparacion Server Function
 #'
 #' @noRd 
-mod_comparacion_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_comparacion_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   
   # Update on load testing data
@@ -46,7 +46,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos, 
   # Update Comparison Table
   output$TablaComp <- DT::renderDataTable({
     res      <- data.frame()
-    idioma   <- codedioma$idioma
+    idioma   <- updateData$idioma
     category <- input$roc.sel
     isolate(test <- updateData$datos.prueba)
     isolate(var  <- updateData$variable.predecir)
@@ -97,7 +97,7 @@ mod_comparacion_server <- function(input, output, session, updateData, modelos, 
   
   # Update Plot ROC
     output$plot_roc <- renderEcharts4r({
-      idioma        <- codedioma$idioma
+      idioma        <- updateData$idioma
       category      <- input$roc.sel
       mdls          <- modelos
       isolate(test  <- updateData$datos.prueba)

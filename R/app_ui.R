@@ -5,7 +5,6 @@
 #' @import shiny
 #' @import rlang
 #' @import traineR 
-#' @import readeR 
 #' @import shinyAce
 #' @import echarts4r
 #' @import htmltools
@@ -14,16 +13,15 @@
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
 #' @importFrom rpart path.rpart
-#' @importFrom DT tableHeader
 #' @importFrom glmnet cv.glmnet
+#' @importFrom DT tableHeader formatStyle
 #' @importFrom utils read.table write.csv head
 #' @importFrom grDevices adjustcolor hcl rainbow 
 #' @importFrom xgboost xgb.importance xgb.plot.importance
-#' @importFrom shinyjs useShinyjs show hide addClass removeClass runjs 
-#' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame 
-#' @importFrom stats pnorm qnorm sd lm qt symnum cov2cor pt model.matrix predict predict.lm
+#' @importFrom shinyjs useShinyjs show hide addClass removeClass
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
-#' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text hist
+#' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text 
+#' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame model.matrix predict predict.lm qt symnum cov2cor pt
 #' @keywords internal
 #' @noRd
 
@@ -42,14 +40,15 @@ app_ui <- function(request) {
             </a>
           </span>',
           '<img src= "img/logo_small.png" height = 50%, width = "120%">'
-        )), controlbarIcon = icon("cogs")
+        )), 
+        controlbarIcon = icon("cogs")
       ),
       dashboardSidebar(
         sidebarMenu(
           id = "principal",
           tags$div(style = "padding-top:10px;"),
           menuItem(labelInput("data"), icon = icon("database"),
-                   tabName = "cargar"),
+                                                          tabName = "cargar"),
           menuItem(labelInput("basico"), tabName = "parte1",
                    icon = icon("th-list"),
                    menuSubItem(labelInput("resumen"), "resumen",
@@ -66,29 +65,29 @@ app_ui <- function(request) {
                                icon = icon("rocket"))
           ),
           menuItem(labelInput("aprendizaje"), tabName = "parte2", 
-                   icon = icon("th-list"),
-                   menuSubItem(labelInput("knnl"),tabName = "knn",
-                               icon = icon("dot-circle")),
-                   menuSubItem(labelInput("svml"),tabName = "svm",
-                               icon = icon("vector-square")),
-                   menuSubItem(labelInput("dtl"),tabName = "dt",
-                               icon = icon("tree")),                                         
-                   menuSubItem(labelInput("rfl"),tabName = "rf",
-                               icon = icon("sitemap")),
-                   menuSubItem(labelInput("xgb"),tabName = "xgb",
-                               icon = icon("project-diagram")),
-                   menuSubItem(labelInput("bl"),tabName = "boosting",
-                               icon = icon("superscript")),
-                   menuSubItem("Bayes",tabName = "bayes",
-                               icon = icon("dice")),
-                   menuSubItem(labelInput("nn"),tabName = "nn",
-                               icon = icon("brain")),
-                   menuSubItem(labelInput("rl"),tabName = "rl",
-                               icon = icon("chart-line")),
-                   menuSubItem(labelInput("rlr"),tabName = "rlr",
-                               icon = icon("wave-square"))),
-          menuItem(labelInput("comparacion"), tabName = "comparar", #balance-scale
-                   icon = icon("balance-scale")),
+                  icon = icon("th-list"),
+                  menuSubItem(labelInput("knnl"),tabName = "knn",
+                              icon = icon("dot-circle")),
+                  menuSubItem(labelInput("svml"),tabName = "svm",
+                              icon = icon("vector-square")),
+                  menuSubItem(labelInput("dtl"),tabName = "dt",
+                              icon = icon("tree")),                                         
+                  menuSubItem(labelInput("rfl"),tabName = "rf",
+                              icon = icon("sitemap")),
+                  menuSubItem(labelInput("xgb"),tabName = "xgb",
+                              icon = icon("project-diagram")),
+                  menuSubItem(labelInput("bl"),tabName = "boosting",
+                              icon = icon("superscript")),
+                  menuSubItem("Bayes",tabName = "bayes",
+                              icon = icon("dice")),
+                  menuSubItem(labelInput("nn"),tabName = "nn",
+                              icon = icon("brain")),
+                  menuSubItem(labelInput("rl"),tabName = "rl",
+                              icon = icon("chart-line")),
+                  menuSubItem(labelInput("rlr"),tabName = "rlr",
+                              icon = icon("wave-square"))),
+          menuItem(labelInput("comparacion"), tabName = "comparar", 
+                   icon = icon("eye")),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
@@ -106,96 +105,87 @@ app_ui <- function(request) {
         )
       ),
       dashboardBody(
-        
+
         tabItems(
-          
+
           # Carga de Datos
           tabItem(tabName = "cargar",  
-                  readeR::mod_carga_datos_ui("carga_datos_ui_1", labelInput("data"))),
+                  mod_carga_datos_ui("carga_datos_ui_1")),
           # Resumen Numérico
           tabItem(tabName = "resumen", 
-                  readeR::mod_r_numerico_ui("r_numerico_ui_1")),
+                  mod_r_numerico_ui("r_numerico_ui_1")),
           
           # Test de Normalidad
           tabItem(tabName = "normalidad", 
-                  readeR::mod_normal_ui("normal_ui_1")),
+                  mod_normal_ui("normal_ui_1")),
           
           # Dispersión
           tabItem(tabName = "dispersion",
-                  readeR::mod_dispersion_ui("dispersion_ui_1")),
+                  mod_dispersion_ui("dispersion_ui_1")),
           
           # Distribuciones
           tabItem(tabName = "distribucion", 
-                  readeR::mod_distribuciones_ui("distribuciones_ui_1")),
+                  mod_distribuciones_ui("distribuciones_ui_1")),
           
           # Correlaciones
           tabItem(tabName = "correlacion", 
-                  readeR::mod_correlacion_ui("correlacion_ui_1")),
-          
+                  mod_correlacion_ui("correlacion_ui_1")),
+
           # Poder Predictivo
-          tabItem(tabName = "poderPred", 
+          tabItem(tabName = "poderPred",
                   mod_poder_pred_ui("poder_pred_ui_1")),
-          
+
           # K Vecinos
-          tabItem(tabName = "knn", 
-                  mod_knn_ui("knn_ui_1")),   
-          
+          tabItem(tabName = "knn",
+                  mod_knn_ui("knn_ui_1")),
+
           # Support Vector Machines
-          tabItem(tabName = "svm", 
+          tabItem(tabName = "svm",
                   mod_svm_ui("svm_ui_1")),
-          
+
           # Decision Trees
-          tabItem(tabName = "dt", 
+          tabItem(tabName = "dt",
                   mod_d_tree_ui("d_tree_ui_1")),
-          
+
           # Random Forest
-          tabItem(tabName = "rf", 
+          tabItem(tabName = "rf",
                   mod_r_forest_ui("r_forest_ui_1")),
-          
+
           # XGBoosting
-          tabItem(tabName = "xgb", 
+          tabItem(tabName = "xgb",
                   mod_xgboosting_ui("xgboosting_ui_1")),
-          
+
           # Potenciacion
-          tabItem(tabName = "boosting", 
-                  mod_boosting_ui("boosting_ui_1")),          
-          
+          tabItem(tabName = "boosting",
+                  mod_boosting_ui("boosting_ui_1")),
+
           # Bayes
-          tabItem(tabName = "bayes", 
+          tabItem(tabName = "bayes",
                   mod_bayes_ui("bayes_ui_1")),
-          
+
           # Neural Net
-          tabItem(tabName = "nn", 
-                  mod_neural_net_ui("neural_net_ui_1")),         
-          
+          tabItem(tabName = "nn",
+                  mod_neural_net_ui("neural_net_ui_1")),
+
           # Logistic Regression
-          tabItem(tabName = "rl", 
-                  mod_l_regression_ui("l_regression_ui_1")),      
-          
+          tabItem(tabName = "rl",
+                  mod_l_regression_ui("l_regression_ui_1")),
+
           # Penalized Logistic Regression
-          tabItem(tabName = "rlr", 
+          tabItem(tabName = "rlr",
                   mod_penalized_l_r_ui("penalized_l_r_ui_1")),
-          
+
           # Comparación de Modelos
-          tabItem(tabName = "comparar", 
-                  mod_comparacion_ui("comparacion_ui_1")),   
-          
+          tabItem(tabName = "comparar",
+                  mod_comparacion_ui("comparacion_ui_1")),
+
           # Predicción Individuos Nuevos
-          tabItem(tabName = "predNuevos", 
-                  mod_ind_nuevos_ui("ind_nuevos_ui_1")), 
-          
+          tabItem(tabName = "predNuevos",
+                  mod_ind_nuevos_ui("ind_nuevos_ui_1")),
+
           # Acerca De
           tabItem(tabName = "acercaDe", 
                   mod_acercade_ui("acercade_ui_1"))
-        )
-      ),
-      dashboardControlbar(
-        width = 500,
-        div(
-          style = "margin-right: 15px; margin-left: 15px;",
-          h3(labelInput('code')), hr(),
-          codigo.monokai("fieldCode", height = "70vh"),
-          downloadButton("btn_code", NULL, style = "width: 100%;")
         )
       )
     )
@@ -212,30 +202,17 @@ app_ui <- function(request) {
 #' @noRd
 golem_add_external_resources <- function(){
   
-  jsCode <- 'get_inputs = function() {
-  var rowname = $("#carga_datos_ui_2-rowname")[0].checked;
-  var header = $("#carga_datos_ui_2-header")[0].checked;
-  var sep = $("input[name=\'carga_datos_ui_2-sep\']:checked").val();
-  var dec = $("input[name=\'carga_datos_ui_2-dec\']:checked").val();
-  var nas = $("input[name=\'carga_datos_ui_2-deleteNA\']:checked").val();
-  Shiny.setInputValue("ind_nuevos_ui_1-jsrowname", rowname);
-  Shiny.setInputValue("ind_nuevos_ui_1-jsheader", header);
-  Shiny.setInputValue("ind_nuevos_ui_1-jssep", sep);
-  Shiny.setInputValue("ind_nuevos_ui_1-jsdec", dec);
-  Shiny.setInputValue("ind_nuevos_ui_1-jsnas", nas);
-  }'
   add_resource_path('www', app_sys('app/www'))
   add_resource_path('img', app_sys('app/img'))
   add_resource_path('lang', app_sys('app/lang'))
-
+  
   tags$head(
     favicon(),
     bundle_resources(
       path = app_sys('app/www'),
       app_title = 'predictoR'
     ),
-    shinyjs::useShinyjs(),
-    tags$script(HTML(jsCode))
+    shinyjs::useShinyjs()
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert() 
   )

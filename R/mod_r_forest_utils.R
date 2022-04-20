@@ -4,13 +4,13 @@
 rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
   ntree   <- ifelse(!is.numeric(ntree), 500, ntree)
   Codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
-                    " ntree =",ntree,",mtry =",mtry,")\n")
+                    " ntree =",ntree,",mtry =",mtry,")")
   return(Codigo)
 }
 
 #Código de la predicción de rf
 rf.prediccion <- function() {
-  return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')\n"))
+  return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')"))
 }
 
 #Código de la matriz de confución de rf
@@ -52,7 +52,7 @@ plot.rf.error <- function(){
 #' e_rf_error(model)
 #' 
 #' 
-e_rf_error <- function(model, label = "Trees") {
+e_rf_error <- function(model) {
   data <- data.frame(x = c(1:length(model$err.rate[,1])),cbind(model$err.rate))
   new  <- data.frame()
   for (nom in colnames(data)[-1]) {
@@ -70,7 +70,7 @@ e_rf_error <- function(model, label = "Trees") {
     e_legend(orient = 'vertical',
              right = '20', top = '10%') |>  
     e_axis_labels(
-      x = label,
+      x = 'Trees',
       y = 'Error') |>   
     e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading() 
   

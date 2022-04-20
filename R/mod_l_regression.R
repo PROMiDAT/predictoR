@@ -9,14 +9,31 @@
 #' @importFrom shiny NS tagList 
 mod_l_regression_ui <- function(id){
   ns <- NS(id)
-
+  codigo.run <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlModelo'",
+                                     codigo.monokai(ns("fieldCodeRl"), height = "10vh")))
+  
+  codigo.rl  <- list(conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlPred'",
+                                     codigo.monokai(ns("fieldCodeRlPred"), height = "10vh")),
+                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlMC'",
+                                     codigo.monokai(ns("fieldCodeRlMC"), height = "10vh")),
+                     conditionalPanel("input['l_regression_ui_1-BoxRl']  == 'tabRlIndex'",
+                                     codigo.monokai(ns("fieldCodeRlIG"), height = "10vh")))
+  
+  opc_rl <- tabsOptions(botones = list(icon("code")), widths = c(100), heights = c(95),
+                         tabs.content = list(codigo.rl))
   opciones <-   
     div(
       conditionalPanel(
         "input['l_regression_ui_1-BoxRl'] == 'tabRlModelo'",
         tabsOptions(heights = c(70, 30), tabs.content = list(
           list(
-            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;"))
+            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;")),
+          codigo.run
+        ))),
+      conditionalPanel(
+        "input['l_regression_ui_1-BoxRl'] != 'tabRlModelo'",
+        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+          codigo.rl
         )))
     )
   
@@ -48,19 +65,20 @@ mod_l_regression_ui <- function(id){
 #' l_regression Server Function
 #'
 #' @noRd 
-mod_l_regression_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_l_regression_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxRl",selected = "tabRlModelo")
+    default.codigo.rl()
   })
 
   # Genera el texto del modelo, predicción y mc de rl
   output$txtrl <- renderPrint({
     input$runRl
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     
     if (length(levels(updateData$datos[, updateData$variable.predecir])) != 2) {
       if (isFALSE(getOption("shiny.testmode")) || is.null(getOption("shiny.testmode"))) {
@@ -93,7 +111,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   output$rlPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     obj.predic(modelos$rl[[nombre.modelo$x]]$pred,idioma = idioma, test, var)    
   },server = FALSE)
   
@@ -104,14 +122,14 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   
   #Gráfico de la Matríz de Confusión
   output$plot_rl_mc <- renderPlot({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$rl[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$rlIndPrecTable <- shiny::renderTable({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.rl,"rl", idioma = idioma))
@@ -120,7 +138,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   
   #Tabla de Errores por Categoría
   output$rlIndErrTable  <- shiny::renderTable({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     indices.rl <- indices.generales(modelos$rl[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$rlPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.rl[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -135,21 +153,19 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   default.codigo.rl <- function() {
     # Se actualiza el código del modelo
     codigo <- rl.modelo(updateData$variable.predecir)
-    cod  <- paste0("### rl\n",codigo)
-    
+    updateAceEditor(session, "fieldCodeRl", value = codigo)
+
     # Se genera el código de la prediccion
     codigo <- rl.prediccion()
-    cod  <- paste0(cod,codigo)
-    
+    updateAceEditor(session, "fieldCodeRlPred", value = codigo)
+
     # Se genera el código de la matriz
     codigo <- rl.MC()
-    cod  <- paste0(cod,codigo)
-    
+    updateAceEditor(session, "fieldCodeRlMC", value = codigo)
+
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.rl)\n")
-    cod  <- paste0(cod,codigo)
-    isolate(codedioma$code <- append(codedioma$code, cod))
+    updateAceEditor(session, "fieldCodeRlIG", value = codigo)
   }
 }
     

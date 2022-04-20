@@ -65,7 +65,6 @@ rvtl <- shiny::reactiveValuesToList
 ########################################################
 
 load("inst/app/lang/translation.bin")
-translation <- append(translation, readeR::translation.readeR())
 
 tr <- function(text, idioma = "es") {
   sapply(text, function(s) {
@@ -99,14 +98,6 @@ cambiar.labels <- function() {
   return(x)
 }
 
-# Obtiene los nombres de columnas o regresa un string vacio
-colnames.empty <- function(res) {
-  res <- colnames(res)
-  if(is.null(res))
-    return("")
-  return(res)
-}
-# 
 # Función para generar diccionario.
 # crear.traslation <- function() {
 #    library(plyr)

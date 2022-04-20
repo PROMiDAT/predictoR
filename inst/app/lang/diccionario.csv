@@ -13,7 +13,6 @@ automatico;Automático;Automatic
 basico;Estadísticas Básicas;Basic Statistics
 bigPlot;El gráfico es demasiado grande para desplegarse;The graph is too large to display
 bl;Potenciación;Boosting
-boost;Potenciación;Boosting
 buscar;Buscar:;Search: 
 betas;Coeficientes Beta;Beta Coefficients
 cant;Cantidad;Count
@@ -52,7 +51,6 @@ distrelvar;Distribución relativa de la variable;Relative distribution of the va
 distribucion;Distribución;Distribution
 distribuciones;Distribuciones;Distributions
 disyuntivo;Disyuntivo;Disjunctive
-docpredcat;Distribución de Variables Categóricas Según Variable a Predecir;Distribution of Categorical Variables According to the Variable to Predict
 ds;Desviación Estandar;Standard deviation
 dtl;Árboles De Decisión;Decision Trees
 espanol;Español;Spanish
@@ -88,7 +86,6 @@ mediana;Mediana;Median
 minimo;Mínimo;Minimum
 minsplit;Mínimo para dividir un nodo:;Minimum to split a node:
 nn;Redes Neuronales;Neural Networks
-nN;Redes Neuronales;Neural Networks
 nnWar;El modelo no converge con los parámetros actuales, intente modificarlos;The model does not converge with the current parameters, try to modify them
 no;NO;NO
 nodata;No hay datos disponibles;No data available in table
@@ -106,7 +103,6 @@ pares;Gráfico de Pares;Pair Plot
 plotnormal;Gráfico Normalidad;Normal Plot
 poderpred;Poder Predictivo;Predictive Power
 posibLanda;Posibles lambda;Possible lambda
-docpot;Potenciación;Boosting
 primero;Primero;First
 prec;Precisión;Precision
 pred;Predicción;Prediction
@@ -162,7 +158,6 @@ res;Reescalados;Rescaled
 rfl;Bosques Aleatorios;Random Forests
 rl;Regresión Logística;Logistic Regression
 rlr;Regresión Logística Penalizada;Penalized Logistic Regression
-plr;Regresión Logística Penalizada;Penalized Logistic Regression
 rocCurva;Curva ROC;ROC Curve
 RocNo;La curva ROC solo aplica para variables binarias;The ROC curve only applies to binary variables
 ruleNumTree;Reglas del árbol número:;Rules of the tree number:
@@ -175,7 +170,6 @@ trans;Transformar;Convert
 ultimo;Ultimo;Last
 variables;Variables;Variables
 varImp;Importancia de Variables;Variable Importance
-docImpV;Importancia de Variables;Variable Importance
 VarsPred;Variables Predictoras:;Predictor Variables:
 version;VERSIÓN DEL SISTEMA;SYSTEM VERSION
 xgb;XGPotenciación;XGBoosting

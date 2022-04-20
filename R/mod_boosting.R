@@ -9,12 +9,26 @@
 #' @importFrom shiny NS tagList 
 mod_boosting_ui <- function(id){
   ns <- NS(id)
-
+  codigo.run  <- list(conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBModelo'",
+                                       codigo.monokai(ns("fieldCodeBoosting"),     height = "10vh")),
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBRules'",
+                                       codigo.monokai(ns("fieldCodeBoostingRules"),height = "10vh")))
+  codigo       <- list(
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBError'",
+                                       codigo.monokai(ns("fieldCodeBoostingPlot"), height = "10vh")),
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBImp'",
+                                       codigo.monokai(ns("fieldCodeBoostingPlotImport"), height = "10vh")),
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBPred'",
+                                       codigo.monokai(ns("fieldCodeBoostingPred"), height = "10vh")),
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBMC'",
+                                       codigo.monokai(ns("fieldCodeBoostingMC"),   height = "10vh")),
+                      conditionalPanel("input['boosting_ui_1-BoxB'] == 'tabBIndex'",
+                                       codigo.monokai(ns("fieldCodeBoostingIG"),   height = "10vh")))  
   opciones <-   
     div(
       conditionalPanel(
         "input['boosting_ui_1-BoxB'] == 'tabBModelo' || input['boosting_ui_1-BoxB'] == 'tabBRules'",
-        tabsOptions(heights = c(70), tabs.content = list(
+        tabsOptions(heights = c(70, 30), tabs.content = list(
           list(
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBModelo'",
@@ -26,8 +40,13 @@ mod_boosting_ui <- function(id){
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBRules'",
               options.base(), tags$hr(style = "margin-top: 0px;"),
-              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
-          
+              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1))),
+          codigo.run
+        ))),
+      conditionalPanel(
+        "input['boosting_ui_1-BoxB'] != 'tabBModelo' && input['boosting_ui_1-BoxB'] != 'tabBRules'",
+        tabsOptions(botones = list(icon("code")), widths = 100,heights = 55, tabs.content = list(
+          codigo
         )))
     )
 
@@ -70,14 +89,14 @@ mod_boosting_ui <- function(id){
 #' boosting Server Function
 #'
 #' @noRd 
-mod_boosting_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_boosting_server <- function(input, output, session, updateData, modelos){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     updateTabsetPanel(session, "BoxB",selected = "tabBModelo")
-    #default.codigo.boosting()
+    default.codigo.boosting()
   })
   
   # Genera el texto del modelo, predicción y mc de boosting
@@ -109,7 +128,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
   output$boostingPrediTable <- DT::renderDataTable({
     test   <- updateData$datos.prueba
     var    <- updateData$variable.predecir
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     obj.predic(modelos$boosting[[nombre.modelo$x]]$pred,idioma = idioma, test, var)
     
   },server = FALSE)
@@ -121,14 +140,14 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
   
   #Gráfico de la Matríz de Confusión
   output$plot_boosting_mc <- renderPlot({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     exe(plot.MC.code(idioma = idioma))
     plot.MC(modelos$boosting[[nombre.modelo$x]]$mc)
   })
   
   #Tabla de Indices por Categoría 
   output$boostingIndPrecTable <- shiny::renderTable({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.boosting,"boosting", idioma = idioma))
@@ -137,7 +156,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
   
   #Tabla de Errores por Categoría
   output$boostingIndErrTable  <- shiny::renderTable({
-    idioma <- codedioma$idioma
+    idioma <- updateData$idioma
     indices.boosting <- indices.generales(modelos$boosting[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$boostingPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.boosting[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -153,10 +172,10 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     isolate(train   <- updateData$datos.aprendizaje)
     isolate(var.pred<- updateData$variable.predecir)
     tryCatch({
-      isolate(codedioma$code <- append(codedioma$code, rules.boosting(n)))
+      updateAceEditor(session,"fieldCodeBoostingRules", rules.boosting(n))
       rules(modelos$boosting[[nombre.modelo$x]]$modelo$trees[[n]], train, var.pred)
     },error = function(e) {
-      stop(tr("NoDRule", codedioma$idioma))
+      stop(tr("NoDRule", updateData$idioma))
     }
   )})
   
@@ -169,30 +188,25 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
                               maxdepth    = isolate(input$maxdepth.boosting),
                               minsplit    = isolate(input$minsplit.boosting))
     
-    cod  <- paste0("### docpot\n",codigo)
-    
+    updateAceEditor(session, "fieldCodeBoosting", value = codigo)
+
     # Se genera el código de la predicción
     codigo <- boosting.prediccion()
-    cod  <- paste0(cod,codigo)
-    
+    updateAceEditor(session, "fieldCodeBoostingPred", value = codigo)
+
+    # Cambia el código del gráfico del modelo
+    updateAceEditor(session, "fieldCodeBoostingPlot", value = boosting.plot())
+
+    # Cambia el código del gráfico de importancia
+    updateAceEditor(session, "fieldCodeBoostingPlotImport", value = boosting.plot.import())
 
     # Se genera el código de la matriz
     codigo <- boosting.MC()
-    cod  <- paste0(cod,codigo)
-    
+    updateAceEditor(session, "fieldCodeBoostingMC", value = codigo)
+
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
-    codigo <- paste0(codigo,"\nindices.generales(MC.boosting)\n")
-    
-    
-    cod  <- paste0(cod, codigo)
-    # Cambia el código del gráfico del modelo
-    cod  <- paste0(cod, "### evolerror\n",boosting.plot())
-    # Cambia el código del gráfico de importancia
-    cod  <- paste0(cod, "### docImpV\n",boosting.plot.import())
-    
-    isolate(codedioma$code <- append(codedioma$code, cod))
-    
+    updateAceEditor(session, "fieldCodeBoostingIG", value = codigo)
   }
   
   # Gráfico de importancia boosting
@@ -222,7 +236,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     cod <- ifelse(input$fieldCodeBoostingPlot == "",boosting.plot(),input$fieldCodeBoostingPlot)
     tryCatch({
       error(modelo, train) -> evol.train
-      e_evol_error(evol.train,strsplit(tr("numTree", codedioma$idioma), ':')[[1]])
+      e_evol_error(evol.train)
     }, error = function(e) {
       return(NULL)
     })

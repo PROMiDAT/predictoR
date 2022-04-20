@@ -6,13 +6,13 @@ boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minspli
   maxdepth <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
   codigo   <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje, mfinal = ",iter,",
-                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))\n")
+                   control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))")
   return(codigo)
 }
 
 #Código de la prediccion de boosting
 boosting.prediccion <- function() {
-  return(paste0("prediccion.boosting <<- predict(modelo.boosting, datos.prueba, type = 'class')\n"))
+  return(paste0("prediccion.boosting <<- predict(modelo.boosting, datos.prueba, type = 'class')"))
 }
 
 
@@ -24,7 +24,7 @@ boosting.MC <- function(){
 #Código del grafico de boosting
 boosting.plot <- function(){
   return(paste0("error(modelo.boosting, datos.aprendizaje) -> evol.train\n",
-                 "e_evol_error(evol.train)\n"))
+                 "e_evol_error(evol.train)"))
 }
 
 #Código del grafico de importancia de variables
@@ -42,7 +42,7 @@ boosting.plot.import <- function() {
 }
 
 #Código del grafico de evolucion del error
-e_evol_error <- function(x, label = "Iterations") {
+e_evol_error <- function(x) {
   if (!((class(x) == "errorevol"))) 
     stop("x class should be errorevol")
   train    <- x$error
@@ -57,13 +57,13 @@ e_evol_error <- function(x, label = "Iterations") {
     e_legend(orient = 'vertical',
              right = '20', top = '10%') |> 
     e_axis_labels(
-      x = label,
+      x = "Iterations",
       y = "Error"
     )|>   e_tooltip() |>  e_datazoom(show = F) |>  e_show_loading()
 }
 
 #Reglas de boosting
 rules.boosting <- function(i){
-  return(paste0("rules(modelo.boosting$trees[[",i,"]])\n"))
+  return(paste0("rules(modelo.boosting$trees[[",i,"]])"))
 }
 
