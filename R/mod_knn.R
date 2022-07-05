@@ -97,7 +97,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos){
     kernel <- isolate(input$kernel.knn)
     k.value<- isolate(input$kmax.knn)
     nombre <- paste0("knnl-",kernel)
-    modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ) 
+    modelo <- train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ) 
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)

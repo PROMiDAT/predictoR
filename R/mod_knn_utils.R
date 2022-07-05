@@ -15,4 +15,3 @@ kkn.prediccion <- function(variable.pr,kernel = "optimal") {
 knn.MC <- function(kernel = "optimal"){
   return(paste0("MC.knn.",kernel," <<- confusion.matrix(datos.prueba, prediccion.knn.",kernel,")","\n"))
 }
-
