@@ -94,7 +94,7 @@ e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}"
   label = str_interp(label,list(X = variable,
                                 Y = var.predecir))
   color    <- gg_color_hue(length(levels(datos[,var.predecir])))
-  dataplot <<- dist_cat_predecir(datos, variable, var.predecir)
+  dataplot <- dist_cat_predecir(datos, variable, var.predecir)
   
   dataplot |> 
     group_by(var.predecir) |> 

@@ -41,6 +41,7 @@ plot.rf.error <- function(){
 #' Error Evolution
 #'
 #' @param model a random forest model.
+#' @param label a label plot.
 #'
 #' @author Joseline Quiros <joseline.quiros@promidat.com>
 #' @return echarts4r plot
@@ -49,7 +50,8 @@ plot.rf.error <- function(){
 #' @import traineR
 #' @examples
 #' model <- traineR::train.randomForest(Species~., iris, mtry = 2, ntree = 20)
-#' e_rf_error(model)
+#' label <- "Trees"
+#' e_rf_error(model, label)
 #' 
 #' 
 e_rf_error <- function(model, label = "Trees") {

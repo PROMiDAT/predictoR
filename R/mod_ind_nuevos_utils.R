@@ -1,6 +1,7 @@
 # -------------------  Prediccion Nuevos
 
 #' @import traineR 
+#' 
 
 carga.datos.np <- function(nombre.filas = T, ruta = NULL, separador = ";",
                            sep.decimal = ",", encabezado = T) {

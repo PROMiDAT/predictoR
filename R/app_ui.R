@@ -21,7 +21,7 @@
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass runjs 
 #' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame 
-#' @importFrom stats pnorm qnorm sd lm qt symnum cov2cor pt model.matrix predict predict.lm
+#' @importFrom stats pnorm qnorm sd lm qt symnum cov2cor pt model.matrix predict predict.lm density
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
 #' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text hist
 #' @keywords internal
@@ -212,32 +212,63 @@ app_ui <- function(request) {
 #' @noRd
 golem_add_external_resources <- function(){
   
-  jsCode <- 'get_inputs = function() {
+  jsCode <- '
+  get_inputs = function() {
   var rowname = $("#carga_datos_ui_2-rowname")[0].checked;
   var header = $("#carga_datos_ui_2-header")[0].checked;
   var sep = $("input[name=\'carga_datos_ui_2-sep\']:checked").val();
   var dec = $("input[name=\'carga_datos_ui_2-dec\']:checked").val();
   var nas = $("input[name=\'carga_datos_ui_2-deleteNA\']:checked").val();
+
   Shiny.setInputValue("ind_nuevos_ui_1-jsrowname", rowname);
   Shiny.setInputValue("ind_nuevos_ui_1-jsheader", header);
   Shiny.setInputValue("ind_nuevos_ui_1-jssep", sep);
   Shiny.setInputValue("ind_nuevos_ui_1-jsdec", dec);
   Shiny.setInputValue("ind_nuevos_ui_1-jsnas", nas);
-  }'
-  add_resource_path('www', app_sys('app/www'))
-  add_resource_path('img', app_sys('app/img'))
-  add_resource_path('lang', app_sys('app/lang'))
+  }
+  
+  get_inputs_xlsx = function() {
+  var rowname = $("#carga_datos_ui_2-rowname_xlsx")[0].checked;
+  var header = $("#carga_datos_ui_2-header_xlsx")[0].checked;
+  var num_hoja = $("#carga_datos_ui_2-num_hoja").val();
+  var fila_inicio = $("#carga_datos_ui_2-fila_inicio").val();
+  var col_inicio = $("#carga_datos_ui_2-col_inicio").val();
+  var fila_final = $("#carga_datos_ui_2-fila_final").val();
+  var col_final = $("#carga_datos_ui_2-col_final").val();
+  var deleteNA_xlsx = $("input[name=\'carga_datos_ui_2-deleteNA_xlsx\']:checked").val();
 
-  tags$head(
-    favicon(),
-    bundle_resources(
-      path = app_sys('app/www'),
-      app_title = 'predictoR'
-    ),
-    shinyjs::useShinyjs(),
-    tags$script(HTML(jsCode))
-    # Add here other external resources
-    # for example, you can add shinyalert::useShinyalert() 
-  )
+  Shiny.setInputValue("ind_nuevos_ui_1-jsrowname_xlsx", rowname);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsheader_xlsx", header);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsnum_hoja", num_hoja);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsfila_inicio", fila_inicio);
+  Shiny.setInputValue("ind_nuevos_ui_1-jscol_inicio", col_inicio);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsfila_final", fila_final);
+  Shiny.setInputValue("ind_nuevos_ui_1-jscol_final", col_final);
+  Shiny.setInputValue("ind_nuevos_ui_1-jsdeleteNA_xlsx", deleteNA_xlsx);
+}
+  
+  get_file = function() {
+  $("#carga_datos_ui_2-run_data").on("click", function(){
+        var file_type = $("#carga_datos_ui_2-file_type").find(".active")[0].firstElementChild.getAttribute("data-value")
+        Shiny.setInputValue("ind_nuevos_ui_1-jsfile_type", file_type);
+        });
+}
+  '
+add_resource_path('www', app_sys('app/www'))
+add_resource_path('img', app_sys('app/img'))
+add_resource_path('lang', app_sys('app/lang'))
+
+tags$head(
+  favicon(),
+  bundle_resources(
+    path = app_sys('app/www'),
+    app_title = 'predictoR'
+  ),
+  shinyjs::useShinyjs(),
+  tags$script(HTML(jsCode))
+  
+  # Add here other external resources
+  # for example, you can add shinyalert::useShinyalert() 
+)
 }
 

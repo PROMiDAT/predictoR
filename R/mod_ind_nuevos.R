@@ -94,7 +94,11 @@ mod_ind_nuevos_ui <- function(id){
                        div(col_12(
                            fileInput(ns('archivoNPred2'), labelInput("cargarchivo"), 
                                      width = "100%",placeholder = "", buttonLabel = labelInput("subir"),
-                                     accept = c('text/csv', '.csv', '.txt'))))))
+                                     accept = c('text/csv', '.csv', '.txt'))),
+                           col_12(
+                             fileInput(ns('archivoNPred3'), labelInput("cargarchivo"), 
+                                       width = "100%",placeholder = "", buttonLabel = labelInput("subir"),
+                                       accept = c('.xlsx', '.xls'))))))
                    ),
                  col_1(actionButton(ns("nuevosnext"), label = NULL, width = "100%",
                                     icon = icon("forward")))
@@ -120,6 +124,8 @@ mod_ind_nuevos_ui <- function(id){
 #' @noRd 
 mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2, codedioma){
   ns <- session$ns
+  
+  shinyjs::runjs('get_file()')
   observeEvent(codedioma$idioma, {
     
     nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
@@ -161,10 +167,11 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     
     newCases$datos.prueba <- datos.prueba
   }
-  
+
   
   # Load Button Function (New Cases)
   observeEvent(input$archivoNPred2, {
+    
     rowname    <- isolate(input$jsrowname)
     ruta       <- isolate(input$archivoNPred2)
     sep        <- isolate(input$jssep)
@@ -172,7 +179,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     encabezado <- isolate(input$jsheader)
     deleteNA   <- isolate(input$jsnas)
     variable   <- newCases$variable.predecir
-    originales <- newCases$originales
+    originales  <- newCases$originales
     newCases$datos.prueba      <- NULL
     newCases$prediccion        <- NULL
     
@@ -189,6 +196,68 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                                                 dec, 
                                                 encabezado)
         
+        #Verifica que los datos contengan las mismas columnas
+        if(any(!(c(colnames(test),variable) %in% colnames(originales))))
+          stop(tr("NoTamColum", codedioma$idioma))
+        
+        test[,variable]       <- NULL
+        test                  <- accion.NAs(test, deleteNA)
+        test[,variable]       <- NA
+        newCases$datos.prueba <- test
+        newCases$datos.prueba[,variable] <- NA
+        
+        validar()
+        # unificar.factores()
+        # 
+        if(ncol(test) <= 1) {
+          showNotification(
+            "ERROR: Check Separators", duration = 10, type = "error")
+          newCases$datos.prueba      <- NULL
+          newCases$prediccion        <- NULL
+          
+        } 
+      }, error = function(e) {
+        newCases$datos.prueba      <- NULL
+        newCases$prediccion        <- NULL
+        showNotification(paste0("ERROR al cargar datos: ", e), type = "error")
+      })
+    }
+    else {
+      newCases$datos.prueba      <- NULL
+      newCases$prediccion        <- NULL
+      
+    }    
+  })
+  
+  
+  
+  # Load Button Function (New Cases)
+  observeEvent(input$archivoNPred3, {
+    
+    ruta        <-  isolate(input$archivoNPred3)
+    variable    <-  newCases$variable.predecir
+    encabezado  <- isolate(input$jsheader_xlsx)
+    rowname     <- isolate(input$jsrowname_xlsx)
+    num_hoja    <- as.numeric(isolate(input$jsnum_hoja))
+    fila_inicio <- as.numeric(isolate(input$jsfila_inicio))
+    col_inicio  <- as.numeric(isolate(input$jscol_inicio))
+    fila_final  <- as.numeric(isolate(input$jsfila_final))
+    col_final   <- as.numeric(isolate(input$jscol_final))
+    deleteNA    <- as.logical(isolate(input$jsdeleteNA_xlsx))
+    originales  <- newCases$originales
+    newCases$datos.prueba      <- NULL
+    newCases$prediccion        <- NULL
+    
+    if(!is.null(variable)){
+      tryCatch({
+        #codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        #codigo <- paste0(codigo, "datos.prueba.completos <<- datos\n")
+        
+        #isolate(codedioma$code <- append(codedioma$code, codigo))
+        
+        test                  <- carga.datos.excel(
+          ruta$datapath, num_hoja, encabezado, fila_inicio, col_inicio, 
+          fila_final, col_final, rowname, deleteNA)
         #Verifica que los datos contengan las mismas columnas
         if(any(!(c(colnames(test),variable) %in% colnames(originales))))
           stop(tr("NoTamColum", codedioma$idioma))
@@ -510,7 +579,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     prueba      <- newCases$datos.prueba
     aprendizaje <- newCases$datos.aprendizaje
     for(nombre in colnames(prueba)){
-      if(class(prueba[,nombre]) == "factor"){
+      if(class(prueba[,nombre])  %in% c("factor")){
         levels(prueba[,nombre]) <- unique(c(levels(prueba[,nombre]),
                                                              levels(aprendizaje[,nombre])))
       }
@@ -530,10 +599,20 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
   # Wizard Opts Ind.Nuevos--------------------------------------------------------------------------------------------------
   observeEvent(updateData2$datos, {
     if(!is.null(updateData2$datos)){
+      file_type <- input$jsfile_type
+      if(file_type == "Excel"){
+        shinyjs::hide("archivoNPred2", anim = TRUE, animType = "slide")
+        shinyjs::show("archivoNPred3", anim = TRUE, animType = "slide")
+      }else{
+        shinyjs::hide("archivoNPred3", anim = TRUE, animType = "slide")
+        shinyjs::show("archivoNPred2", anim = TRUE, animType = "slide")
+        
+      }
       shinyjs::runjs('get_inputs()')
+      shinyjs::runjs('get_inputs_xlsx()')
       cod <-  "datos.aprendizaje.completos <<- datos\n"
       isolate(codedioma$code <- append(codedioma$code, cod))
-      
+
       newCases$originales <- updateData2$originales
       newCases$datos.aprendizaje <- updateData2$datos
       
