@@ -13,17 +13,16 @@
 #' @import shinydashboardPlus
 #' @importFrom xtable xtable
 #' @importFrom rpart.plot prp
-#' @importFrom rpart path.rpart
 #' @importFrom DT tableHeader
 #' @importFrom glmnet cv.glmnet
 #' @importFrom utils read.table write.csv head
-#' @importFrom grDevices adjustcolor hcl rainbow 
+#' @importFrom grDevices adjustcolor hcl rainbow dev.cur
 #' @importFrom xgboost xgb.importance xgb.plot.importance
 #' @importFrom shinyjs useShinyjs show hide addClass removeClass runjs 
 #' @importFrom stats cor cutree hclust median na.omit as.formula loess model.frame 
 #' @importFrom stats pnorm qnorm sd lm qt symnum cov2cor pt model.matrix predict predict.lm density
 #' @importFrom shinydashboard sidebarMenu menuItem menuSubItem dashboardBody tabItems tabItem tabBox
-#' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text hist
+#' @importFrom graphics abline legend lines pairs par points polygon rect smoothScatter strwidth text hist identify
 #' @keywords internal
 #' @noRd
 
@@ -89,6 +88,10 @@ app_ui <- function(request) {
                                icon = icon("wave-square"))),
           menuItem(labelInput("comparacion"), tabName = "comparar", #balance-scale
                    icon = icon("balance-scale")),
+          menuItem(labelInput("crossval"), tabName = "validacion",#server, award battle-net brain bug buffer check-circle chart-line chart-bar
+                   icon = icon("cogs"),
+                   menuSubItem(labelInput("knnl"),tabName = "cv_knn",
+                               icon = icon("dot-circle"))),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
@@ -180,6 +183,10 @@ app_ui <- function(request) {
           tabItem(tabName = "comparar", 
                   mod_comparacion_ui("comparacion_ui_1")),   
           
+          
+          ############### Validación Cruzada ############### 
+          tabItem(tabName = "cv_knn", 
+                  mod_cv_knn_ui("cv_knn_ui_1")),
           # Predicción Individuos Nuevos
           tabItem(tabName = "predNuevos", 
                   mod_ind_nuevos_ui("ind_nuevos_ui_1")), 

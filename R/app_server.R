@@ -142,6 +142,11 @@ app_server <- function( input, output, session ) {
         shinyjs::enable(selector = 'a[href^="#shiny-tab-comparar"]')
         
       }
+      if(is.null(updateData$grupos) || (is.null(updateData$numValC) && updateData$numValC <= 1)) {
+        shinyjs::disable(selector = 'a[href^="#shiny-tab-validacion"]')
+      } else {
+        shinyjs::enable(selector = 'a[href^="#shiny-tab-validacion"]')
+      }
       
     })
   })
@@ -174,6 +179,9 @@ app_server <- function( input, output, session ) {
   #Comparación de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos, codedioma)
   
+  
+  #Validación Cruzada
+  callModule(mod_cv_knn_server,          "cv_knn_ui_1",        updateData, codedioma)
   
   #Predicción de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",  newCases, updateData2, codedioma)

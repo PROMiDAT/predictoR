@@ -36,6 +36,7 @@ ErrorModelo;Aún no genera el modelo;The model has not yet been generated
 escal;Escalar Datos;Scale Data
 comparacion;Comparación de Modelos;Model Comparison
 copyright;TODOS LOS DERECHOS RESERVADOS A;ALL RIGHTS RESERVED TO
+crossval;Validación Cruzada;Cross Validation
 data;Datos;Data
 dataA;Datos de Aprendizaje;Training Sample
 dataP;Datos de Prueba;Test Sample
@@ -72,9 +73,11 @@ histograma;Histograma;Histogram
 home;Inicio;Home
 idioma;Idioma;Language
 indices;Índices Generales;General Indexes
+indicesCat;Índices por Categoría;Categorical Indexes
 imputar;Imputar;Impute
 inferior;Valor Inferior;Lower Value
 info;MÁS INFORMACIÓN;MORE INFORMATION
+iter;Iteración;Iteration
 knnl;K Vecinos Más Cercanos;K Nearest Neighbors
 kmax;K Máximo:;K Max:
 landa;Seleccionar Log(λ):;Select Log(λ):

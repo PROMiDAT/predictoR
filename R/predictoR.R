@@ -23,4 +23,6 @@
 NULL
 utils::globalVariables(c(
   "datos","<<-", "z", "prop", "x",
-  "OOB", "cont", "MeanDecreaseAccuracy", "plot.MC", "y", "importancia", "count"))
+  "OOB", "cont", "MeanDecreaseAccuracy", 
+  "plot.MC", "y", "importancia", "count", 
+  "desc", "name", "value"))
