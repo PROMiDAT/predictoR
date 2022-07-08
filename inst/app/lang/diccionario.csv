@@ -166,6 +166,7 @@ rfl;Bosques Aleatorios;Random Forests
 rl;Regresión Logística;Logistic Regression
 rlr;Regresión Logística Penalizada;Penalized Logistic Regression
 plr;Regresión Logística Penalizada;Penalized Logistic Regression
+probC;Probabilidad de Corte;Cut-Off Probability
 rocCurva;Curva ROC;ROC Curve
 RocNo;La curva ROC solo aplica para variables binarias;The ROC curve only applies to binary variables
 ruleNumTree;Reglas del árbol número:;Rules of the tree number:

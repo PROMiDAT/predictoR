@@ -40,18 +40,14 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
   #   names_to  = 'name',
   #   values_to = 'value'
   # )
-  
-  color <- gg_color_hue(length(unique(datos.grafico[["name"]])))
   datos.grafico <- datos.grafico |>
-    dplyr::group_by( name ) |>
-    dplyr::summarise(value = mean(value)) |>
+    dplyr::group_by( name, color ) |>
+    dplyr::summarise(value = mean(value), .groups = 'drop') |>
     dplyr::arrange(desc(value))
   
   resumen <- datos.grafico |>
-    group_by( name )|>
-    e_charts( name , color = color) |>
-    e_scatter(value,
-              symbolSize = 15)|>
+    e_charts( name) |>
+    e_bar(value, name = var)|> e_add_nested("itemStyle", color) |>
     e_labels(show     = TRUE,
              position = 'top' ,
              formatter =  e_JS("function(params){
@@ -98,9 +94,10 @@ indices.cv <- function(category, cant.vc, kernels, MCs.knn){
   for (cat in category) {
     ind.categ[[cat]] <- vector(mode = "numeric",   length = cant.vc * length(kernels))
   }
-  
+  col_      <- gg_color_hue(length(kernels))
   value     <- vector(mode = "numeric",   length = cant.vc * length(kernels))
   name      <- vector(mode = "character", length = cant.vc * length(kernels))
+  color     <- vector(mode = "character", length = cant.vc * length(kernels))
   rep       <- vector(mode = "numeric",   length = cant.vc * length(kernels))
   indice    <- 1
   
@@ -108,6 +105,7 @@ indices.cv <- function(category, cant.vc, kernels, MCs.knn){
     n <- kernel * cant.vc
     rep[indice:(n)]       <- 1:cant.vc
     name[indice:(n)]      <- kernels[kernel]
+    color[indice:(n)]     <- col_[kernel]
     value[indice:(n)]     <- sapply(MCs.knn[[paste0("MCs.", kernels[kernel])]], 
                                     precision.global)
     
@@ -118,7 +116,8 @@ indices.cv <- function(category, cant.vc, kernels, MCs.knn){
     indice <- indice + cant.vc
   }
   
-  grafico   <- data.frame(rep, name, value)
+  grafico    <- data.frame(rep, name, value, color)
+  
   resultados <- list(grafico = grafico, global = value, categories = ind.categ)
   return(list(grafico = grafico, global = value, categories = ind.categ))
 }
