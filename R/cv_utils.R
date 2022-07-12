@@ -40,14 +40,15 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
   #   names_to  = 'name',
   #   values_to = 'value'
   # )
-  datos.grafico <- datos.grafico |>
+  datos.grafico <<- datos.grafico |>
     dplyr::group_by( name, color ) |>
     dplyr::summarise(value = mean(value), .groups = 'drop') |>
     dplyr::arrange(desc(value))
   
-  resumen <- datos.grafico |>
+  resumen <<- datos.grafico |>
     e_charts( name) |>
-    e_bar(value, name = var)|> e_add_nested("itemStyle", color) |>
+    e_bar(value, name = var) |> 
+    e_add_nested("itemStyle", color) |>
     e_labels(show     = TRUE,
              position = 'top' ,
              formatter =  e_JS("function(params){
@@ -57,16 +58,20 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
     e_axis_labels(x = labels[2],
                   y = paste('%', labels[1])) |>
     e_title(labels[1],
-            left = "center",
-            top = 5,
+            left  = "center",
+            top   = 5,
             textStyle = list(fontSize = 20)) |>
     e_tooltip(formatter = e_JS("function(params){
                                            return('<strong>' + params.value[0] + ' </strong>' +",
                                " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
     e_datazoom(show = F) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
-    e_show_loading()
-  resumen$x$opts$legend$data <- datos.grafico$name
+    e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  resumen$x$opts$legend$data <<- datos.grafico$name
+  resumen$x$opts$xAxis[[1]]$nameLocation = 'middle'
+  #resumen$x$opts$xAxis[[1]]$nameGap = 35
+  #resumen$x$opts$xAxis[[1]]$nameTextStyle = list(fontSize = 25)
+  # e_x_axis(nameTextStyle = list(fontSize = 25))
   resumen
 }
 

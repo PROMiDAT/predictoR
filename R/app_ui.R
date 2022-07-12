@@ -96,6 +96,8 @@ app_ui <- function(request) {
                                icon = icon("vector-square")),
                    menuSubItem(labelInput("dtl"),tabName = "cv_dt",
                                icon = icon("tree")),
+                   menuSubItem(labelInput("xgb"),tabName = "cv_xgb",
+                               icon = icon("project-diagram")),
                    menuSubItem(labelInput("knnl"),tabName = "cv_cv",
                                icon = icon("dot-circle"))),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
@@ -193,10 +195,16 @@ app_ui <- function(request) {
           ############### Validación Cruzada ############### 
           tabItem(tabName = "cv_knn", 
                   mod_cv_knn_ui("cv_knn_ui_1")),
+          
           tabItem(tabName = "cv_svm", 
                   mod_cv_svm_ui("cv_svm_ui_1")),
+          
           tabItem(tabName = "cv_dt", 
                   mod_cv_dt_ui("cv_dt_ui_1")),
+          
+          tabItem(tabName = "cv_xgb", 
+                  mod_cv_xgb_ui("cv_xgb_ui_1")),
+          
           tabItem(tabName = "cv_cv", 
                   mod_cross_validation_ui("cross_validation_ui_1")),
           # Predicción Individuos Nuevos

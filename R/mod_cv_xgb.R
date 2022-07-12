@@ -1,4 +1,4 @@
-#' cv_dt UI Function
+#' cv_xgb UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,53 +7,53 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_cv_dt_ui <- function(id){
+mod_cv_xgb_ui <- function(id){
   ns <- NS(id)
   
   
-  title_comp <- list(conditionalPanel("input['cv_dt_ui_1-Boxdt'] == 'tabCVdtIndicesCat'",
+  title_comp <- list(conditionalPanel("input['cv_xgb_ui_1-Boxdt'] == 'tabcvxgbIndicesCat'",
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvdt.sel"),label = NULL,
+                                                   selectInput(inputId = ns("cvxgb_sel"),label = NULL,
                                                                choices =  "", width = "100%")))),
-                     conditionalPanel("input['cv_dt_ui_1-Boxdt'] == 'tabCVdtIndices3'",
+                     conditionalPanel("input['cv_xgb_ui_1-Boxdt'] == 'tabcvxgbIndices3'",
                                       div(id = ns("row2"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvdt.glo"),label = NULL,
+                                                   selectInput(inputId = ns("cvxgb_glo"),label = NULL,
                                                                choices = "")))))
   
   tagList(
     tabBoxPrmdt(
       id = ns("Boxdt"), title = title_comp, 
-      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVdtModelo",
+      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabcvxgbModelo",
                fluidRow(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
-                        col_6(numericInput(ns("min_split"), labelInput("minsplit"),min = 1,step = 1, value = 2))),
+                        col_6(numericInput(ns("n_rounds"), labelInput("selnrounds"),min = 1,step = 1, value = 50))),
                fluidRow(col_12(
                  selectizeInput(
-                   ns("split_dt"), labelInput("splitIndex"), multiple = T,
-                   choices =  list("gini" = "gini", "Entropia" = "information")))),
+                   ns("booster_xgb"), labelInput("selbooster"), multiple = T,
+                   choices =  c("gbtree", "gblinear", "dart")))),
                
-               fluidRow(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%")),
-                        col_6(selectInput(ns("cvdt_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
+               fluidRow(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%")),
+                        col_6(selectInput(ns("cvxgb_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
-                   style = "display:block",withLoader(verbatimTextOutput(ns("txtcvdt")), 
+                   style = "display:block",withLoader(verbatimTextOutput(ns("txtcvxgb")), 
                                                       type = "html", loader = "loader4")),
                hr(style = "border-top: 2px solid #cccccc;" ),
-               actionButton(ns("btn_cv_dt"), labelInput("generar"), width  = "100%" ),br(),br()),
-      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVdtIndices",
-               div(col_6(echarts4rOutput(ns("e_dt_glob"), width = "100%", height = "70vh")),
-                   col_6(echarts4rOutput(ns("e_dt_error"), width = "100%", height = "70vh")))),
-      tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVdtIndicesCat",
-               div(col_12(echarts4rOutput(ns("e_dt_category"), width = "100%", height = "70vh"))))
+               actionButton(ns("btn_cv_xgb"), labelInput("generar"), width  = "100%" ),br(),br()),
+      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabcvxgbIndices",
+               div(col_6(echarts4rOutput(ns("e_xgb_glob"), width = "100%", height = "70vh")),
+                   col_6(echarts4rOutput(ns("e_xgb_error"), width = "100%", height = "70vh")))),
+      tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabcvxgbIndicesCat",
+               div(col_12(echarts4rOutput(ns("e_xgb_category"), width = "100%", height = "70vh"))))
     )
  
   )
 }
     
-#' cv_dt Server Functions
+#' cv_xgb Server Functions
 #'
 #' @noRd 
-mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
+mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
     ns <- session$ns
     
     
@@ -64,7 +64,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       nombres <- list(0, 1)
       names(nombres) <- tr(c("errG", "precG"),codedioma$idioma)
       
-      updateSelectInput(session, "cvdt.glo", choices = nombres, selected = 1)
+      updateSelectInput(session, "cvxgb_glo", choices = nombres, selected = 1)
     })
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
@@ -77,56 +77,56 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       
       if(!is.null(datos)){
         choices      <- as.character(unique(datos[, variable]))
-        updateSelectInput(session, "cvdt.sel", choices = choices, selected = choices[1])
-        updateSelectInput(session, "cvdt_cat", choices = choices, selected = choices[1])
+        updateSelectInput(session, "cvxgb_sel", choices = choices, selected = choices[1])
+        updateSelectInput(session, "cvxgb_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
-          shinyjs::show("cvdt_cat", anim = TRUE, animType = "fade")
-          shinyjs::show("cvdt_step", anim = TRUE, animType = "fade")
+          shinyjs::show("cvxgb_cat", anim = TRUE, animType = "fade")
+          shinyjs::show("cvxgb_step", anim = TRUE, animType = "fade")
         }else{
-          shinyjs::hide("cvdt_cat", anim = TRUE, animType = "fade")
-          shinyjs::hide("cvdt_step", anim = TRUE, animType = "fade")
+          shinyjs::hide("cvxgb_cat", anim = TRUE, animType = "fade")
+          shinyjs::hide("cvxgb_step", anim = TRUE, animType = "fade")
         }
       }
       
     })
     
-    output$txtcvdt <- renderPrint({
-      input$btn_cv_dt
+    output$txtcvxgb <- renderPrint({
+      input$btn_cv_xgb
       M$MCs.dt <- NULL
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
       tryCatch({
-        splits    <- isolate(input$split_dt)
+        boosters    <- isolate(input$booster_xgb)
         cant.vc   <- isolate(updateData$numValC)
         MCs.dt    <- vector(mode = "list")
         datos     <- isolate(updateData$datos)
         numGrupos <- isolate(updateData$numGrupos)
         grupos    <- isolate(updateData$grupos)
         max_depth <- isolate(input$max_depth)
-        min_split <- isolate(input$min_split)
+        n_rounds  <- isolate(input$n_rounds)
         variable  <- updateData$variable.predecir
         var_      <- paste0(variable, "~.")
         category  <- isolate(levels(updateData$datos[,variable]))
         dim_v     <- isolate(length(category))
-        nombres   <- vector(mode = "character", length = length(splits))
-        Corte     <- isolate(input$cvdt_step)
-        cat_sel   <- isolate(input$cvdt_cat)
+        nombres   <- vector(mode = "character", length = length(boosters))
+        Corte     <- isolate(input$cvxgb_step)
+        cat_sel   <- isolate(input$cvxgb_cat)
         
-        if(length(splits)<1){
+        if(length(boosters)<1){
           if(M$times != 0)
-            showNotification("Debe seleccionar al menos un kernel")
+            showNotification("Debe seleccionar al menos un booster")
         }
-        for (kernel in 1:length(splits)){
-          MCs.dt[[paste0("MCs.",splits[kernel])]] <- vector(mode = "list", length = cant.vc)
-          nombres[kernel] <- paste0("MC.",splits[kernel])
+        for (booster in 1:length(boosters)){
+          MCs.dt[[paste0("MCs.",boosters[booster])]] <- vector(mode = "list", length = cant.vc)
+          nombres[booster] <- paste0("MC.",boosters[booster])
         }
         
         for (i in 1:cant.vc){
-          MC.dt <- vector(mode = "list", length = length(splits))
+          MC.dt <- vector(mode = "list", length = length(boosters))
           names(MC.dt) <- nombres
-          for (kernel in 1:length(splits)){
-            MC.dt[[kernel]] <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
+          for (booster in 1:length(boosters)){
+            MC.dt[[booster]] <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
           }
           
           for (k in 1:numGrupos){
@@ -134,9 +134,10 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
             ttraining <- datos[-muestra, ]
             ttesting  <- datos[muestra, ]
             
-            for (j in 1:length(splits)){
-              modelo      <- train.rpart(as.formula(var_), data = ttraining,
-                                         control = rpart.control(minsplit = min_split, maxdepth = max_depth),parms = list(split = splits[j]))
+            for (j in 1:length(boosters)){
+              modelo      <- train.xgboost(as.formula(var_), data = ttraining,
+                                         max_depth = max_depth, booster = boosters[j], 
+                                         nrounds = n_rounds)
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -160,7 +161,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
         }
         
         M$MCs.dt  <- MCs.dt
-        resultados <- indices.cv(category, cant.vc, splits, MCs.dt)
+        resultados <- indices.cv(category, cant.vc, boosters, MCs.dt)
         M$grafico  <- resultados$grafico
         M$global   <- resultados$global
         M$categories <- resultados$categories
@@ -179,39 +180,38 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     
     
     
-    output$e_dt_glob  <-  renderEcharts4r({
-      input$btn_cv_dt
+    output$e_xgb_glob  <-  renderEcharts4r({
+      input$btn_cv_xgb
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
-        
-        resumen.puntos(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":"))))
+        resumen.puntos(grafico, labels = c(tr("precG",idioma), unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
       }
       else
         return(NULL)
     })    
     
-    output$e_dt_error  <-  renderEcharts4r({
+    output$e_xgb_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
       
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("splitIndex",idioma), ":"))))
-        
+        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
+
       }
       else
         return(NULL)
     })
     
     
-    output$e_dt_category  <-  renderEcharts4r({
+    output$e_xgb_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
-      cat    <- input$cvdt.sel
+      cat    <- input$cvxgb_sel
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.puntos(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  unlist(strsplit(tr("splitIndex",idioma), ":"))))
+        resumen.puntos(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
         
       }
       else
@@ -221,7 +221,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
 
     
 ## To be copied in the UI
-# mod_cv_dt_ui("cv_dt_1")
+# mod_cv_xgb_ui("cv_xgb_1")
     
 ## To be copied in the server
-# mod_cv_dt_server("cv_dt_1")
+# mod_cv_xgb_server("cv_xgb_1")

@@ -183,7 +183,8 @@ app_server <- function( input, output, session ) {
   #Validación Cruzada
   callModule(mod_cv_knn_server,          "cv_knn_ui_1",           updateData, codedioma)
   callModule(mod_cv_svm_server,          "cv_svm_ui_1",           updateData, codedioma)
-  callModule(mod_cv_dt_server,          "cv_dt_ui_1",           updateData, codedioma)
+  callModule(mod_cv_dt_server,          "cv_dt_ui_1",             updateData, codedioma)
+  callModule(mod_cv_xgb_server,          "cv_xgb_ui_1",           updateData, codedioma)
   callModule(mod_cross_validation_server,"cross_validation_ui_1", updateData, codedioma)
   
   #Predicción de Individuos Nuevos
