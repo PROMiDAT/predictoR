@@ -40,12 +40,12 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
   #   names_to  = 'name',
   #   values_to = 'value'
   # )
-  datos.grafico <<- datos.grafico |>
+  datos.grafico <- datos.grafico |>
     dplyr::group_by( name, color ) |>
     dplyr::summarise(value = mean(value), .groups = 'drop') |>
     dplyr::arrange(desc(value))
   
-  resumen <<- datos.grafico |>
+  resumen <- datos.grafico |>
     e_charts( name) |>
     e_bar(value, name = var) |> 
     e_add_nested("itemStyle", color) |>
@@ -67,7 +67,7 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
     e_datazoom(show = F) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
-  resumen$x$opts$legend$data <<- datos.grafico$name
+  resumen$x$opts$legend$data <- datos.grafico$name
   resumen$x$opts$xAxis[[1]]$nameLocation = 'middle'
   #resumen$x$opts$xAxis[[1]]$nameGap = 35
   #resumen$x$opts$xAxis[[1]]$nameTextStyle = list(fontSize = 25)

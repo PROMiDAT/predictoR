@@ -98,8 +98,10 @@ app_ui <- function(request) {
                                icon = icon("tree")),
                    menuSubItem(labelInput("xgb"),tabName = "cv_xgb",
                                icon = icon("project-diagram")),
-                   menuSubItem(labelInput("knnl"),tabName = "cv_cv",
-                               icon = icon("dot-circle"))),
+                   menuSubItem(labelInput("rlr"),tabName = "cv_rlr",
+                               icon = icon("wave-square")),
+                   menuSubItem(labelInput("crossval"),tabName = "cv_cv",
+                               icon = icon("cogs"))),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
@@ -204,6 +206,9 @@ app_ui <- function(request) {
           
           tabItem(tabName = "cv_xgb", 
                   mod_cv_xgb_ui("cv_xgb_ui_1")),
+          
+          tabItem(tabName = "cv_rlr", 
+                  mod_cv_rlr_ui("cv_rlr_ui_1")),
           
           tabItem(tabName = "cv_cv", 
                   mod_cross_validation_ui("cross_validation_ui_1")),
