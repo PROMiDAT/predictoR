@@ -141,6 +141,7 @@ seleParModel;Selección y Parametrización del Modelo;Selection and Parameteriza
 selidioma;Seleccionar Idioma:;Select Language
 selkernel;Seleccionar un Kernel:;Select kernel:
 selnrounds;Número Máximo de Iteraciones:;Maximum Number of Iterations:
+selpaso;Seleccionar Paso:;Select Step:
 selvar;Seleccionar Variable:;Select Variable:
 selvars;Seleccionar Variables:;Select Variables:
 semilla;Semilla Aleatoria:;Random Seed:
@@ -157,6 +158,7 @@ svml;Soporte Vectorial;Support Vector Machines
 reald;Datos Reales;Real Data
 redPlot;Red Neuronal;Neural Network
 reglas;Reglas;Rules
+rep;Repetición;Repetition
 Rownames;Nombre de Individuos;Row names
 resumen;Resumen Numérico;Numeric Summary
 resumenvar;Resumen Numérico por Variable;Numeric Summary by Variable
@@ -167,6 +169,7 @@ rl;Regresión Logística;Logistic Regression
 rlr;Regresión Logística Penalizada;Penalized Logistic Regression
 plr;Regresión Logística Penalizada;Penalized Logistic Regression
 probC;Probabilidad de Corte;Cut-Off Probability
+probCstep;Probabilidad de Corte con Paso;Cut-Off Probability by Step
 rocCurva;Curva ROC;ROC Curve
 RocNo;La curva ROC solo aplica para variables binarias;The ROC curve only applies to binary variables
 ruleNumTree;Reglas del árbol número:;Rules of the tree number:

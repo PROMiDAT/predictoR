@@ -10,9 +10,10 @@ mod_knn_ui <- function(id){
   ns <- NS(id)
   
 opc_knn <- div(conditionalPanel(
-  "input['knn_ui_1-BoxKnn'] == 'tabKknModelo'",
+  "input['knn_ui_1-BoxKnn'] == 'tabKknModelo' || input['knn_ui_1-BoxKnn'] == 'tabKnnProb' || input['knn_ui_1-BoxKnn'] == 'tabKnnProbInd'",
   tabsOptions(heights = c(80), tabs.content = list(
-    list(options.run(ns("runKnn")), tags$hr(style = "margin-top: 0px;"),
+    list(conditionalPanel("input['knn_ui_1-BoxKnn']   == 'tabKknModelo'",
+                          options.run(ns("runKnn")), tags$hr(style = "margin-top: 0px;"),
                           fluidRow(col_6(
                             numericInput(ns("kmax.knn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
                             col_6(
@@ -20,7 +21,23 @@ opc_knn <- div(conditionalPanel(
                                           choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
                                                       "triweight", "cos","inv","gaussian")))),
                           fluidRow(col_6(
-                            radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no")))))))))
+                            radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no"))))),
+         conditionalPanel(
+           "input['knn_ui_1-BoxKnn'] == 'tabKnnProb'",
+           options.base(), tags$hr(style = "margin-top: 0px;"),
+           div(col_12(selectInput(inputId = ns("knn.sel"),label = labelInput("selectCat"),
+                                  choices =  "", width = "100%"))),
+           div(col_12(numericInput(inputId = ns("knn.by"),label =  labelInput("selpaso"), value = -0.05,
+                                   width = "100%")))
+         ),
+         conditionalPanel(
+           "input['knn_ui_1-BoxKnn'] == 'tabKnnProbInd'",
+           options.base(), tags$hr(style = "margin-top: 0px;"),
+           div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                  choices =  "", width = "100%"))),
+           div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                   width = "100%")))
+         ))))))
 
   tagList(
     tabBoxPrmdt(
@@ -42,7 +59,13 @@ opc_knn <- div(conditionalPanel(
                fluidRow(col_6(echarts4rOutput(ns("knnPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("knnErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("knnIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("knnIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("knnIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabKnnProbInd",
+               withLoader(verbatimTextOutput(ns("txtknnprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabKnnProb",
+               withLoader(verbatimTextOutput(ns("txtknnprob")), 
+                          type = "html", loader = "loader4"))
       )
   )
 }
@@ -57,6 +80,20 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "knn.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "knn.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
+    if(!is.null(updateData$datos.aprendizaje)){
+      k.value <- round(sqrt(nrow(updateData$datos.aprendizaje)))
+      updateNumericInput(session,"kmax.knn",value = k.value)
+    }
     updateTabsetPanel(session, "BoxKnn",selected = "tabKknModelo")
   })
 
@@ -126,7 +163,46 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
+  # Genera la probabilidad de corte
+  output$txtknnprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$knn.sel
+      paso       <- input$knn.by
+      kernel     <- paste0(".knn.",isolate(input$kernel.knn))
+      prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   
+  # Genera la probabilidad de corte
+  output$txtknnprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      kernel     <- paste0(".knn.",isolate(input$kernel.knn))
+      prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+      return(invisible(""))  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   # Actualiza el código a la versión por defecto
   default.codigo.knn <- function(k.def = FALSE) {
     train  <- updateData$datos.aprendizaje

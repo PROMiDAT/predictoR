@@ -60,7 +60,6 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     M <- rv(MCs.dt = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
     
     observeEvent(codedioma$idioma, {
-      
       nombres <- list(0, 1)
       names(nombres) <- tr(c("errG", "precG"),codedioma$idioma)
       
@@ -68,10 +67,11 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     })
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
-      M$MCs.dt <- NULL
+      M$MCs.dt  <- NULL
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
+      M$times      <- 0
       datos        <- updateData$datos
       variable     <- updateData$variable.predecir
       

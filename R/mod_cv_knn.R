@@ -73,6 +73,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
+      M$times <- 0
       datos        <- updateData$datos
       variable     <- updateData$variable.predecir
       

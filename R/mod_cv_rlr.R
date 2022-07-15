@@ -143,7 +143,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
                 negative    <- category[which(category != cat_sel)]
                 prediccion  <- predict(modelo, ttesting, type = "prob")
                 Clase       <- ttesting[,variable]
-                Score       <- prediccion$prediction[,positive]
+                Score       <- prediccion$prediction[,positive,]
                 Prediccion  <- ifelse(Score  > Corte, positive, negative)
                 MC          <- table(Clase , Pred = factor(Prediccion, levels = category))
                 MC.rlr[[j]] <- MC.rlr[[j]] + MC

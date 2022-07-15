@@ -1,45 +1,29 @@
-# library(caret)
-# library(tidyverse)
-# library(scales)
-# 
-# resumen.lineas <- function(resultados, labels = c("Global", "repetición")) {
-#   datos.grafico <- pivot_longer(
-#     resultados,
-#     cols      = -rep,
-#     names_to  = 'name',
-#     values_to = 'value'
-#   )
-#   
-#   color <- gg_color_hue(length(unique(datos.grafico[["name"]])))
-#   
-#   datos.grafico |> 
-#     group_by(name)|> 
-#     e_charts(rep, color = color) |> 
-#     e_line(value,
-#               symbolSize = 5)|> 
-#     e_y_axis(formatter = e_axis_formatter("percent", 
-#                                           digits = 0)) |>
-#     e_axis_labels(x = labels[2],
-#                   y = paste('%', labels[1])) |> 
-#     e_title(labels[1],
-#             left = "center",
-#             top = 5,
-#             textStyle = list(fontSize = 20)) |>   
-#     e_tooltip(formatter = e_JS("function(params){
-#                                            return('<strong>' + params.value[0] + ' </strong>' +",
-#                                " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>  
-#     e_datazoom(show = F) |> 
-#     e_legend(show = T, type = "scroll", bottom = 1) |>  
-#     e_show_loading()
-# }
-# 
+
+resumen.lineas <- function(datos.grafico, labels = c("Global", "repetición")) {
+  datos.grafico |>
+    group_by(name)|>
+    e_charts(rep) |>
+    e_line(value,
+              symbolSize = 5) |> 
+    e_add_nested("itemStyle", color)|>
+    e_y_axis(formatter = e_axis_formatter("percent",
+                                          digits = 0)) |>
+    e_axis_labels(x = labels[2],
+                  y = paste('%', labels[1])) |>
+    e_title(labels[1],
+            left = "center",
+            top = 5,
+            textStyle = list(fontSize = 20)) |>
+    e_tooltip(formatter = e_JS("function(params){
+                                           return('<strong>' + params.value[0] + ' </strong>' +",
+                               " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
+    e_datazoom(show = F,startValue=1) |>
+    e_legend(show = T, type = "scroll", bottom = 1) |>
+    e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+}
+
 resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
-  # datos.grafico <- pivot_longer(
-  #   resultados,
-  #   cols      = -rep,
-  #   names_to  = 'name',
-  #   values_to = 'value'
-  # )
+  
   datos.grafico <- datos.grafico |>
     dplyr::group_by( name, color ) |>
     dplyr::summarise(value = mean(value), .groups = 'drop') |>
@@ -68,10 +52,39 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
   resumen$x$opts$legend$data <- datos.grafico$name
-  resumen$x$opts$xAxis[[1]]$nameLocation = 'middle'
-  #resumen$x$opts$xAxis[[1]]$nameGap = 35
-  #resumen$x$opts$xAxis[[1]]$nameTextStyle = list(fontSize = 25)
-  # e_x_axis(nameTextStyle = list(fontSize = 25))
+  resumen
+}
+
+resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion")) {
+  
+  datos.grafico <- datos.grafico |>
+    dplyr::group_by( name, color ) |>
+    dplyr::summarise(value = mean(value), .groups = 'drop') |>
+    dplyr::arrange(desc(value))
+  
+  resumen <- datos.grafico |>
+    e_charts( name) |>
+    e_bar(value, name = var) |> 
+    e_add_nested("itemStyle", color) |>
+    e_labels(show     = TRUE,
+             position = 'top' ,
+             formatter =  e_JS("function(params){
+                                           return(parseFloat(params.value[1] *100).toFixed(2) + '%' )}")) |>
+    e_y_axis(formatter = e_axis_formatter("percent",
+                                          digits = 0)) |>
+    e_axis_labels(x = labels[2],
+                  y = paste('%', labels[1])) |>
+    e_title(labels[1],
+            left  = "center",
+            top   = 5,
+            textStyle = list(fontSize = 20)) |>
+    e_tooltip(formatter = e_JS("function(params){
+                                           return('<strong>' + params.value[0] + ' </strong>' +",
+                               " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
+    e_datazoom(show = F) |>
+    e_legend(show = T, type = "scroll", bottom = 1) |>
+    e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  resumen$x$opts$legend$data <- datos.grafico$name
   resumen
 }
 
@@ -83,14 +96,8 @@ precision <- function(clase){
 }
 
 precision.global <- function(x) sum(diag(x))/sum(x)
-# resultado.global <- readRDS("global.rds")
-# resultado.no <- readRDS("datos_no.rds")
-# resultado.si <- readRDS("datos_si.rds")
-# resumen.puntos(resultado.no, c("Global", "repetición"))
-# resumen.lineas(resultado.no, c("Global", "repetición"))
-# plot_resumen(resultado.no, c("Global", "repetición"))
 
-#####################   KNN   ########################
+#####################   Indices CrossVal   ########################
 
 indices.cv <- function(category, cant.vc, kernels, MCs.knn){
   ind.categ  <- vector(mode = "list",   length = length(category))

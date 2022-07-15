@@ -24,6 +24,46 @@ roc.values <- function(score, clase, n = 20) {
 }
 
 
+#' Create Cut-Off Probability values.
+#'
+#' @param Score a data.frame object.
+#' @param Class the column name to apply disjunctive code.
+#' @param levels the column name to apply disjunctive code.
+#' @param category a character value specifying the name of the category to apply the Cut-Off Probability.
+#' @param step the step for the Cut-Off Probability.
+#'
+#' @author Joseline Quirós <joseline.quiros@promidat.com>
+#' @export prob.values
+#' 
+#' 
+#' 
+prob.values <- function(Score, Class, levels, category, step = -0.05){
+  positive  <- levels[which(levels == category)]
+  negative  <- levels[which(levels != category)]
+  for(Corte in seq(1, 0, by = step)) {
+    Prediccion <- ifelse(Score >= Corte, positive, negative)
+    MC         <- table(Class, Pred = factor(Prediccion, levels = levels))
+    cat("\nCorte usado para la Probabilidad = ")
+    cat(Corte)
+    cat("\n")
+    print(general.indexes(mc = MC))
+    cat("\n========================================")
+  } 
+}
+
+prob.values.ind <- function(Score, Class, levels, category, Corte = 0.5){
+  positive  <- levels[which(levels == category)]
+  negative  <- levels[which(levels != category)]
+    Prediccion <- ifelse(Score >= Corte, positive, negative)
+    MC         <- table(Class, Pred = factor(Prediccion, levels = levels))
+    cat("\n========================================")
+    cat("\nCorte usado para la Probabilidad = ")
+    cat(Corte)
+    cat("\n")
+    print(general.indexes(mc = MC))
+    cat("\n========================================")
+}
+
 
 
 
