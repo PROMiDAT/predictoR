@@ -1,11 +1,31 @@
+cv.values <- function(datos){
+  modelos <- unique(datos$name)
+  puntos <- vector(mode = "list", length = length(modelos))
+  j <- 1
+  for (modelo in modelos) {
+    res <- datos[datos$name == modelo,]
+    punto <- vector(mode = "list", length = nrow(res))
+    for (i in 1:nrow(res)) {
+      punto[i] <- append(list(c(res$rep[i], res$value[i])), punto)
+    }
+    puntos[[j]] <- list(data = punto,
+                        type  = "line",  
+                        color = res$color, 
+                        name = modelo)
+    j <- j + 1
+  }
+  return(puntos)
+}
 
-resumen.lineas <- function(datos.grafico, labels = c("Global", "repetición")) {
-  datos.grafico |>
-    group_by(name)|>
-    e_charts(rep) |>
-    e_line(value,
-              symbolSize = 5) |> 
-    e_add_nested("itemStyle", color)|>
+resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
+  puntos <- cv.values(datos.grafico)
+  opts <- list(
+    xAxis = list(show = TRUE),
+    yAxis = list(show = TRUE),
+    series = puntos)
+  
+  comp_plot <- e_charts() |>  
+    e_list(opts) |>  
     e_y_axis(formatter = e_axis_formatter("percent",
                                           digits = 0)) |>
     e_axis_labels(x = labels[2],
@@ -20,6 +40,7 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repetición")) {
     e_datazoom(show = F,startValue=1) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  comp_plot
 }
 
 resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {

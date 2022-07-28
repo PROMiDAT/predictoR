@@ -17,14 +17,30 @@ mod_xgboosting_ui <- function(id){
                                 col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50)))))
   
   opc_xgb <- div(conditionalPanel(
-    "input['xgboosting_ui_1-BoxXgb']  == 'tabXgbModelo'",
+    "input['xgboosting_ui_1-BoxXgb']  == 'tabXgbModelo' || input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProb' || input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProbInd'",
     tabsOptions(heights = c(70), tabs.content = list(
-      list(options.run(ns("runXgb")), tags$hr(style = "margin-top: 0px;"),
+      list(conditionalPanel("input['xgboosting_ui_1-BoxXgb']   == 'tabXgbModelo'",
+                            options.run(ns("runXgb")), tags$hr(style = "margin-top: 0px;"),
            fluidRow(col_12(selectInput(inputId = ns("boosterXgb"), label = labelInput("selbooster"),selected = 1,
                                        choices = c("gbtree", "gblinear", "dart")))),
            fluidRow(col_6(numericInput(ns("maxdepthXgb"), labelInput("maxdepth"), min = 1,step = 1, value = 6)),
-                    col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50))))
-      ))))
+                    col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50)))),
+      conditionalPanel(
+        "input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProb'",
+        options.base(), tags$hr(style = "margin-top: 0px;"),
+        div(col_12(selectInput(inputId = ns("xgb.sel"),label = labelInput("selectCat"),
+                               choices =  "", width = "100%"))),
+        div(col_12(numericInput(inputId = ns("xgb.by"),label =  labelInput("selpaso"), value = -0.05,
+                                width = "100%")))
+      ),
+      conditionalPanel(
+        "input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProbInd'",
+        options.base(), tags$hr(style = "margin-top: 0px;"),
+        div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                               choices =  "", width = "100%"))),
+        div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                width = "100%"))))
+      )))))
   
   tagList(
     tabBoxPrmdt(
@@ -50,7 +66,13 @@ mod_xgboosting_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("xgbPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("xgbErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("xgbIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("xgbIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("xgbIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabXgbProbInd",
+               withLoader(verbatimTextOutput(ns("txtxgbprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabXgbProb",
+               withLoader(verbatimTextOutput(ns("txtxgbprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -64,6 +86,16 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
   
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "xgb.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "xgb.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxXgb",selected = "tabXgbModelo")
     #default.codigo.xgb()
   })
@@ -162,6 +194,44 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
     })
   })
   
+  # Genera la probabilidad de corte
+  output$txtxgbprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$xgb.sel
+      paso       <- input$xgb.by
+      prediccion <- modelos$xgb[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtxgbprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$xgb[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+      
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   # Update default code
   default.codigo.xgb <- function() {
     tipo   <- isolate(input$boosterXgb)
@@ -176,7 +246,7 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
 
     #Predicción 
     codigo <- xgb.prediccion(booster = tipo)
-    cod  <- paste0(cod,codigo)
+    cod    <- paste0(cod,codigo)
     
     #Matriz de confusión
     codigo <- xgb.MC(booster = tipo)

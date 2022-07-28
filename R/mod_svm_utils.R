@@ -10,7 +10,7 @@ svm.prediccion <- function(kernel = "linear") {
   return(paste0("prediccion.svm.",kernel," <<- predict(modelo.svm.",kernel," , datos.prueba, type = 'class')\n"))
 }
 
-#Código de la matriz de confución de svm
+#Código de la matriz de confusión de svm
 svm.MC <- function( kernel = "linear"){
   return(paste0("MC.svm.",kernel," <<- confusion.matrix(datos.prueba, prediccion.svm.",kernel,")","\n"))
 }

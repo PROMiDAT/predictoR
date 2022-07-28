@@ -13,7 +13,7 @@ mod_penalized_l_r_ui <- function(id){
   
   opc_rlr  <-   div(
     conditionalPanel(
-      "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
+      "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrModelo' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProb' || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProbInd'",
       tabsOptions(heights = c(70, 30), tabs.content = list(
         list(
           conditionalPanel(
@@ -26,12 +26,28 @@ mod_penalized_l_r_ui <- function(id){
             "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'  || input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrBetas'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             fluidRow(col_12(selectInput(inputId = ns("coeff.sel"),label = labelInput("selectCat"),
-                                        choices =  "", width = "100%"))),
+                                        choices =  "", width = "100%")))),
             conditionalPanel(
               "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrLanda'" ,
               fluidRow(col_6(id = ns("colManualLanda"),br(),
                            numericInput(ns("landa"), labelInput("landa"),value = 0, width = "100%")), br(),
-                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F))))))
+                     col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F)))),
+            conditionalPanel(
+              "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProb'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("rlr.sel"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("rlr.by"),label =  labelInput("selpaso"), value = -0.05,
+                                      width = "100%")))
+            ),
+            conditionalPanel(
+              "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProbInd'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                      width = "100%"))))
+            )
       )))
   )
   
@@ -67,7 +83,13 @@ mod_penalized_l_r_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("rlrPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("rlrErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("rlrIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("rlrIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("rlrIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabRlrProbInd",
+               withLoader(verbatimTextOutput(ns("txtrlrprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabRlrProb",
+               withLoader(verbatimTextOutput(ns("txtrlrprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -86,6 +108,13 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     datos        <- updateData$datos
     choices      <- unique(datos[, variable])
     updateSelectInput(session, "coeff.sel", choices = choices, selected = choices[1])
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "rlr.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "rlr.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxRlr",selected = "tabRlrModelo")
   })
   
@@ -94,14 +123,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     input$runRlr
     tryCatch({
     default.codigo.rlr()
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
+    train  <<- updateData$datos.aprendizaje
+    test   <<- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
-    scales <- isolate(input$switch.scale.rlr)
-    tipo   <- rlr.type()
-    alpha  <- isolate(input$alpha.rlr)
+    scales <<- isolate(input$switch.scale.rlr)
+    tipo   <<- rlr.type()
+    alpha  <<- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     prob   <- predict(modelo , test, type = 'prob')
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
@@ -217,6 +246,46 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     pos      <- select.beta(modelo, lambda)
     isolate(codedioma$code <- append(codedioma$code, paste0("### betas\n","modelo.Rlr.",tipo,"$beta[['",category,"']][,",pos,"]")))
     print(modelo$beta[[category]][,pos])
+  })
+  
+  
+  
+  # Genera la probabilidad de corte
+  output$txtrlrprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <<- levels(test[, variable])
+      category   <<- input$rlr.sel
+      paso       <<- input$rlr.by
+      prediccion <<- modelos$rlr[[nombre.modelo$x]]$prob 
+      Score      <<- prediccion$prediction[,category,]
+      Clase      <<- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtrlrprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$rlr[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category,]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
   })
   
   # Actualiza el código a la versión por defecto

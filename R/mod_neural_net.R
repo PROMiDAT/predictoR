@@ -12,19 +12,35 @@ mod_neural_net_ui <- function(id){
   
   opc_nn <- div(
     conditionalPanel(
-    "input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
+    "input['neural_net_ui_1-BoxNn']   == 'tabNnModelo' || input['neural_net_ui_1-BoxNn'] == 'tabNnProb' || input['neural_net_ui_1-BoxNn'] == 'tabNnProbInd'",
     tabsOptions(heights = c(70, 30), tabs.content = list(
-      list(options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
-           
-           fluidRow(col_6(numericInput(ns("threshold.nn"),labelInput("threshold"),
-                                       min = 0, step = 0.01, value = 0.05)),
-                    col_6(numericInput(ns("stepmax.nn"),labelInput("stepmax"),
-                                       min = 100, step = 100, value = 5000))),
-           fluidRow(col_12(sliderInput(inputId = ns("cant.capas.nn"), min = 1, max = 10,
-                                       label = labelInput("selectCapas"), value = 2))),
-           fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
+      list(conditionalPanel("input['neural_net_ui_1-BoxNn']   == 'tabNnModelo'",
+                            options.run(ns("runNn")), tags$hr(style = "margin-top: 0px;"),
+                           fluidRow(col_6(numericInput(ns("threshold.nn"),labelInput("threshold"),
+                                                       min = 0, step = 0.01, value = 0.05)),
+                                    col_6(numericInput(ns("stepmax.nn"),labelInput("stepmax"),
+                                                       min = 100, step = 100, value = 5000))),
+                           fluidRow(col_12(sliderInput(inputId = ns("cant.capas.nn"), min = 1, max = 10,
+                                                       label = labelInput("selectCapas"), value = 2))),
+                           fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(col_2(numericInput(ns(paste0("nn.cap.",i)), NULL,
                                                                                                min = 1, step = 1, value = 2),
-                                                                                  class = "mini-numeric-select")))))))))
+                                                                                  class = "mini-numeric-select"))))),
+           conditionalPanel(
+             "input['neural_net_ui_1-BoxNn'] == 'tabNnProb'",
+             options.base(), tags$hr(style = "margin-top: 0px;"),
+             div(col_12(selectInput(inputId = ns("nn.sel"),label = labelInput("selectCat"),
+                                    choices =  "", width = "100%"))),
+             div(col_12(numericInput(inputId = ns("nn.by"),label =  labelInput("selpaso"), value = -0.05,
+                                     width = "100%")))
+           ),
+           conditionalPanel(
+             "input['neural_net_ui_1-BoxNn'] == 'tabNnProbInd'",
+             options.base(), tags$hr(style = "margin-top: 0px;"),
+             div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                    choices =  "", width = "100%"))),
+             div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                     width = "100%"))))
+           )))))
   
   tagList(
     tabBoxPrmdt(
@@ -50,7 +66,13 @@ mod_neural_net_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("nnPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("nnErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("nnIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("nnIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("nnIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabNnProbInd",
+               withLoader(verbatimTextOutput(ns("txtnnprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabNnProb",
+               withLoader(verbatimTextOutput(ns("txtnnprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -64,6 +86,16 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
   
   # Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "nn.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "nn.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
   })
 
@@ -124,8 +156,6 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
       showNotification(paste0(tr("nnWar", idioma)," (NN) : ",w), duration = 10, type = "warning")
       return(invisible(""))
     })
-
-
   })
   
   #Tabla de la predicción
@@ -152,7 +182,6 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
       showNotification(paste0("Error (NN) : ", e), duration = 15, type = "error")
       return(NULL)
     })
-
   })
   
   #Tabla de Indices por Categoría 
@@ -175,6 +204,46 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
     xtable(indices.error.table(indices.nn,"nn"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  
+  
+  # Genera la probabilidad de corte
+  output$txtnnprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$nn.sel
+      paso       <- input$nn.by
+      prediccion <- modelos$nn[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtnnprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$nn[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   
   # Actualiza el código a la versión por defecto
   default.codigo.nn <- function(){

@@ -13,11 +13,26 @@ mod_l_regression_ui <- function(id){
   opciones <-   
     div(
       conditionalPanel(
-        "input['l_regression_ui_1-BoxRl'] == 'tabRlModelo'",
+        "input['l_regression_ui_1-BoxRl'] == 'tabRlModelo' || input['l_regression_ui_1-BoxRl'] == 'tabRlProb' || input['l_regression_ui_1-BoxRl'] == 'tabRlProbInd'",
         tabsOptions(heights = c(70, 30), tabs.content = list(
-          list(
-            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;"))
-        )))
+          list(conditionalPanel("input['l_regression_ui_1-BoxRl']   == 'tabKknModelo'",
+            options.run(ns("runRl")), tags$hr(style = "margin-top: 0px;")),
+            conditionalPanel(
+              "input['l_regression_ui_1-BoxRl'] == 'tabRlProb'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("rl.sel"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("rl.by"),label =  labelInput("selpaso"), value = -0.05,
+                                      width = "100%")))
+            ),
+            conditionalPanel(
+              "input['l_regression_ui_1-BoxRl'] == 'tabRlProbInd'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                      width = "100%"))))
+        ))))
     )
   
   tagList(
@@ -40,7 +55,13 @@ mod_l_regression_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("rlPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("rlErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("rlIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("rlIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("rlIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabRlProbInd",
+               withLoader(verbatimTextOutput(ns("txtrlprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabRlProb",
+               withLoader(verbatimTextOutput(ns("txtrlprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -51,9 +72,19 @@ mod_l_regression_ui <- function(id){
 mod_l_regression_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
-  
+
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "rl.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "rl.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxRl",selected = "tabRlModelo")
   })
 
@@ -130,6 +161,44 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
+  
+  # Genera la probabilidad de corte
+  output$txtrlprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$rl.sel
+      paso       <- input$rl.by
+      prediccion <- modelos$rl[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtrlprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$rl[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   
   # Actualiza el código a la versión por defecto
   default.codigo.rl <- function() {

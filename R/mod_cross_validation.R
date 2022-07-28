@@ -21,10 +21,9 @@ mod_cross_validation_ui <- function(id){
                                                          "triweight", "cos","inv","gaussian"))),
                            col_4(radioSwitchNP(ns("switch.scale.knn.pred"), "escal", c("si", "no") ))))
   
-  opc_svm <- list(fluidRow(col_6(
-    radioSwitchNP(ns("switch.scale.svm.pred"), "escal", c("si", "no"))),
-    col_6(selectInput(inputId = ns("kernel.svm.pred"), label = labelInput("selkernel"),selected = "radial",
-                      choices = c("linear", "polynomial", "radial", "sigmoid")))))
+  opc_svm <- list(fluidRow(col_6(radioSwitchNP(ns("switch.scale.svm.pred"), "escal", c("si", "no"))),
+                           col_6(selectInput(inputId = ns("kernel.svm.pred"), label = labelInput("selkernel"),selected = "radial",
+                                 choices = c("linear", "polynomial", "radial", "sigmoid")))))
   
   opc_rf  <- list(fluidRow(col_6(numericInput(ns("ntree.rf.pred"), labelInput("numTree"), 20, width = "100%", min = 0)),
                            col_6(numericInput(ns("mtry.rf.pred"),  labelInput("numVars"),1, width = "100%", min = 1))))
@@ -57,8 +56,8 @@ mod_cross_validation_ui <- function(id){
                           col_4(sliderInput(inputId = ns("cant.capas.nn.pred"), min = 1, max = 10,
                                             label = labelInput("selectCapas"), value = 3))),
                  fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(
-                   col_2(numericInput(ns(paste0("nn.cap.pred.",i)), NULL, min = 1, step = 1, value = 3),
-                         class = "mini-numeric-select")))))
+                          col_2(numericInput(ns(paste0("nn.cap.pred.",i)), NULL, min = 1, step = 1, value = 3),
+                          class = "mini-numeric-select")))))
   
   tagList(
     tabBoxPrmdt(
@@ -137,6 +136,12 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         updateSelectInput(session, "predic_var", choices = rev(colnames.empty(var.categoricas(updateData$datos))))
         
       }
+      
+      output$txt_cv <- renderPrint({
+        return(invisible(''))
+        
+        
+      })
     })
     
     observeEvent(input$btn_cv, {
@@ -170,7 +175,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
             MC.arboles      <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
             MC.bosques      <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
             MC.potenciacion <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
-            MC.xgboosting      <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
+            MC.xgboosting   <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
             MC.bayes        <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
             MC.regrLog      <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
             MC.regrLogP     <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
@@ -205,7 +210,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
               MC         <- confusion.matrix(ttesting, prediccion)
               MC.bosques <- MC.bosques + MC
               
-              modelo     <- train.gbm(var_, data = ttraining, distribution = "tdist", n.trees = 100, shrinkage = 0.1)
+              modelo     <- train.gbm(var_, data = ttraining, distribution = "tdist", n.trees = 100, shrinkage = 0.1, verbose = FALSE)
               prediccion <- predict(modelo, ttesting)
               MC         <- confusion.matrix(ttesting, prediccion)
               MC.potenciacion <- MC.potenciacion + MC
@@ -263,7 +268,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                        "xgboosting", "bayes", "regrLog", "regrLogP")
           M$MCs.cv     <- MCs.cv
           resultados   <- indices.cv(category, cant.vc, methods, MCs.cv)
-          result<<-resultados
+          result       <<- resultados
           M$grafico    <- resultados$grafico
           M$global     <- resultados$global
           M$categories <- resultados$categories
@@ -281,9 +286,9 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
           print(MCs.xgboosting)
           print("Bayes")
           print(MCs.bayes)
-          print("Regresión Logística")
+          print(tr("rl"))
           print(MCs.regrLog)
-          print("Regresión Logística Penalizada")
+          print(tr("rlr"))
           print(MCs.regrLogP)
           
         },error = function(e){
@@ -293,14 +298,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         
       })
     })
-    
-    output$txt_cv <- renderPrint({
-      if(M$times == 0){
-        M$times <- 1
-        return(invisible(''))
-      }
-      
-    })
+
     
     
     output$e_cv_glob  <-  renderEcharts4r({
@@ -367,83 +365,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         }
       }
     })
-    # 
-    # # Update Models Options
-    # output$opcModelsCV = renderUI({
-    #   idioma  <- codedioma$idioma
-    #   modelo  <- input$sel_methods
-    # 
-    #   opc_knn <- list(fluidRow(col_4(numericInput(ns("kmax.knn"), tr("kmax", idioma), min = 1,step = 1, value = 7)),
-    #                            col_4(selectInput(inputId = ns("kernel.knn.pred"), label = tr("selkernel", idioma),selected = 1,
-    #                                              choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
-    #                                                          "triweight", "cos","inv","gaussian"))),
-    #                            col_4(radioSwitchNP(ns("switch.scale.knn.pred"), "escal", c("si", "no"),idioma = idioma ))))
-    # 
-    #   opc_svm <- list(fluidRow(col_6(
-    #     radioSwitchNP(ns("switch.scale.svm.pred"), "escal", c("si", "no"),idioma = idioma )),
-    #     col_6(selectInput(inputId = ns("kernel.svm.pred"), label = tr("selkernel", idioma),selected = "radial",
-    #                       choices = c("linear", "polynomial", "radial", "sigmoid")))))
-    # 
-    #   opc_rf  <- list(fluidRow(col_6(numericInput(ns("ntree.rf.pred"), tr("numTree", idioma), 20, width = "100%", min = 0)),
-    #                            col_6(numericInput(ns("mtry.rf.pred"),  tr("numVars", idioma),1, width = "100%", min = 1))))
-    # 
-    #   opc_dt  <- list(fluidRow(col_4(numericInput(ns("minsplit.dt.pred"), tr("minsplit", idioma), 20, width = "100%",min = 1)),
-    #                            col_4(numericInput(ns("maxdepth.dt.pred"), tr("maxdepth", idioma), 15, width = "100%",min = 0, max = 30, step = 1)),
-    #                            col_4(selectInput(inputId = ns("split.dt.pred"), label = tr("splitIndex", idioma),selected = 1,
-    #                                              choices =  list("gini" = "gini", "Entropia" = "information")))))
-    #   opc_bayes <- list(tags$span())
-    # 
-    #   opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), tr("numTree", idioma), 20, width = "100%",min = 1)),
-    #                                     col_4(numericInput(ns("maxdepth.boosting.pred"),tr("maxdepth", idioma), 15, width = "100%",min = 1)),
-    #                                     col_4(numericInput(ns("minsplit.boosting.pred"),tr("minsplit", idioma), 20, width = "100%",min = 1))))
-    #   opc_rl  <- list(tags$span())
-    # 
-    #   opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = tr("selectAlg", idioma),selected = 1,
-    #                                              choices = list("Ridge" = 0, "Lasso" = 1))),
-    #                            col_6(radioSwitchNP(ns("switch.scale.rlr.pred"), "escal", c("si", "no"),idioma = idioma )))
-    #   )
-    # 
-    #   opc_xgb <- list(fluidRow(col_4(selectInput(inputId = ns("boosterXgb.pred"), label = tr("selbooster", idioma), selected = 1,
-    #                                              choices = c("gbtree", "gblinear", "dart"))),
-    #                            col_4(numericInput(ns("maxdepthXgb"), tr("maxdepth", idioma),  min = 1,  step = 1, value = 6)),
-    #                            col_4(numericInput(ns("nroundsXgb"),  tr("selnrounds", idioma), min = 0, step = 1, value = 50))))
-    # 
-    #   opc_nn <- list(fluidRow(col_4(numericInput(ns("threshold.nn"),tr("threshold", idioma),
-    #                                              min = 0,   step = 0.01, value = 0.05)),
-    #                           col_4(numericInput(ns("stepmax_nn"),tr("stepmax", idioma),
-    #                                              min = 100, step = 100,  value = 5000)),
-    #                           col_4(sliderInput(inputId = ns("cant.capas.nn.pred"), min = 1, max = 10,
-    #                                             label = tr("selectCapas", idioma), value = 3))),
-    #                  fluidRow(id = ns("capasFila"),lapply(1:10, function(i) tags$span(
-    #                    col_2(numericInput(ns(paste0("nn.cap.pred.",i)), NULL, min = 1, step = 1, value = 2),
-    #                          class = "mini-numeric-select")))))
-    # 
-    #   res <-  switch(modelo,
-    #                  knn   =  opc_knn,
-    #                  svm   =  opc_svm,
-    #                  rf    =  opc_rf,
-    #                  bayes =  opc_bayes,
-    #                  nn    =  opc_nn,
-    #                  ada   =  opc_potenciacion,
-    #                  xgb   =  opc_xgb,
-    #                  rl    =  opc_rl,
-    #                  rlr   =  opc_rlr,
-    #                  dt    =  opc_dt)
-    # 
-    #   if(!is.null(updateData$datos)){
-    #     updateSelectInput(session, "predic_var", choices = rev(colnames.empty(var.categoricas(updateData$datos))))
-    #     updateNumericInput(session, "kmax.knn", value = round(sqrt(nrow(updateData$datos))))
-    #     updateNumericInput(session, "mtry.rf.pred",  value = round(sqrt(ncol(updateData$datos) -1)))
-    #     updateSliderInput(session, "cant.capas.nn.pred", value = 2)
-    #     
-    # 
-    #   }
-    # 
-    #   res <-  do.call(tagList, res)
-    # 
-    #   return(res)
-    # })
-    # 
+    
     listar_parametros <- function(){
       isolate({
         k_kn         <-  input$kmax.knn 

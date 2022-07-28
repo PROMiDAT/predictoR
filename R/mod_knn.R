@@ -36,8 +36,8 @@ opc_knn <- div(conditionalPanel(
            div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                   choices =  "", width = "100%"))),
            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
-                                   width = "100%")))
-         ))))))
+                                   width = "100%"))))
+         )))))
 
   tagList(
     tabBoxPrmdt(
@@ -76,8 +76,7 @@ opc_knn <- div(conditionalPanel(
 mod_knn_server <- function(input, output, session, updateData, modelos, codedioma){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
-  #requireNamespace("traineR")
-  
+
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable <- updateData$variable.predecir
@@ -163,6 +162,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
+  
   # Genera la probabilidad de corte
   output$txtknnprob <- renderPrint({
     tryCatch({
@@ -171,7 +171,6 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       choices    <- levels(test[, variable])
       category   <- input$knn.sel
       paso       <- input$knn.by
-      kernel     <- paste0(".knn.",isolate(input$kernel.knn))
       prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -191,12 +190,10 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       choices    <- levels(test[, variable])
       category   <- input$cat_probC
       corte      <- input$val_probC
-      kernel     <- paste0(".knn.",isolate(input$kernel.knn))
       prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
-      return(invisible(""))  
     },error = function(e){
       showNotification(paste0("ERROR: ", e), type = "error")
       return(invisible(""))

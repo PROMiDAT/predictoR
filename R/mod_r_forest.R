@@ -12,7 +12,7 @@ mod_r_forest_ui <- function(id){
   
   opc_rf  <-     div(
     conditionalPanel(
-      "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo' || input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
+      "input['r_forest_ui_1-BoxRf'] == 'tabRfModelo' || input['r_forest_ui_1-BoxRf'] == 'tabRfRules' || input['r_forest_ui_1-BoxRf'] == 'tabRfProb' || input['r_forest_ui_1-BoxRf'] == 'tabRfProbInd'",
       tabsOptions(heights = c(70), tabs.content = list(
         list(
           conditionalPanel(
@@ -23,7 +23,23 @@ mod_r_forest_ui <- function(id){
           conditionalPanel(
             "input['r_forest_ui_1-BoxRf'] == 'tabRfRules'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
-            numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
+            numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)),
+          conditionalPanel(
+            "input['r_forest_ui_1-BoxRf'] == 'tabRfProb'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("rf.sel"),label = labelInput("selectCat"),
+                                   choices =  "", width = "100%"))),
+            div(col_12(numericInput(inputId = ns("rf.by"),label =  labelInput("selpaso"), value = -0.05,
+                                    width = "100%")))
+          ),
+          conditionalPanel(
+            "input['r_forest_ui_1-BoxRf'] == 'tabRfProbInd'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                   choices =  "", width = "100%"))),
+            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                    width = "100%")))
+          ))
       )))
   )
   
@@ -60,6 +76,12 @@ mod_r_forest_ui <- function(id){
       
       tabPanel(title = labelInput("reglas"), value = "tabRfRules",
                withLoader(verbatimTextOutput(ns("rulesRf")),
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probC"), value = "tabRfProbInd",
+               withLoader(verbatimTextOutput(ns("txtrfprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabRfProb",
+               withLoader(verbatimTextOutput(ns("txtrfprob")), 
                           type = "html", loader = "loader4"))
     )
   )
@@ -74,6 +96,16 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "rf.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "rf.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
   })
   
@@ -193,6 +225,47 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     })
   })
 
+  
+  # Genera la probabilidad de corte
+  output$txtrfprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$rf.sel
+      paso       <- input$rf.by
+      kernel     <- paste0(".rf.",isolate(input$kernel.rf))
+      prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtrfprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      kernel     <- paste0(".rf.",isolate(input$kernel.rf))
+      prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
   # Actualiza el código a la versión por defecto
   default.codigo.rf <- function(rf.def = FALSE){
     train  <- updateData$datos.aprendizaje

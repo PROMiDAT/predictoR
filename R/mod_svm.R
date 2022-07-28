@@ -12,7 +12,7 @@ mod_svm_ui <- function(id){
   
   opc_svm <-     div(
     conditionalPanel(
-      "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
+      "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot' || input['svm_ui_1-BoxSvm'] == 'tabsvmProb' || input['svm_ui_1-BoxSvm'] == 'tabsvmProbInd'",
       tabsOptions(heights = c(70), tabs.content = list(
         list(
           conditionalPanel(
@@ -27,7 +27,23 @@ mod_svm_ui <- function(id){
             "input['svm_ui_1-BoxSvm']  == 'tabSvmPlot'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             selectizeInput(ns("select_var_svm_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
-                           options = list(maxItems = 2, placeholder = ""), width = "100%")))
+                           options = list(maxItems = 2, placeholder = ""), width = "100%")),
+          conditionalPanel(
+            "input['svm_ui_1-BoxSvm'] == 'tabsvmProb'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("svm.sel"),label = labelInput("selectCat"),
+                                   choices =  "", width = "100%"))),
+            div(col_12(numericInput(inputId = ns("svm.by"),label =  labelInput("selpaso"), value = -0.05,
+                                    width = "100%")))
+          ),
+          conditionalPanel(
+            "input['svm_ui_1-BoxSvm'] == 'tabsvmProbInd'",
+            options.base(), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                   choices =  "", width = "100%"))),
+            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                    width = "100%")))
+          ))
       )))
   )
   tagList(
@@ -54,7 +70,13 @@ mod_svm_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("svmPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("svmErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("svmIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("svmIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("svmIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabsvmProbInd",
+               withLoader(verbatimTextOutput(ns("txtsvmprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabsvmProb",
+               withLoader(verbatimTextOutput(ns("txtsvmprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -69,7 +91,17 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    nombres <- colnames.empty(var.numericas(updateData$datos))
+    nombres  <- colnames.empty(var.numericas(updateData$datos))
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "svm.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "svm.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
     updateTabsetPanel(session, "BoxSvm",selected = "tabSvmModelo")
   })
@@ -85,7 +117,10 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     scales <- isolate(input$switch.scale.svm)
     k      <- isolate(input$kernel.svm)
     nombre <- paste0("svml-",k)
-    modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
+    scal <- scales
+    ker <- k
+    predecir <- as.formula(var)
+    modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k, probability = TRUE)
     pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     mc     <- confusion.matrix(test, pred)
@@ -138,6 +173,46 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
     }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
+  # Genera la probabilidad de corte
+  output$txtsvmprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$svm.sel
+      paso       <- input$svm.by
+      kernel     <- paste0(".svm.",isolate(input$kernel.svm))
+      prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  
+  # Genera la probabilidad de corte
+  output$txtsvmprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      kernel     <- paste0(".svm.",isolate(input$kernel.svm))
+      prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   # Update default code
   default.codigo.svm <- function() {
     kernel <- isolate(input$kernel.svm)

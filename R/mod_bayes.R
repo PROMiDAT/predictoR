@@ -13,10 +13,25 @@ mod_bayes_ui <- function(id){
   opciones <-   
     div(
       conditionalPanel(
-        "input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo'",
+        "input['bayes_ui_1-BoxBayes'] == 'tabBayesModelo' || input['bayes_ui_1-BoxBayes'] == 'tabBayesProb' || input['bayes_ui_1-BoxBayes'] == 'tabBayesProbInd'",
         tabsOptions(heights = c(70), tabs.content = list(
-          list(
-            options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;"))
+          list(conditionalPanel("input['bayes_ui_1-BoxBayes']   == 'tabKknModelo'",
+            options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;")),
+            conditionalPanel(
+              "input['bayes_ui_1-BoxBayes'] == 'tabBayesProb'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("bayes.sel"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("bayes.by"),label =  labelInput("selpaso"), value = -0.05,
+                                      width = "100%")))
+            ),
+            conditionalPanel(
+              "input['bayes_ui_1-BoxBayes'] == 'tabBayesProbInd'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                      width = "100%")))))
           
         )))
     )
@@ -41,7 +56,13 @@ mod_bayes_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("bayesPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("bayesErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("bayesIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("bayesIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("bayesIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabBayesProbInd",
+               withLoader(verbatimTextOutput(ns("txtbayesprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabBayesProb",
+               withLoader(verbatimTextOutput(ns("txtbayesprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -55,6 +76,16 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "bayes.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "bayes.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
   })
   
@@ -120,6 +151,44 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
     xtable(indices.error.table(indices.bayes,"bayes"))
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  
+  # Genera la probabilidad de corte
+  output$txtbayesprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$bayes.sel
+      paso       <- input$bayes.by
+      prediccion <- modelos$bayes[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtbayesprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$bayes[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
   
   #Código por defecto de bayes
   default.codigo.bayes <- function() {

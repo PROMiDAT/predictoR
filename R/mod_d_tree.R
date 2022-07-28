@@ -12,13 +12,30 @@ mod_d_tree_ui <- function(id){
   
   
   opc_dt <- div(conditionalPanel(
-                        "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo'",
+                        "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo' || input['d_tree_ui_1-BoxDt'] == 'tabDtProb' || input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
                         tabsOptions(heights = c(70), tabs.content = list(
-                          list(options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
+                          list(conditionalPanel("input['d_tree_ui_1-BoxDt']   == 'tabKknModelo'",
+                                                options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
                                fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
                                         col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
                                fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
-                                                           choices =  list("gini" = "gini", "Entropia" = "information")))))
+                                                           choices =  list("gini" = "gini", "Entropia" = "information"))))),
+                               conditionalPanel(
+                                 "input['d_tree_ui_1-BoxDt'] == 'tabDtProb'",
+                                 options.base(), tags$hr(style = "margin-top: 0px;"),
+                                 div(col_12(selectInput(inputId = ns("dt.sel"),label = labelInput("selectCat"),
+                                                        choices =  "", width = "100%"))),
+                                 div(col_12(numericInput(inputId = ns("dt.by"),label =  labelInput("selpaso"), value = -0.05,
+                                                         width = "100%")))
+                               ),
+                               conditionalPanel(
+                                 "input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
+                                 options.base(), tags$hr(style = "margin-top: 0px;"),
+                                 div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                                        choices =  "", width = "100%"))),
+                                 div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                                         width = "100%")))
+                               ))
                           ))))
   
   tagList(
@@ -49,6 +66,12 @@ mod_d_tree_ui <- function(id){
       
       tabPanel(title = labelInput("reglas"),value = "tabDtReglas",
                withLoader(verbatimTextOutput(ns("rulesDt")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probC"), value = "tabDtProbInd",
+               withLoader(verbatimTextOutput(ns("txtdtprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabDtProb",
+               withLoader(verbatimTextOutput(ns("txtdtprob")), 
                           type = "html", loader = "loader4"))
     )
   )
@@ -63,6 +86,16 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "dt.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "dt.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
   })
 
@@ -167,6 +200,46 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     rpart.plot::rpart.rules(model, cover = TRUE,nn = TRUE ,roundint=FALSE, style = "tall", digits=3, 
                             response.name = paste0("Rule Number - ", var))
     
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtdtprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$dt.sel
+      paso       <- input$dt.by
+      kernel     <- paste0(".dt.",isolate(input$kernel.dt))
+      prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtdtprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      kernel     <- paste0(".dt.",isolate(input$kernel.dt))
+      prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
   })
   
   # Actualiza el código a la versión por defecto

@@ -13,7 +13,7 @@ mod_boosting_ui <- function(id){
   opciones <-   
     div(
       conditionalPanel(
-        "input['boosting_ui_1-BoxB'] == 'tabBModelo' || input['boosting_ui_1-BoxB'] == 'tabBRules'",
+        "input['boosting_ui_1-BoxB'] == 'tabBModelo' || input['boosting_ui_1-BoxB'] == 'tabBRules' || input['boosting_ui_1-BoxB'] == 'tabBProb' || input['boosting_ui_1-BoxB'] == 'tabBProbInd'",
         tabsOptions(heights = c(70), tabs.content = list(
           list(
             conditionalPanel(
@@ -26,7 +26,22 @@ mod_boosting_ui <- function(id){
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBRules'",
               options.base(), tags$hr(style = "margin-top: 0px;"),
-              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)))
+              numericInput(ns("rules.b.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)),
+            conditionalPanel(
+              "input['boosting_ui_1-BoxB'] == 'tabBProb'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("boost.sel"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("boost.by"),label =  labelInput("selpaso"), value = -0.05,
+                                      width = "100%")))
+            ),
+            conditionalPanel(
+              "input['boosting_ui_1-BoxB'] == 'tabBProbInd'",
+              options.base(), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                      width = "100%")))))
           
         )))
     )
@@ -62,7 +77,13 @@ mod_boosting_ui <- function(id){
                fluidRow(col_12(shiny::tableOutput(ns("boostingIndErrTable"))))),
       
       tabPanel(title = labelInput("reglas"), value = "tabBRules",
-               verbatimTextOutput(ns("rulesB")))
+               verbatimTextOutput(ns("rulesB"))),
+      tabPanel(title = labelInput("probC"), value = "tabBProbInd",
+               withLoader(verbatimTextOutput(ns("txtboostprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabBProb",
+               withLoader(verbatimTextOutput(ns("txtboostprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -76,8 +97,19 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "boost.sel", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "boost.sel", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "BoxB",selected = "tabBModelo")
-    #default.codigo.boosting()
+    
+    
   })
   
   # Genera el texto del modelo, predicción y mc de boosting
@@ -159,6 +191,43 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
       stop(tr("NoDRule", codedioma$idioma))
     }
   )})
+  
+  # Genera la probabilidad de corte
+  output$txtboostprob <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$boost.sel
+      paso       <- input$boost.by
+      prediccion <- modelos$boosting[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtboostprobInd <- renderPrint({
+    tryCatch({
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- input$cat_probC
+      corte      <- input$val_probC
+      prediccion <- modelos$boosting[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values.ind(Score, Clase, choices, category, corte) 
+    },error = function(e){
+      showNotification(paste0("ERROR: ", e), type = "error")
+      return(invisible(""))
+    })
+  })
   
   # Actualiza el código a la versión por defecto
   default.codigo.boosting <- function() {
