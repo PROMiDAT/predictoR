@@ -194,15 +194,15 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   default.codigo.bayes <- function() {
     
     #Modelo
-    codigo <- bayes.modelo(updateData$variable.predecir)
+    codigo <- codigo.modelo("bayes", updateData$variable.predecir)
     cod    <- paste0("### Bayes\n",codigo)
 
     #Predicción
-    codigo <- bayes.prediccion()
+    codigo <- codigo.prediccion("bayes")
     cod  <- paste0(cod,codigo)
     
     #Matríz de Confusión
-    codigo <- bayes.MC()
+    codigo <- codigo.MC("bayes")
     cod  <- paste0(cod,codigo)
     
     #Indices generales

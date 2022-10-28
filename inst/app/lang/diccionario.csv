@@ -82,6 +82,7 @@ knnl;K Vecinos Más Cercanos;K Nearest Neighbors
 kmax;K Máximo:;K Max:
 landa;Seleccionar Log(λ):;Select Log(λ):
 lambda;Log(λ);Log(λ)
+lda;Análisis Discriminante Lineal;Linear Discriminant Analysis
 limitLambda;Lambda seleccionado fuera del rango;Lambda selected  out of range
 limitModel;Este modelo solo se puede aplicar a variables binarias;This model can only be applied to binary variables
 manual;Manual;Manual
@@ -123,6 +124,7 @@ propP;Partición de Prueba;Test partition:
 punto;Punto;Point
 puntocoma;Punto y coma;Semicolon
 pvalue;P-valor (Shapiro);P-value (Shapiro)
+qda;Análisis Discriminante Cuadrático;Quadratic Discriminant Analysis
 q1;Primer Cuartil;First Quartile
 q3;Tercer Cuartil;Third Quartile
 salida;Salida R;R Output 

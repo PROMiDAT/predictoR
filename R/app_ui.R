@@ -41,7 +41,7 @@ app_ui <- function(request) {
             </a>
           </span>',
           '<img src= "img/logo_small.png" height = 50%, width = "120%">'
-        )), controlbarIcon = icon("cogs")
+        )), controlbarIcon = icon("gears")
       ),
       dashboardSidebar(
         sidebarMenu(
@@ -50,7 +50,7 @@ app_ui <- function(request) {
           menuItem(labelInput("data"), icon = icon("database"),
                    tabName = "cargar"),
           menuItem(labelInput("basico"), tabName = "parte1",
-                   icon = icon("th-list"),
+                   icon = icon("square-poll-vertical"),
                    menuSubItem(labelInput("resumen"), "resumen",
                                icon = icon("sort-numeric-down")),
                    menuSubItem(labelInput("normalidad"), "normalidad",
@@ -85,11 +85,15 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("rl"),tabName = "rl",
                                icon = icon("chart-line")),
                    menuSubItem(labelInput("rlr"),tabName = "rlr",
-                               icon = icon("wave-square"))),
+                               icon = icon("wave-square")),
+                   menuSubItem(labelInput("lda"),tabName = "lda",
+                               icon = icon("chart-gantt")),
+                   menuSubItem(labelInput("qda"),tabName = "qda",
+                               icon = icon("square-root-variable"))),
           menuItem(labelInput("comparacion"), tabName = "comparar", #balance-scale
                    icon = icon("balance-scale")),
           menuItem(labelInput("crossval"), tabName = "validacion",#server, award battle-net brain bug buffer check-circle chart-line chart-bar
-                   icon = icon("cogs"),
+                   icon = icon("gears"),
                    menuSubItem(labelInput("knnl"),tabName = "cv_knn",
                                icon = icon("dot-circle")),
                    menuSubItem(labelInput("svml"),tabName = "cv_svm",
@@ -101,7 +105,7 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("rlr"),tabName = "cv_rlr",
                                icon = icon("wave-square")),
                    menuSubItem(labelInput("crossval"),tabName = "cv_cv",
-                               icon = icon("cogs"))),
+                               icon = icon("gears"))),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
@@ -187,7 +191,15 @@ app_ui <- function(request) {
           
           # Penalized Logistic Regression
           tabItem(tabName = "rlr", 
-                  mod_penalized_l_r_ui("penalized_l_r_ui_1")),
+                  mod_penalized_l_r_ui("penalized_l_r_ui_1")), 
+          
+          # Linear Discriminant Analysis
+          tabItem(tabName = "lda", 
+                  mod_lda_ui("lda_ui_1")),
+          
+          # Quadratic Discriminant Analysis
+          tabItem(tabName = "qda", 
+                  mod_qda_ui("qda_ui_1")),
           
           # Comparación de Modelos
           tabItem(tabName = "comparar", 

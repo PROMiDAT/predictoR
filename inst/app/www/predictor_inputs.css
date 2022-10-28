@@ -2,7 +2,7 @@
     width: 100%;
 }
 /*tamaño minimo para el campo de texto de las matrices de confusion*/
-#knn_ui_1-txtknnMC, #svm_ui_1-txtSvmMC, #d_tree_ui_1-txtDtMC, #r_forest_ui_1-txtRfMC, #boosting_ui_1-txtBoostingMC,  #bayes_ui_1-txtbayesMC, #xgboosting_ui_1-txtxgbMC, #neural_net_ui_1-txtnnMC,  #l_regression_ui_1-txtrlMC,  #penalized_l_r_ui_1-txtrlrMC{
+#knn_ui_1-txtknnMC, #svm_ui_1-txtSvmMC, #d_tree_ui_1-txtDtMC, #r_forest_ui_1-txtRfMC, #boosting_ui_1-txtBoostingMC,  #bayes_ui_1-txtbayesMC, #xgboosting_ui_1-txtxgbMC, #neural_net_ui_1-txtnnMC,  #l_regression_ui_1-txtrlMC,  #penalized_l_r_ui_1-txtrlrMC,  #lda_ui_1-txtldaMC,  #qda_ui_1-txtqdaMC{
   min-height: 100px !important;
 }
 

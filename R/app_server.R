@@ -87,7 +87,7 @@ app_server <- function( input, output, session ) {
       'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
       'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol', 
       'xgb', 'docImpV', 'rfl', 'docpot', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
-      'posibLanda', 'gcoeff', 'betas')
+      'posibLanda', 'gcoeff', 'betas', 'qda', 'lda')
     
     for (k in keys) {
       codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
@@ -175,6 +175,8 @@ app_server <- function( input, output, session ) {
   callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData, modelos, codedioma)
   callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData, modelos, codedioma)
   callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData, modelos, codedioma)
+  callModule(mod_lda_server,            "lda_ui_1",            updateData, modelos, codedioma)
+  callModule(mod_qda_server,            "qda_ui_1",            updateData, modelos, codedioma)
   
   #Comparación de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos, codedioma)

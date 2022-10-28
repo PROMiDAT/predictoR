@@ -12,7 +12,7 @@ mod_svm_ui <- function(id){
   
   opc_svm <-     div(
     conditionalPanel(
-      "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot' || input['svm_ui_1-BoxSvm'] == 'tabsvmProb' || input['svm_ui_1-BoxSvm'] == 'tabsvmProbInd'",
+      "input['svm_ui_1-BoxSvm']   == 'tabSvmModelo' || input['svm_ui_1-BoxSvm']  == 'tabSvmPlot' || input['svm_ui_1-BoxSvm'] == 'tabSvmProb' || input['svm_ui_1-BoxSvm'] == 'tabSvmProbInd'",
       tabsOptions(heights = c(70), tabs.content = list(
         list(
           conditionalPanel(
@@ -29,7 +29,7 @@ mod_svm_ui <- function(id){
             selectizeInput(ns("select_var_svm_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
                            options = list(maxItems = 2, placeholder = ""), width = "100%")),
           conditionalPanel(
-            "input['svm_ui_1-BoxSvm'] == 'tabsvmProb'",
+            "input['svm_ui_1-BoxSvm'] == 'tabSvmProb'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             div(col_12(selectInput(inputId = ns("svm.sel"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
@@ -37,7 +37,7 @@ mod_svm_ui <- function(id){
                                     width = "100%")))
           ),
           conditionalPanel(
-            "input['svm_ui_1-BoxSvm'] == 'tabsvmProbInd'",
+            "input['svm_ui_1-BoxSvm'] == 'tabSvmProbInd'",
             options.base(), tags$hr(style = "margin-top: 0px;"),
             div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
@@ -59,11 +59,11 @@ mod_svm_ui <- function(id){
       
       tabPanel(title = labelInput("predm"), value = "tabSvmPred",
                withLoader(DT::dataTableOutput(ns("svmPrediTable")), 
-               type = "html", loader = "loader4")),
+                          type = "html", loader = "loader4")),
       
       tabPanel(title = labelInput("mc"), value = "tabSvmMC",
                withLoader(plotOutput(ns('plot_svm_mc'), height = "45vh"), 
-               type = "html", loader = "loader4"),
+                          type = "html", loader = "loader4"),
                verbatimTextOutput(ns("txtSvmMC"))),
       
       tabPanel(title = labelInput("indices"), value = "tabSvmIndex",
@@ -71,16 +71,16 @@ mod_svm_ui <- function(id){
                         col_6(echarts4rOutput(ns("svmErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("svmIndPrecTable")))),
                fluidRow(col_12(shiny::tableOutput(ns("svmIndErrTable"))))),
-      tabPanel(title = labelInput("probC"), value = "tabsvmProbInd",
+      tabPanel(title = labelInput("probC"), value = "tabSvmProbInd",
                withLoader(verbatimTextOutput(ns("txtsvmprobInd")), 
                           type = "html", loader = "loader4")),
-      tabPanel(title = labelInput("probCstep"), value = "tabsvmProb",
+      tabPanel(title = labelInput("probCstep"), value = "tabSvmProb",
                withLoader(verbatimTextOutput(ns("txtsvmprob")), 
                           type = "html", loader = "loader4"))
     )
   )
 }
-    
+
 #' svm Server Function
 #'
 #' @noRd 
@@ -91,7 +91,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    nombres  <- colnames.empty(var.numericas(updateData$datos))
+    nombres <- colnames.empty(var.numericas(updateData$datos))
     variable <- updateData$variable.predecir
     datos    <- updateData$datos
     choices  <- as.character(unique(datos[, variable]))
@@ -105,28 +105,25 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
     updateTabsetPanel(session, "BoxSvm",selected = "tabSvmModelo")
   })
-
+  
   # Update model text
   output$txtSvm <- renderPrint({
     input$runSvm
     default.codigo.svm()
     tryCatch({
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
-    var    <- paste0(updateData$variable.predecir, "~.")
-    scales <- isolate(input$switch.scale.svm)
-    k      <- isolate(input$kernel.svm)
-    nombre <- paste0("svml-",k)
-    scal <- scales
-    ker <- k
-    predecir <- as.formula(var)
-    modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k, probability = TRUE)
-    pred   <- predict(modelo , test, type = 'class')
-    prob   <- predict(modelo , test, type = 'prob')
-    mc     <- confusion.matrix(test, pred)
-    isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
-    nombre.modelo$x <- nombre
-    print(modelo)
+      train  <- updateData$datos.aprendizaje
+      test   <- updateData$datos.prueba
+      var    <- paste0(updateData$variable.predecir, "~.")
+      scales <- isolate(input$switch.scale.svm)
+      k      <- isolate(input$kernel.svm)
+      nombre <- paste0("svml-",k)
+      modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
+      pred   <- predict(modelo , test, type = 'class')
+      prob   <- predict(modelo , test, type = 'prob')
+      mc     <- confusion.matrix(test, pred)
+      isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
+      nombre.modelo$x <- nombre
+      print(modelo)
     },error = function(e){
       return(invisible(""))
     })
@@ -138,7 +135,7 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     var    <- updateData$variable.predecir
     idioma <- codedioma$idioma
     obj.predic(modelos$svm[[nombre.modelo$x]]$pred,idioma = idioma, test, var)  
-    },server = FALSE)
+  },server = FALSE)
   
   # Update confusion matrix text
   output$txtSvmMC    <- renderPrint({
@@ -154,11 +151,11 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
   # Update indexes table
   output$svmIndPrecTable <- shiny::renderTable({
-    idioma <- codedioma$idioma
+    idioma      <- codedioma$idioma
     indices.svm <- indices.generales(modelos$svm[[nombre.modelo$x]]$mc)
     
     xtable(indices.prec.table(indices.svm,"SVM", idioma = idioma))
-    }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   
   # Update error table
@@ -170,8 +167,8 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     output$svmErrorGlob <-  renderEcharts4r(e_global_gauge(round(indices.svm[[2]],2), tr("errG",idioma),  "#E39191", "#C46868"))
     
     xtable(indices.error.table(indices.svm,"SVM"))
-  
-    }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
+    
+  }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
   # Genera la probabilidad de corte
   output$txtsvmprob <- renderPrint({
@@ -181,7 +178,6 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       choices    <- levels(test[, variable])
       category   <- input$svm.sel
       paso       <- input$svm.by
-      kernel     <- paste0(".svm.",isolate(input$kernel.svm))
       prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -193,7 +189,6 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     })
   })
   
-  
   # Genera la probabilidad de corte
   output$txtsvmprobInd <- renderPrint({
     tryCatch({
@@ -202,17 +197,18 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       choices    <- levels(test[, variable])
       category   <- input$cat_probC
       corte      <- input$val_probC
-      kernel     <- paste0(".svm.",isolate(input$kernel.svm))
       prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
+      return(invisible(""))  
     },error = function(e){
       showNotification(paste0("ERROR: ", e), type = "error")
       return(invisible(""))
       
     })
   })
+  
   # Update default code
   default.codigo.svm <- function() {
     kernel <- isolate(input$kernel.svm)
@@ -225,16 +221,16 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     
     # Se genera el código de la predicción
     codigo <- svm.prediccion(kernel)
-    cod  <- paste0(cod,codigo)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- svm.MC(kernel)
-    cod  <- paste0(cod,codigo)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
-    cod  <- paste0(cod,codigo)
+    codigo <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
+    cod    <- paste0(cod,codigo)
     
     isolate(codedioma$code <- append(codedioma$code, cod))
     
@@ -252,30 +248,30 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       var2      <- paste(variables, collapse = "~") 
       k         <- isolate(input$kernel.svm)
       cod       <- svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k)
-      cod  <- paste0("### gclasificacion\n",cod)
+      cod       <- paste0("### gclasificacion\n",cod)
       
       if (length(variables) == 2){
-      isolate(codedioma$code <- append(codedioma$code, cod))
-      modelo.svm.temp <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
-      slices <- lapply(1:(ncol(datos)-1),function(i) i)
-      names(slices) <- colnames(datos[, -which(colnames(datos) == variable)])
-      plot(modelo.svm.temp, datos, as.formula(var2), slice = slices)
-      }else{
-        return(NULL)
-
+        isolate(codedioma$code <- append(codedioma$code, cod))
+        modelo.svm.temp        <- traineR::train.svm(as.formula(var) , data = train, kernel = k) 
+        slices <- lapply(1:(ncol(datos)-1),function(i) i)
+        names(slices) <- colnames(datos[, -which(colnames(datos) == variable)])
+        plot(modelo.svm.temp, datos, as.formula(var2), slice = slices)
       }
-      },error = function(e){
-        showNotification(e,
-                         duration = 10,
-                         type = "error")
+      else{
         return(NULL)
-      })
+      }
+    },error = function(e){
+      showNotification(e,
+                       duration = 10,
+                       type = "error")
+      return(NULL)
+    })
   })
 }
-    
+
 ## To be copied in the UI
 # mod_svm_ui("svm_ui_1")
-    
+
 ## To be copied in the server
 # callModule(mod_svm_server, "svm_ui_1")
- 
+

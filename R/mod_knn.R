@@ -211,23 +211,23 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     }
 
     kernel <-  isolate(input$kernel.knn)
-    codigo <- code.kkn.modelo(updateData$variable.predecir, isolate(input$switch.scale.knn), k.value, kernel = kernel)
+    codigo <-  code.kkn.modelo(updateData$variable.predecir, isolate(input$switch.scale.knn), k.value, kernel = kernel)
 
     cod  <- paste0("### knnl\n",codigo)
     
     # Se genera el código de la prediccion
-    codigo       <- kkn.prediccion(kernel = kernel)
+    codigo       <- codigo.prediccion("knn",  kernel)
 
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
-    codigo       <- knn.MC(kernel = kernel)
+    codigo       <- codigo.MC("knn",  kernel)
     cod  <- paste0(cod,codigo)
     
     # Se genera el código de la indices
-    codigo       <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.knn.",kernel,")\n")
-    cod  <- paste0(cod,codigo)
+    codigo <- extract.code("indices.generales")
+    codigo <- paste0(codigo,"\nindices.generales(MC.knn.",kernel,")\n")
+    cod    <- paste0(cod,codigo)
     isolate(codedioma$code <- append(codedioma$code, cod))
     
   }

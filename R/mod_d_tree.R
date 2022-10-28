@@ -12,31 +12,34 @@ mod_d_tree_ui <- function(id){
   
   
   opc_dt <- div(conditionalPanel(
-                        "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo' || input['d_tree_ui_1-BoxDt'] == 'tabDtProb' || input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
-                        tabsOptions(heights = c(70), tabs.content = list(
-                          list(conditionalPanel("input['d_tree_ui_1-BoxDt']   == 'tabKknModelo'",
-                                                options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
-                               fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
-                                        col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
-                               fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
-                                                           choices =  list("gini" = "gini", "Entropia" = "information"))))),
-                               conditionalPanel(
-                                 "input['d_tree_ui_1-BoxDt'] == 'tabDtProb'",
-                                 options.base(), tags$hr(style = "margin-top: 0px;"),
-                                 div(col_12(selectInput(inputId = ns("dt.sel"),label = labelInput("selectCat"),
-                                                        choices =  "", width = "100%"))),
-                                 div(col_12(numericInput(inputId = ns("dt.by"),label =  labelInput("selpaso"), value = -0.05,
-                                                         width = "100%")))
-                               ),
-                               conditionalPanel(
-                                 "input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
-                                 options.base(), tags$hr(style = "margin-top: 0px;"),
-                                 div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
-                                                        choices =  "", width = "100%"))),
-                                 div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
-                                                         width = "100%")))
-                               ))
-                          ))))
+    "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo' || input['d_tree_ui_1-BoxDt'] == 'tabDtProb' || input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
+    tabsOptions(heights = c(70), tabs.content = list(
+      list(
+        conditionalPanel(
+          "input['d_tree_ui_1-BoxDt']   == 'tabDtModelo'",
+          options.run(ns("runDt")), tags$hr(style = "margin-top: 0px;"),
+          fluidRow(col_6(numericInput(ns("minsplit.dt"), labelInput("minsplit"), 2, width = "100%",min = 1)),
+                   col_6(numericInput(ns("maxdepth.dt"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1))),
+          fluidRow(col_12(selectInput(inputId = ns("split.dt"), label = labelInput("splitIndex"),selected = 1,
+                                      choices =  list("gini" = "gini", "Entropia" = "information"))))),
+        conditionalPanel(
+          "input['d_tree_ui_1-BoxDt'] == 'tabDtProb'",
+          options.base(), tags$hr(style = "margin-top: 0px;"),
+          div(col_12(selectInput(inputId = ns("dt.sel"),label = labelInput("selectCat"),
+                                 choices =  "", width = "100%"))),
+          div(col_12(numericInput(inputId = ns("dt.by"),label =  labelInput("selpaso"), value = -0.05,
+                                  width = "100%")))
+        ),
+        conditionalPanel(
+          "input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
+          options.base(), tags$hr(style = "margin-top: 0px;"),
+          div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                 choices =  "", width = "100%"))),
+          div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+                                  width = "100%")))
+        )
+        
+      )))))
   
   tagList(
     tabBoxPrmdt(
@@ -76,7 +79,7 @@ mod_d_tree_ui <- function(id){
     )
   )
 }
-    
+
 #' d_tree Server Function
 #'
 #' @noRd 
@@ -86,6 +89,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    
     variable <- updateData$variable.predecir
     datos    <- updateData$datos
     choices  <- as.character(unique(datos[, variable]))
@@ -98,30 +102,30 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     }
     updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
   })
-
+  
   
   # Genera el texto del modelo, predicción y mc de DT
   output$txtDt <- renderPrint({
     input$runDt
     tryCatch({
-    default.codigo.dt()
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
-    var    <- paste0(updateData$variable.predecir, "~.")
-    tipo   <- isolate(input$split.dt)
-    minsplit<-isolate(input$minsplit.dt)
-    maxdepth<-isolate(input$maxdepth.dt)
-    nombre <- paste0("dtl-",tipo)
-    modelo <- traineR::train.rpart(as.formula(var), data = train,
-                                   control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
-    pred   <- predict(modelo , test, type = 'class')
-    prob   <- predict(modelo , test, type = 'prob')
-    mc     <- confusion.matrix(test, pred)
-    isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
-    nombre.modelo$x <- nombre
-    print(modelo)
-  },error = function(e){
-    return(invisible(""))
+      default.codigo.dt()
+      train  <- updateData$datos.aprendizaje
+      test   <- updateData$datos.prueba
+      var    <- paste0(updateData$variable.predecir, "~.")
+      tipo   <- isolate(input$split.dt)
+      minsplit<-isolate(input$minsplit.dt)
+      maxdepth<-isolate(input$maxdepth.dt)
+      nombre <- paste0("dtl-",tipo)
+      modelo <- traineR::train.rpart(as.formula(var), data = train,
+                                     control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
+      pred   <- predict(modelo , test, type = 'class')
+      prob   <- predict(modelo , test, type = 'prob')
+      mc     <- confusion.matrix(test, pred)
+      isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
+      nombre.modelo$x <- nombre
+      print(modelo)
+    },error = function(e){
+      return(invisible(""))
     })
   })
   
@@ -202,6 +206,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     
   })
   
+  
   # Genera la probabilidad de corte
   output$txtdtprob <- renderPrint({
     tryCatch({
@@ -210,7 +215,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       choices    <- levels(test[, variable])
       category   <- input$dt.sel
       paso       <- input$dt.by
-      kernel     <- paste0(".dt.",isolate(input$kernel.dt))
       prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -230,17 +234,18 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       choices    <- levels(test[, variable])
       category   <- input$cat_probC
       corte      <- input$val_probC
-      kernel     <- paste0(".dt.",isolate(input$kernel.dt))
       prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
+      return(invisible(""))  
     },error = function(e){
       showNotification(paste0("ERROR: ", e), type = "error")
       return(invisible(""))
       
     })
   })
+  
   
   # Actualiza el código a la versión por defecto
   default.codigo.dt <- function() {
@@ -252,7 +257,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
                         split = tipo)
     cod  <- paste0("### dtl\n",codigo)
     
-
+    
     # Se genera el código de la predicción
     codigo <- dt.prediccion(tipo)
     cod  <- paste0(cod,codigo)
@@ -270,10 +275,10 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     
   }
 }
-    
+
 ## To be copied in the UI
 # mod_d_tree_ui("d_tree_ui_1")
-    
+
 ## To be copied in the server
 # callModule(mod_d_tree_server, "d_tree_ui_1")
- 
+

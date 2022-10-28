@@ -43,7 +43,7 @@ mod_r_forest_ui <- function(id){
       )))
   )
   
-
+  
   tagList(
     tabBoxPrmdt(
       id = ns("BoxRf"),opciones = opc_rf,
@@ -86,7 +86,7 @@ mod_r_forest_ui <- function(id){
     )
   )
 }
-    
+
 #' r_forest Server Function
 #'
 #' @noRd 
@@ -96,6 +96,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
+    
     variable <- updateData$variable.predecir
     datos    <- updateData$datos
     choices  <- as.character(unique(datos[, variable]))
@@ -113,21 +114,21 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   output$txtRf <- renderPrint({
     input$runRf
     tryCatch({
-    default.codigo.rf()
-    train  <- updateData$datos.aprendizaje
-    test   <- updateData$datos.prueba
-    var    <- paste0(updateData$variable.predecir, "~.")
-    mtry   <- isolate(input$mtry.rf)
-    ntree  <- isolate(input$ntree.rf)
-    nombre <- paste0("rfl")
-    
-    modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE)
-    pred   <- predict(modelo , test, type = 'class')
-    prob   <- predict(modelo , test, type = 'prob')
-    mc     <- confusion.matrix(test, pred)
-    isolate(modelos$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
-    nombre.modelo$x <- nombre
-    print(modelo)
+      default.codigo.rf()
+      train  <- updateData$datos.aprendizaje
+      test   <- updateData$datos.prueba
+      var    <- paste0(updateData$variable.predecir, "~.")
+      mtry   <- isolate(input$mtry.rf)
+      ntree  <- isolate(input$ntree.rf)
+      nombre <- paste0("rfl")
+      
+      modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE)
+      pred   <- predict(modelo , test, type = 'class')
+      prob   <- predict(modelo , test, type = 'prob')
+      mc     <- confusion.matrix(test, pred)
+      isolate(modelos$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+      nombre.modelo$x <- nombre
+      print(modelo)
     },error = function(e){
       return(invisible(""))
     })
@@ -186,7 +187,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       
       rulesRandomForest(modelo, n)
     },error = function(e){
-             stop(tr("NoDRule", idioma))
+      stop(tr("NoDRule", idioma))
     })
   })
   
@@ -224,7 +225,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       return(NULL)
     })
   })
-
+  
   
   # Genera la probabilidad de corte
   output$txtrfprob <- renderPrint({
@@ -234,7 +235,6 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       choices    <- levels(test[, variable])
       category   <- input$rf.sel
       paso       <- input$rf.by
-      kernel     <- paste0(".rf.",isolate(input$kernel.rf))
       prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -254,11 +254,11 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       choices    <- levels(test[, variable])
       category   <- input$cat_probC
       corte      <- input$val_probC
-      kernel     <- paste0(".rf.",isolate(input$kernel.rf))
       prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
+      return(invisible(""))  
     },error = function(e){
       showNotification(paste0("ERROR: ", e), type = "error")
       return(invisible(""))
@@ -289,7 +289,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     codigo <- rf.prediccion()
     cod  <- paste0(cod,codigo)
     
-
+    
     # Se genera el código de la matriz
     codigo <- rf.MC()
     cod  <- paste0(cod,codigo)
@@ -305,10 +305,10 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     isolate(codedioma$code <- append(codedioma$code, cod))
   }
 }
-    
+
 ## To be copied in the UI
 # mod_r_forest_ui("r_forest_ui_1")
-    
+
 ## To be copied in the server
 # callModule(mod_r_forest_server, "r_forest_ui_1")
- 
+
