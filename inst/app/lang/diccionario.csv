@@ -30,6 +30,7 @@ correlacion;Correlación;Correlation
 curvanormal;Curva Normal;Normal Curve
 eliminana;Acción para Datos Ausentes (NAs);Action for Missing Data (NAs)
 errG;Error Global;Global Error
+errorprobC;Solo se aplica cuando la variable a predecir posee 2 categorías.;It only applies when the variable to predict has 2 categories.
 errorcat;Se necesitan variables categóricas  para esta parte.;You need categorical variables for this part.
 errornum;Se necesitan variables numéricas  para esta parte.;You need numerical variables for this part.
 ErrorModelo;Aún no genera el modelo;The model has not yet been generated
@@ -83,6 +84,7 @@ kmax;K Máximo:;K Max:
 landa;Seleccionar Log(λ):;Select Log(λ):
 lambda;Log(λ);Log(λ)
 lda;Análisis Discriminante Lineal;Linear Discriminant Analysis
+adl;Análisis Discriminante Lineal;Linear Discriminant Analysis
 limitLambda;Lambda seleccionado fuera del rango;Lambda selected  out of range
 limitModel;Este modelo solo se puede aplicar a variables binarias;This model can only be applied to binary variables
 manual;Manual;Manual
@@ -125,6 +127,7 @@ punto;Punto;Point
 puntocoma;Punto y coma;Semicolon
 pvalue;P-valor (Shapiro);P-value (Shapiro)
 qda;Análisis Discriminante Cuadrático;Quadratic Discriminant Analysis
+adc;Análisis Discriminante Cuadrático;Quadratic Discriminant Analysis
 q1;Primer Cuartil;First Quartile
 q3;Tercer Cuartil;Third Quartile
 salida;Salida R;R Output 

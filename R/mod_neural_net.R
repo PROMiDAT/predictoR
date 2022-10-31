@@ -245,39 +245,7 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
     })
   })
   
-  # Actualiza el código a la versión por defecto
-  default.codigo.nn <- function(){
-    #Modelo
-    codigo <- nn.modelo(updateData$variable.predecir,
-                        isolate(input$threshold.nn),
-                        isolate(input$stepmax.nn),
-                        isolate(input$cant.capas.nn),
-                        isolate(input$nn.cap.1),isolate(input$nn.cap.2),
-                        isolate(input$nn.cap.3),isolate(input$nn.cap.4),
-                        isolate(input$nn.cap.5),isolate(input$nn.cap.6),
-                        isolate(input$nn.cap.7),isolate(input$nn.cap.8),
-                        isolate(input$nn.cap.9),isolate(input$nn.cap.10))
-    cod  <- paste0("### nN\n",codigo)
-    
-    #Predicción
-    codigo <- nn.prediccion()
-    cod  <- paste0(cod,codigo)
-    
-    #Matriz de Confusión
-    codigo <- nn.MC()
-    cod  <- paste0(cod,codigo)
-    
-    #Indices Generales
-    codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.nn)\n")
-    cod  <- paste0(cod,codigo)
-    
-    #Neuralnet PLot
-    cod  <- paste0(cod,"### redPlot\n", nn.plot())
-    
-    isolate(codedioma$code <- append(codedioma$code, cod))
-  }
-  
+
   #Genera el gráfico de la red neuronal
   output$plot_nn <- renderPlot({
     idioma <- codedioma$idioma
@@ -305,6 +273,40 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
       return(NULL)
     })
   })
+  
+  # Actualiza el código a la versión por defecto
+  default.codigo.nn <- function(){
+    #Modelo
+    codigo <- nn.modelo(updateData$variable.predecir,
+                        isolate(input$threshold.nn),
+                        isolate(input$stepmax.nn),
+                        isolate(input$cant.capas.nn),
+                        isolate(input$nn.cap.1),isolate(input$nn.cap.2),
+                        isolate(input$nn.cap.3),isolate(input$nn.cap.4),
+                        isolate(input$nn.cap.5),isolate(input$nn.cap.6),
+                        isolate(input$nn.cap.7),isolate(input$nn.cap.8),
+                        isolate(input$nn.cap.9),isolate(input$nn.cap.10))
+    cod  <- paste0("### nN\n",codigo)
+    
+    #Predicción
+    codigo <- codigo.prediccion("neuralnet")
+    cod  <- paste0(cod,codigo)
+    
+    #Matríz de Confusión
+    codigo <- codigo.MC("neuralnet")
+    cod  <- paste0(cod,codigo)
+    
+    #Indices Generales
+    codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.nn)\n")
+    cod  <- paste0(cod,codigo)
+    
+    #Neuralnet PLot
+    cod  <- paste0(cod,"### redPlot\n", nn.plot())
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
+  }
+  
 }
     
 ## To be copied in the UI

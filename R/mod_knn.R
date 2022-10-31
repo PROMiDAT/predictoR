@@ -176,10 +176,15 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
+
   })
   
   # Genera la probabilidad de corte
@@ -195,7 +200,11 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -216,13 +225,12 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     cod  <- paste0("### knnl\n",codigo)
     
     # Se genera el código de la prediccion
-    codigo       <- codigo.prediccion("knn",  kernel)
-
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.prediccion("knn",  kernel)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
-    codigo       <- codigo.MC("knn",  kernel)
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.MC("knn",  kernel)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")

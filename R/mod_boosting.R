@@ -205,7 +205,11 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -224,45 +228,14 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
     })
   })
-  
-  # Actualiza el código a la versión por defecto
-  default.codigo.boosting <- function() {
-
-    # Se actualiza el código del modelo
-    codigo <- boosting.modelo(variable.pr = updateData$variable.predecir,
-                              iter        = isolate(input$iter.boosting),
-                              maxdepth    = isolate(input$maxdepth.boosting),
-                              minsplit    = isolate(input$minsplit.boosting))
-    
-    cod  <- paste0("### docpot\n",codigo)
-    
-    # Se genera el código de la predicción
-    codigo <- boosting.prediccion()
-    cod  <- paste0(cod,codigo)
-    
-
-    # Se genera el código de la matriz
-    codigo <- boosting.MC()
-    cod  <- paste0(cod,codigo)
-    
-    # Se genera el código de la indices
-    codigo <- extract.code("indices.generales")
-    codigo <- paste0(codigo,"\nindices.generales(MC.boosting)\n")
-    
-    
-    cod  <- paste0(cod, codigo)
-    # Cambia el código del gráfico del modelo
-    cod  <- paste0(cod, "### evolerror\n",boosting.plot())
-    # Cambia el código del gráfico de importancia
-    cod  <- paste0(cod, "### docImpV\n",boosting.plot.import())
-    
-    isolate(codedioma$code <- append(codedioma$code, cod))
-    
-  }
   
   # Gráfico de importancia boosting
   output$plot_boosting_import <- renderEcharts4r({
@@ -296,7 +269,41 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
       return(NULL)
     })
   })
-
+  
+  # Actualiza el código a la versión por defecto
+  default.codigo.boosting <- function() {
+    
+    # Se actualiza el código del modelo
+    codigo <- boosting.modelo(variable.pr = updateData$variable.predecir,
+                              iter        = isolate(input$iter.boosting),
+                              maxdepth    = isolate(input$maxdepth.boosting),
+                              minsplit    = isolate(input$minsplit.boosting))
+    
+    cod  <- paste0("### docpot\n",codigo)
+    
+    #Predicción
+    codigo <- codigo.prediccion("boosting")
+    cod  <- paste0(cod,codigo)
+    
+    #Matríz de Confusión
+    codigo <- codigo.MC("boosting")
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código de la indices
+    codigo <- extract.code("indices.generales")
+    codigo <- paste0(codigo,"\nindices.generales(MC.boosting)\n")
+    
+    
+    cod  <- paste0(cod, codigo)
+    # Cambia el código del gráfico del modelo
+    cod  <- paste0(cod, "### evolerror\n",boosting.plot())
+    # Cambia el código del gráfico de importancia
+    cod  <- paste0(cod, "### docImpV\n",boosting.plot.import())
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
+    
+  }
+  
 }
     
 ## To be copied in the UI

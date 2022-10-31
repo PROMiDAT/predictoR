@@ -175,7 +175,11 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -194,7 +198,11 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -206,17 +214,17 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
     codigo <- rl.modelo(updateData$variable.predecir)
     cod  <- paste0("### rl\n",codigo)
     
-    # Se genera el código de la prediccion
-    codigo <- rl.prediccion()
-    cod  <- paste0(cod,codigo)
+    #Predicción
+    codigo <- codigo.prediccion("glm")
+    cod  <- paste0(cod, codigo)
     
-    # Se genera el código de la matriz
-    codigo <- rl.MC()
-    cod  <- paste0(cod,codigo)
+    #Matríz de Confusión
+    codigo <- codigo.MC("glm")
+    cod  <- paste0(cod, codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.rl)\n")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.glm)\n")
     cod  <- paste0(cod,codigo)
     isolate(codedioma$code <- append(codedioma$code, cod))
   }

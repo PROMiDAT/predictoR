@@ -123,14 +123,14 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     input$runRlr
     tryCatch({
     default.codigo.rlr()
-    train  <<- updateData$datos.aprendizaje
-    test   <<- updateData$datos.prueba
+    train  <- updateData$datos.aprendizaje
+    test   <- updateData$datos.prueba
     var    <- paste0(updateData$variable.predecir, "~.")
-    scales <<- isolate(input$switch.scale.rlr)
-    tipo   <<- rlr.type()
-    alpha  <<- isolate(input$alpha.rlr)
+    scales <- isolate(input$switch.scale.rlr)
+    tipo   <- rlr.type()
+    alpha  <- isolate(input$alpha.rlr)
     nombre <- paste0("rlr-",tipo)
-    modelo <<- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
+    modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' )
     prob   <- predict(modelo , test, type = 'prob')
     nombre.modelo$x <- nombre
     x         <- model.matrix(as.formula(var), train)[, -1]
@@ -244,7 +244,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     cv.glm   <- cv$cv.glm
     lambda   <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
     pos      <- select.beta(modelo, lambda)
-    isolate(codedioma$code <- append(codedioma$code, paste0("### betas\n","modelo.Rlr.",tipo,"$beta[['",category,"']][,",pos,"]")))
+    isolate(codedioma$code <- append(codedioma$code, paste0("### betas\n","modelo.glmnet.",tipo,"$beta[['",category,"']][,",pos,"]")))
     print(modelo$beta[[category]][,pos])
   })
   
@@ -255,15 +255,19 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
-      choices    <<- levels(test[, variable])
-      category   <<- input$rlr.sel
-      paso       <<- input$rlr.by
-      prediccion <<- modelos$rlr[[nombre.modelo$x]]$prob 
-      Score      <<- prediccion$prediction[,category,]
-      Clase      <<- test[,variable]
+      choices    <- levels(test[, variable])
+      category   <- input$rlr.sel
+      paso       <- input$rlr.by
+      prediccion <- modelos$rlr[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category,]
+      Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -282,47 +286,15 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       Clase      <- test[,variable]
       prob.values.ind(Score, Clase, choices, category, corte) 
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
   })
-  
-  # Actualiza el código a la versión por defecto
-  default.codigo.rlr <- function(){
-    tipo  <- rlr.type()
-
-
-    # Se actualiza el código del modelo
-    codigo <- rlr.modelo(variable.pr = updateData$variable.predecir,
-                         type        = tipo,
-                         isolate(input$alpha.rlr),
-                         isolate(input$switch.scale.rlr))
-    cod  <- paste0("### plr\n",codigo)
-    
-    # Se genera el código de la predicción
-    codigo <- rlr.prediccion(tipo)
-    cod  <- paste0(cod,codigo)
-    
-    # Se genera el código de la matriz
-    codigo <- rlr.MC(tipo)
-    cod  <- paste0(cod,codigo)
-    
-    # Se genera el código de los indices
-    codigo <- extract.code("indices.generales")
-    codigo  <- paste0(codigo,"\nindices.generales(MC.Rlr.",tipo,")\n")
-    cod  <- paste0(cod,codigo)
-    
-    # Se genera el código del posible lambda
-    codigo <- select.landa(updateData$variable.predecir,
-                           isolate(input$alpha.rlr),
-                           isolate(input$switch.scale.rlr),
-                           tipo)
-    
-    cod  <- paste0(cod, "### posibLanda\n",codigo)
-    
-    isolate(codedioma$code <- append(codedioma$code, cod))
-  }
   
   #Gráfica de los Lambdas
   output$plot_rlr_posiblanda <- renderEcharts4r({
@@ -346,7 +318,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       cv.glm <- cv$cv.glm
       modelo <- modelos$rlr[[nombre.modelo$x]]$modelo
       lambda <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
-      cod  <- paste0("### gcoeff\n",paste0("e_coeff_landa(modelo.Rlr.",tipo,", '",coeff,"', ",lambda,")\n"))
+      cod  <- paste0("### gcoeff\n",paste0("e_coeff_landa(modelo.glmnet.",tipo,", '",coeff,"', ",lambda,")\n"))
       
       isolate(codedioma$code <- append(codedioma$code, cod))
       e_coeff_landa(modelo, coeff, lambda, tr("lambda", codedioma$idioma))
@@ -360,6 +332,44 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   rlr.type <- function(){
     ifelse(isolate(input$alpha.rlr) == 0, "ridge", "lasso")
   }
+  
+  
+  # Actualiza el código a la versión por defecto
+  default.codigo.rlr <- function(){
+    tipo  <- rlr.type()
+    
+    
+    # Se actualiza el código del modelo
+    codigo <- rlr.modelo(variable.pr = updateData$variable.predecir,
+                         type        = tipo,
+                         isolate(input$alpha.rlr),
+                         isolate(input$switch.scale.rlr))
+    cod  <- paste0("### plr\n",codigo)
+    
+    # Se genera el código de la prediccion
+    codigo  <- codigo.prediccion("glmnet",  tipo)
+    cod     <- paste0(cod,codigo)
+    
+    # Se genera el código de la matriz
+    codigo <- codigo.MC("glmnet",  tipo)
+    cod    <- paste0(cod,codigo)
+    
+    # Se genera el código de los indices
+    codigo <- extract.code("indices.generales")
+    codigo  <- paste0(codigo,"\nindices.generales(MC.glmnet.",tipo,")\n")
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código del posible lambda
+    codigo <- select.landa(updateData$variable.predecir,
+                           isolate(input$alpha.rlr),
+                           isolate(input$switch.scale.rlr),
+                           tipo)
+    
+    cod  <- paste0(cod, "### posibLanda\n",codigo)
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
+  }
+  
 }
     
 ## To be copied in the UI

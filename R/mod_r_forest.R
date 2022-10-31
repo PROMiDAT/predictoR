@@ -100,6 +100,7 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     variable <- updateData$variable.predecir
     datos    <- updateData$datos
     choices  <- as.character(unique(datos[, variable]))
+    n.mtry   <- floor(sqrt(ncol(updateData$datos.aprendizaje)))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
       updateSelectInput(session, "rf.sel", choices = choices, selected = choices[1])
@@ -107,9 +108,11 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       updateSelectInput(session, "rf.sel", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
+    updateNumericInput(session, "mtry.rf", value = n.mtry)
+    
     updateTabsetPanel(session, "BoxRf",selected = "tabRfModelo")
   })
-  
+ 
   # Genera el texto del modelo, predicción y mc de RF
   output$txtRf <- renderPrint({
     input$runRf
@@ -240,7 +243,11 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -260,39 +267,31 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       prob.values.ind(Score, Clase, choices, category, corte) 
       return(invisible(""))  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
   })
   
   # Actualiza el código a la versión por defecto
-  default.codigo.rf <- function(rf.def = FALSE){
-    train  <- updateData$datos.aprendizaje
-    mtry <- isolate(input$mtry.rf)
-    if((!is.null(train) & rf.def) | is.na(mtry)){
-      mtry.value <- ifelse(rf.def || is.na(mtry), round(sqrt(ncol(train))), mtry)
-      if(!is.na(mtry)){
-        updateNumericInput(session,"mtry.rf",value = mtry.value)
-      }
-    }else{
-      mtry.value <- mtry
-    }
-    
+  default.codigo.rf <- function(){
     # Se actualiza el código del modelo
     codigo <- rf.modelo(variable.pr = updateData$variable.predecir,
                         ntree = isolate(input$ntree.rf),
-                        mtry = mtry.value)
+                        mtry = isolate(input$mtry.rf))
     cod  <- paste0("### rfl\n",codigo)
     
-    # Se genera el código de la predicción
-    codigo <- rf.prediccion()
-    cod  <- paste0(cod,codigo)
-    
+    # Se genera el código de la prediccion
+    codigo <- codigo.prediccion("rf")
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
-    codigo <- rf.MC()
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.MC("rf")
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de los indices
     codigo <- extract.code("indices.generales")

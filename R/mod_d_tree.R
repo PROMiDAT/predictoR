@@ -220,7 +220,11 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -240,7 +244,11 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       prob.values.ind(Score, Clase, choices, category, corte) 
       return(invisible(""))  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -257,14 +265,13 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
                         split = tipo)
     cod  <- paste0("### dtl\n",codigo)
     
-    
-    # Se genera el código de la predicción
-    codigo <- dt.prediccion(tipo)
-    cod  <- paste0(cod,codigo)
+    # Se genera el código de la prediccion
+    codigo <- codigo.prediccion("dt",  tipo)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
-    codigo <- dt.MC(tipo)
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.MC("dt",  tipo)
+    cod    <- paste0(cod,codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")

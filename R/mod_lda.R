@@ -163,15 +163,15 @@ mod_lda_server <- function(input, output, session, updateData, modelos, codediom
   default.codigo.lda <- function() {
     
     #Modelo
-    codigo <- lda.modelo(updateData$variable.predecir)
-    cod    <- paste0("### lda\n",codigo)
+    codigo <- codigo.modelo("lda", updateData$variable.predecir)
+    cod    <- paste0("### adl\n",codigo)
 
     #Predicción
-    codigo <- lda.prediccion()
+    codigo <- codigo.prediccion("lda")
     cod  <- paste0(cod,codigo)
     
     #Matríz de Confusión
-    codigo <- lda.MC()
+    codigo <- codigo.MC("lda")
     cod  <- paste0(cod,codigo)
     
     #Indices generales

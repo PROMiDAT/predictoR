@@ -41,7 +41,7 @@ prob.values <- function(Score, Class, levels, category, step = -0.05){
   positive  <- levels[which(levels == category)]
   negative  <- levels[which(levels != category)]
   for(Corte in seq(1, 0, by = step)) {
-    Prediccion <- ifelse(Score > Corte, positive, negative)
+    Prediccion <- ifelse(Score >= Corte, positive, negative)
     MC         <- table(Class, Pred = factor(Prediccion, levels = levels))
     cat("\nCorte usado para la Probabilidad = ")
     cat(Corte)
@@ -54,7 +54,7 @@ prob.values <- function(Score, Class, levels, category, step = -0.05){
 prob.values.ind <- function(Score, Class, levels, category, Corte = 0.5){
   positive  <- levels[which(levels == category)]
   negative  <- levels[which(levels != category)]
-    Prediccion <- ifelse(Score > Corte, positive, negative)
+    Prediccion <- ifelse(Score >= Corte, positive, negative)
     MC         <- table(Class, Pred = factor(Prediccion, levels = levels))
     cat("\n========================================")
     cat("\nCorte usado para la Probabilidad = ")

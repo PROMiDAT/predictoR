@@ -183,7 +183,11 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -203,39 +207,16 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       prob.values.ind(Score, Clase, choices, category, corte) 
       return(invisible(""))  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
   })
-  
-  # Update default code
-  default.codigo.svm <- function() {
-    kernel <- isolate(input$kernel.svm)
-    # Se actualiza el código del modelo
-    codigo <- svm.modelo(variable.pr = updateData$variable.predecir,
-                         scale = isolate(input$switch.scale.svm),
-                         kernel = kernel)
-    
-    cod  <- paste0("### svml\n",codigo)
-    
-    # Se genera el código de la predicción
-    codigo <- svm.prediccion(kernel)
-    cod    <- paste0(cod,codigo)
-    
-    # Se genera el código de la matriz
-    codigo <- svm.MC(kernel)
-    cod    <- paste0(cod,codigo)
-    
-    # Se genera el código de la indices
-    codigo <- extract.code("indices.generales")
-    codigo <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
-    cod    <- paste0(cod,codigo)
-    
-    isolate(codedioma$code <- append(codedioma$code, cod))
-    
-  }
-  
+
   # Update SVM plot
   output$plot_svm <- renderPlot({
     tryCatch({
@@ -267,6 +248,35 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       return(NULL)
     })
   })
+  
+  
+  # Update default code
+  default.codigo.svm <- function() {
+    kernel <- isolate(input$kernel.svm)
+    # Se actualiza el código del modelo
+    codigo <- svm.modelo(variable.pr = updateData$variable.predecir,
+                         scale = isolate(input$switch.scale.svm),
+                         kernel = kernel)
+    
+    cod  <- paste0("### svml\n",codigo)
+    
+    # Se genera el código de la prediccion
+    codigo       <- codigo.prediccion("svm",  kernel)
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código de la matriz
+    codigo       <- codigo.MC("svm",  kernel)
+    cod  <- paste0(cod,codigo)
+    
+    # Se genera el código de la indices
+    codigo <- extract.code("indices.generales")
+    codigo <- paste0(codigo,"\nindices.generales(MC.svm.",kernel,")\n")
+    cod    <- paste0(cod,codigo)
+    
+    isolate(codedioma$code <- append(codedioma$code, cod))
+    
+  }
+  
 }
 
 ## To be copied in the UI

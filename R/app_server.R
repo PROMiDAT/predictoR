@@ -87,7 +87,7 @@ app_server <- function( input, output, session ) {
       'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
       'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol', 
       'xgb', 'docImpV', 'rfl', 'docpot', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
-      'posibLanda', 'gcoeff', 'betas', 'qda', 'lda')
+      'posibLanda', 'gcoeff', 'betas', 'adc', 'adl')
     
     for (k in keys) {
       codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
@@ -146,6 +146,7 @@ app_server <- function( input, output, session ) {
         shinyjs::disable(selector = 'a[href^="#shiny-tab-validacion"]')
       } else {
         shinyjs::enable(selector = 'a[href^="#shiny-tab-validacion"]')
+        shinyjs::enable(selector = 'a[data-value=poderPred]')
       }
       
     })

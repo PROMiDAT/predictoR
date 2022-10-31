@@ -204,7 +204,11 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
       Clase      <- test[,variable]
       prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -224,7 +228,11 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
       prob.values.ind(Score, Clase, choices, category, corte) 
       return(invisible(""))  
     },error = function(e){
-      showNotification(paste0("ERROR: ", e), type = "error")
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
       return(invisible(""))
       
     })
@@ -242,13 +250,13 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
     cod  <- paste0("### xgb\n",codigo)
     
     
-    #Predicción 
-    codigo <- xgb.prediccion(booster = tipo)
-    cod  <- paste0(cod,codigo)
+    # Prediccion
+    codigo <- codigo.prediccion("xgb",  tipo)
+    cod    <- paste0(cod,codigo)
     
-    #Matriz de confusión
-    codigo <- xgb.MC(booster = tipo)
-    cod  <- paste0(cod,codigo)
+    # Matriz de Confusion
+    codigo <- codigo.MC("xgb",  tipo)
+    cod    <- paste0(cod,codigo)
     
     #Indices Generales
     codigo <- extract.code("indices.generales")

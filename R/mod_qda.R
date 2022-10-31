@@ -159,20 +159,21 @@ mod_qda_server <- function(input, output, session, updateData, modelos, codediom
       return(NULL)
     })
   })
+  
   #Código por defecto de qda
   default.codigo.qda <- function() {
     
     #Modelo
-    codigo <- qda.modelo(updateData$variable.predecir)
-    cod    <- paste0("### qda\n",codigo)
+    codigo <- codigo.modelo("qda", updateData$variable.predecir)
+    cod    <- paste0("### adc\n",codigo)
 
     #Predicción
-    codigo <- qda.prediccion()
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.prediccion("qda")
+    cod    <- paste0(cod,codigo)
     
     #Matríz de Confusión
-    codigo <- qda.MC()
-    cod  <- paste0(cod,codigo)
+    codigo <- codigo.MC("qda")
+    cod    <- paste0(cod,codigo)
     
     #Indices generales
     codigo <- extract.code("indices.generales")

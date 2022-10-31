@@ -36,9 +36,12 @@ dist_cat_predecir <- function(data, variable, variable.pr){
 #Gráfica el pairs
 pairs.poder  <- function(datos,variable.predecir){
   vars.p <- datos[,variable.predecir]
-  col    <- rainbow((length(unique(vars.p)) + 1)*2)[seq(2,(length(unique(vars.p)) + 1)*2,2)]
-  col    <- col[2:length(col)]
-  r      <- pairs.panels(var.numericas(datos),bg = col[datos[,variable.predecir]],
+  tam    <- length(unique(vars.p))
+  col    <- gg_color_hue(tam)
+  if(tam == 2){
+    col <- base::rev(col)
+  }
+  r      <- pairs.panels(var.numericas(datos),bg = col,
                          pch = 22, main = '', hist.col = gg_color_hue(1), ellipses = FALSE, oma=c(3,3,3,15))
   legend('topright', 
          fill   = unique(col[datos[,variable.predecir]]), 

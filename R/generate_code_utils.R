@@ -31,17 +31,6 @@ boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minspli
   return(codigo)
 }
 
-#Código de la prediccion de boosting
-boosting.prediccion <- function() {
-  return(paste0("prediccion.boosting <<- predict(modelo.boosting, datos.prueba, type = 'class')\n"))
-}
-
-
-#Código de la matríz de confución de boosting
-boosting.MC <- function(){
-  return(paste0("MC.boosting <<- confusion.matrix(datos.prueba, prediccion.boosting)\n"))
-}
-
 #Código del grafico de boosting
 boosting.plot <- function(){
   return(paste0("error(modelo.boosting, datos.aprendizaje) -> evol.train\n",
@@ -79,16 +68,6 @@ dt.modelo  <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split 
   return(codigo)
 }
 
-#Código de la predicción de DT
-dt.prediccion <- function(tipo) {
-  return(paste0("prediccion.dt.",tipo," <<- predict(modelo.dt.",tipo,", datos.prueba, type='class')\n"))
-}
-
-#Código de la matriz de confución de dt
-dt.MC <- function(tipo){
-  return(paste0("MC.dt.",tipo," <<- confusion.matrix(datos.prueba, prediccion.dt.",tipo,")","\n"))
-}
-
 #Código del gráfico de dt
 dt.plot <- function(tipo, num = 1){
   #∫num <- length(levels(datos[,var.pred]))
@@ -109,34 +88,7 @@ code.kkn.modelo <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = 
 
 #Crea el modelo RL
 rl.modelo <- function(variable.predecir = NULL){
-  return(paste0("modelo.rl <<- train.glm(",variable.predecir,"~., data = datos.aprendizaje, family = binomial)\n"))
-}
-
-#Código de la prediccion de rl
-rl.prediccion <- function() {
-  return(paste0("prediccion.rl <<- predict(modelo.rl, datos.prueba, type = 'class')\n"))
-}
-
-#Código de la matriz de confucion de rl
-rl.MC <- function(){
-  return(paste0("MC.rl <<- confusion.matrix(datos.prueba, prediccion.rl)","\n"))
-}
-
-# Códigos de lda ---------------------------------------------------------------------------------------------------------
-
-#Crea el modelo lda
-lda.modelo <- function(variable.pr = NULL){
-  return(paste0("modelo.lda <<- train.lda(",variable.pr,"~., data = datos.aprendizaje)\n"))
-}
-
-#Codigo de la prediccion de lda
-lda.prediccion <- function() {
-  return(paste0("prediccion.lda <<- predict(modelo.lda, datos.prueba, type = 'class')\n"))
-}
-
-#Codigo de la matriz de confucion de lda
-lda.MC <- function(){
-  return(paste0("MC.lda <<- confusion.matrix(datos.prueba, prediccion.lda)","\n"))
+  return(paste0("modelo.glm <<- train.glm(",variable.predecir,"~., data = datos.aprendizaje, family = binomial)\n"))
 }
 
 # Códigos de NN ---------------------------------------------------------------------------------------------------------
@@ -147,23 +99,13 @@ nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, ca
   stepmax   <- ifelse(stepmax < 100, 100, stepmax)
   capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
   
-  return(paste0("modelo.NN <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+  return(paste0("modelo.neuralnet <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
                 "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
-}
-
-#Código de la prediccion de nn
-nn.prediccion <- function() {
-  return(paste0("prediccion.NN <<- predict(modelo.NN, datos.prueba, type = 'class')\n"))
-}
-
-#Código de la matriz de confucion de xgb
-nn.MC <- function(){
-  return(paste0("MC.NN <<- confusion.matrix(datos.prueba, prediccion.NN)","\n"))
 }
 
 #Gráfico de la red neuronal
 nn.plot <- function(){
-  paste0("plot(modelo.NN,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t",
+  paste0("plot(modelo.neuralnet,,arrow.length = 0.1, rep = 'best', intercept = T,x.entry = 0.1, x.out = 0.9,\n\t",
          "information=F,intercept.factor = 0.8,col.entry.synapse='red',col.entry='red',col.out='green',col.out.synapse='green',\n\t",
          "dimension=15, radius = 0.2, fontsize = 10)\n")
 }
@@ -172,18 +114,9 @@ nn.plot <- function(){
 
 #Crea el modelo RLR
 rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE){
-  return(paste0("modelo.Rlr.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')\n"))
+  return(paste0("modelo.glmnet.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')\n"))
 }
 
-#Código de la prediccion de rlr
-rlr.prediccion <- function(type = "ridge") {
-  return(paste0("prediccion.Rlr.",type," <<- predict(modelo.Rlr.",type,", datos.prueba, type = 'class')\n"))
-}
-
-#Código de la matriz de confución de rlr
-rlr.MC <- function(type = "ridge"){
-  return(paste0("MC.Rlr.",type," <<- confusion.matrix(datos.prueba, prediccion.Rlr.",type,")","\n"))
-}
 # Códigos de RF--------------------------------------------------------------------------------------------------
 
 #Crea el modelo RF
@@ -192,16 +125,6 @@ rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
   Codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
                     " ntree =",ntree,",mtry =",mtry,")\n")
   return(Codigo)
-}
-
-#Código de la predicción de rf
-rf.prediccion <- function() {
-  return(paste0("prediccion.rf <<- predict(modelo.rf, datos.prueba, type = 'class')\n"))
-}
-
-#Código de la matriz de confución de rf
-rf.MC <- function(){
-  return(paste0("MC.rf <<- confusion.matrix(datos.prueba, prediccion.rf)\n"))
 }
 
 #Código del gráfico de importancia de variables
@@ -230,16 +153,6 @@ svm.modelo <- function(variable.pr = NULL, scale = TRUE, kernel = "linear"){
   return(paste0("modelo.svm.",kernel," <- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kernel = '",kernel,"')\n"))
 }
 
-#Código de la predicción de svm
-svm.prediccion <- function(kernel = "linear") {
-  return(paste0("prediccion.svm.",kernel," <<- predict(modelo.svm.",kernel," , datos.prueba, type = 'class')\n"))
-}
-
-#Código de la matriz de confución de svm
-svm.MC <- function( kernel = "linear"){
-  return(paste0("MC.svm.",kernel," <<- confusion.matrix(datos.prueba, prediccion.svm.",kernel,")","\n"))
-}
-
 #Código del gráfico de svm
 svm.plot <- function(var.pred,train,  variables, resto, kernel = "linear"){
   if(is.null(variables)){
@@ -263,16 +176,6 @@ xgb.modelo <- function(variable.pr = NULL, booster = "gbtree",max.depth = 6, n.r
   return(paste0("modelo.xgb.",booster," <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")\n"))
 }
 
-#Código de la predicción de xgb
-xgb.prediccion <- function(booster = "gbtree") {
-  return(paste0("prediccion.xgb.",booster," <<- predict(modelo.xgb.",booster,", datos.prueba, type = 'class')\n"))
-}
-
-
-#Código de la matríz de confución de xgb
-xgb.MC <- function(booster = "gbtree"){
-  return(paste0("MC.xgb.",booster," <<- confusion.matrix(datos.prueba, prediccion.xgb.",booster,")","\n"))
-}
 
 #Código del grafico de importancia de variables
 e_xgb_varImp <- function(booster = "gbtree"){
@@ -289,21 +192,4 @@ e_xgb_varImp <- function(booster = "gbtree"){
          
   )
 }
-# Códigos de qda ---------------------------------------------------------------------------------------------------------
-
-#Crea el modelo qda
-qda.modelo <- function(variable.pr = NULL){
-  return(paste0("modelo.qda <<- train.qda(",variable.pr,"~., data = datos.aprendizaje)\n"))
-}
-
-#Codigo de la prediccion de qda
-qda.prediccion <- function() {
-  return(paste0("prediccion.qda <<- predict(modelo.qda, datos.prueba, type = 'class')\n"))
-}
-
-#Codigo de la matriz de confucion de qda
-qda.MC <- function(){
-  return(paste0("MC.qda <<- confusion.matrix(datos.prueba, prediccion.qda)","\n"))
-}
-
 
