@@ -34,18 +34,18 @@ mod_penalized_l_r_ui <- function(id){
                      col_6(radioSwitch(ns("permitir.landa"), "", c("manual", "automatico"), val.def = F)))),
             conditionalPanel(
               "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProb'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
+              options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
               div(col_12(selectInput(inputId = ns("rlr.sel"),label = labelInput("selectCat"),
                                      choices =  "", width = "100%"))),
-              div(col_12(numericInput(inputId = ns("rlr.by"),label =  labelInput("selpaso"), value = -0.05,
+              div(col_12(numericInput(inputId = ns("rlr.by"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                       width = "100%")))
             ),
             conditionalPanel(
               "input['penalized_l_r_ui_1-BoxRlr'] == 'tabRlrProbInd'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
+              options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
               div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                      choices =  "", width = "100%"))),
-              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                       width = "100%"))))
             )
       )))
@@ -136,8 +136,22 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     x         <- model.matrix(as.formula(var), train)[, -1]
     y         <- train[,updateData$variable.predecir]
     cv$cv.glm <- glmnet::cv.glmnet(x, y, standardize = as.logical(scales), alpha = alpha ,family = 'multinomial')
-    pred      <- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
-    mc        <- confusion.matrix(test, pred)
+
+    variable   <- updateData$variable.predecir
+    choices    <- levels(test[, variable])
+    if(length(choices) == 2){
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
+      Score      <- prob$prediction[,category,]
+      Clase      <- test[,variable]
+      results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+      mc     <- results$MC
+      pred   <- results$Prediccion
+    }else{
+      pred   <<- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
+      mc     <- confusion.matrix(test, pred)
+      pred   <<- pred$prediction
+    }
     updateNumericInput(session, 
                        "landa", 
                        max   =  round(max(log(modelo$lambda)), 5), 
@@ -252,12 +266,13 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   # Genera la probabilidad de corte
   output$txtrlrprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$rlr.sel
-      paso       <- input$rlr.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$rlr[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category,]
       Clase      <- test[,variable]
@@ -275,16 +290,22 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   
   # Genera la probabilidad de corte
   output$txtrlrprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$rlr[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category,]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$rlr[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$rlr[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+      
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")

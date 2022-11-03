@@ -33,7 +33,7 @@ mod_cv_xgb_ui <- function(id){
                    ns("booster_xgb"), labelInput("selbooster"), multiple = T,
                    choices =  c("gbtree", "gblinear", "dart")))),
                
-               fluidRow(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%")),
+               fluidRow(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvxgb_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvxgb")), 
@@ -197,7 +197,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
+        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))), error = TRUE)
 
       }
       else

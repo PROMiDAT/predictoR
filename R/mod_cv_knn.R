@@ -29,12 +29,18 @@ mod_cv_knn_ui <- function(id){
                fluidRow(col_6(numericInput(ns("kmax_cvknn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
                         col_6(radioSwitch(ns("scale_cvknn"), "escal", c("si", "no")))),
                fluidRow(col_12(
+                 
+                 # selectizeInput(
+                 #   ns("sel_kernel"), labelInput("selkernel"), multiple = T,
+                 #   choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
+                 #               "triweight", "cos","inv","gaussian"))
                  selectizeInput(
                    ns("sel_kernel"), labelInput("selkernel"), multiple = T,
                    choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
-                               "triweight", "cos","inv","gaussian")))),
+                               "triweight", "cos","inv","gaussian"))
+                 )),
                
-               fluidRow(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%")),
+               fluidRow(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvknn_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvknn")), 
@@ -80,6 +86,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(datos)){
         updateNumericInput(session,"kmax_cvknn",value = round(sqrt(nrow(datos))))
         choices      <- as.character(unique(datos[, variable]))
+        updateSelectizeInput(session, "sel_kernel", selected = "")
         updateSelectInput(session, "cvknn.sel", choices = choices, selected = choices[1])
         updateSelectInput(session, "cvknn_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
@@ -198,7 +205,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma), "Kernel"))
+        resumen.puntos(err, labels = c(tr("errG",idioma), "Kernel"), error = TRUE)
         
       }
       else

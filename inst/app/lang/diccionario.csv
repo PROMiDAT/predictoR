@@ -38,6 +38,7 @@ escal;Escalar Datos;Scale Data
 comparacion;Comparación de Modelos;Model Comparison
 copyright;TODOS LOS DERECHOS RESERVADOS A;ALL RIGHTS RESERVED TO
 crossval;Validación Cruzada;Cross Validation
+calibracion;Calibración de Modelos;Model Calibration
 data;Datos;Data
 dataA;Datos de Aprendizaje;Training Sample
 dataP;Datos de Prueba;Test Sample

@@ -13,17 +13,27 @@ mod_qda_ui <- function(id){
   opciones <-   
     div(
       conditionalPanel(
-        "input['qda_ui_1-Boxqda'] == 'tabqdaModelo' || input['qda_ui_1-Boxqda']  == 'tabqdaPlot' ",
+        "input['qda_ui_1-Boxqda'] == 'tabqdaModelo' || input['qda_ui_1-Boxqda'] == 'tabqdaProb' || input['qda_ui_1-Boxqda'] == 'tabqdaProbInd'",
         tabsOptions(heights = c(70), tabs.content = list(
           list(
             conditionalPanel(
             "input['qda_ui_1-Boxqda'] == 'tabqdaModelo'",
             options.run(ns("runqda")), tags$hr(style = "margin-top: 0px;")),
             conditionalPanel(
-              "input['qda_ui_1-Boxqda']  == 'tabqdaPlot'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
-              selectizeInput(ns("select_var_qda_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
-                             options = list(maxItems = 2, placeholder = ""), width = "100%"))
+              "input['qda_ui_1-Boxqda'] == 'tabqdaProb'",
+              options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = 0, max = 1, step = 0.01, 
+                                      width = "100%")))
+            ),
+            conditionalPanel(
+              "input['qda_ui_1-Boxqda'] == 'tabqdaProbInd'",
+              options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
+                                     choices =  "", width = "100%"))),
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
+                                      width = "100%"))))
           
         ))))
     )
@@ -34,11 +44,6 @@ mod_qda_ui <- function(id){
       tabPanel(title = labelInput("generatem"), value = "tabqdaModelo",
                withLoader(verbatimTextOutput(ns("txtqda")), 
                           type = "html", loader = "loader4")),
-      
-      tabPanel(title = labelInput("gclasificacion"), value = "tabqdaPlot",
-               withLoader(plotOutput(ns('plot_qda'), height = "55vh"), 
-                          type = "html", loader = "loader4")),
-      
       tabPanel(title = labelInput("predm"), value = "tabqdaPred",
                withLoader(DT::dataTableOutput(ns("qdaPrediTable")), 
                           type = "html", loader = "loader4")),
@@ -52,7 +57,13 @@ mod_qda_ui <- function(id){
                fluidRow(col_6(echarts4rOutput(ns("qdaPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("qdaErrorGlob"), width = "100%"))),
                fluidRow(col_12(shiny::tableOutput(ns("qdaIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("qdaIndErrTable")))))
+               fluidRow(col_12(shiny::tableOutput(ns("qdaIndErrTable"))))),
+      tabPanel(title = labelInput("probC"), value = "tabqdaProbInd",
+               withLoader(verbatimTextOutput(ns("txtqdaprobInd")), 
+                          type = "html", loader = "loader4")),
+      tabPanel(title = labelInput("probCstep"), value = "tabqdaProb",
+               withLoader(verbatimTextOutput(ns("txtqdaprob")), 
+                          type = "html", loader = "loader4"))
     )
   )
 }
@@ -66,8 +77,16 @@ mod_qda_server <- function(input, output, session, updateData, modelos, codediom
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
-    nombres <- colnames.empty(var.numericas(updateData$datos))
-    updateSelectizeInput(session, "select_var_qda_plot", choices = nombres)
+    variable <- updateData$variable.predecir
+    datos    <- updateData$datos
+    choices  <- as.character(unique(datos[, variable]))
+    if(length(choices) == 2){
+      updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
+    }else{
+      updateSelectInput(session, "cat.sel.prob", choices = "")
+      updateSelectInput(session, "cat_probC", choices = "")
+    }
     updateTabsetPanel(session, "Boxqda",selected = "tabqdaModelo")
   })
   
@@ -81,10 +100,25 @@ mod_qda_server <- function(input, output, session, updateData, modelos, codediom
     var    <- paste0(updateData$variable.predecir, "~.")
     nombre <- paste0("qda")
     modelo <- traineR::train.qda(as.formula(var), data = train)
-    pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     
-    mc     <- confusion.matrix(test, pred)
+    variable   <- updateData$variable.predecir
+    choices    <- levels(test[, variable])
+    
+    if(length(choices) == 2){
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
+      Score      <- prob$prediction[,category]
+      Clase      <- test[,variable]
+      results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+      mc     <- results$MC
+      pred   <- results$Prediccion
+    }else{
+      pred   <- predict(modelo , test, type = 'class')
+      mc     <- confusion.matrix(test, pred)
+      pred   <- pred$prediction
+    }
+    
     isolate(modelos$qda[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)    
@@ -134,29 +168,57 @@ mod_qda_server <- function(input, output, session, updateData, modelos, codediom
     
   }, spacing = "xs",bordered = T, width = "100%", align = "c", digits = 2)
   
-  
-  # Update qda plot
-  output$plot_qda <- renderPlot({
+  # Genera la probabilidad de corte
+  output$txtqdaprob <- renderPrint({
+    input$runProb
     tryCatch({
-      idioma    <- codedioma$idioma
-      train     <- updateData$datos.aprendizaje
-      variable  <- isolate(updateData$variable.predecir)
-      variables <- input$select_var_qda_plot
-      # cod       <- svm.plot(variable, train, variables, colnames(datos[, -which(colnames(datos) == variable)]), k)
-      # cod       <- paste0("### gclasificacion\n",cod)
-      modelo <- modelos$qda[[nombre.modelo$x]]$modelo
-      if (length(variables) == 2){
-        #isolate(codedioma$code <- append(codedioma$code, cod))
-        plot(modelo, col = as.numeric(train[, variable]))
-      }
-      else{
-        return(NULL)
-      }
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
+      prediccion <- modelos$qda[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      prob.values(Score, Clase, choices, category, paso)  
     },error = function(e){
-      showNotification(e,
-                       duration = 10,
-                       type = "error")
-      return(NULL)
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
+      return(invisible(""))
+      
+    })
+  })
+  
+  # Genera la probabilidad de corte
+  output$txtqdaprobInd <- renderPrint({
+    input$runProbInd
+    tryCatch({
+      
+      test       <- updateData$datos.prueba
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
+      prediccion <- modelos$qda[[nombre.modelo$x]]$prob 
+      Score      <- prediccion$prediction[,category]
+      Clase      <- test[,variable]
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$qda[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$qda[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+      
+    },error = function(e){
+      if(length(choices) != 2){
+        showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
+      }else{
+        showNotification(paste0("ERROR: ", e), type = "error")
+      }
+      return(invisible(""))
+      
     })
   })
   

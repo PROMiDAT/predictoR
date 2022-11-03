@@ -90,9 +90,9 @@ app_ui <- function(request) {
                                icon = icon("chart-gantt")),
                    menuSubItem(labelInput("qda"),tabName = "qda",
                                icon = icon("square-root-variable"))),
-          menuItem(labelInput("comparacion"), tabName = "comparar", #balance-scale
+          menuItem(labelInput("comparacion"), tabName = "comparar", 
                    icon = icon("balance-scale")),
-          menuItem(labelInput("crossval"), tabName = "validacion",#server, award battle-net brain bug buffer check-circle chart-line chart-bar
+          menuItem(labelInput("calibracion"), tabName = "calibracion",#server, award battle-net brain bug buffer check-circle chart-line chart-bar
                    icon = icon("gears"),
                    menuSubItem(labelInput("knnl"),tabName = "cv_knn",
                                icon = icon("dot-circle")),

@@ -30,18 +30,18 @@ mod_svm_ui <- function(id){
                            options = list(maxItems = 2, placeholder = ""), width = "100%")),
           conditionalPanel(
             "input['svm_ui_1-BoxSvm'] == 'tabSvmProb'",
-            options.base(), tags$hr(style = "margin-top: 0px;"),
-            div(col_12(selectInput(inputId = ns("svm.sel"),label = labelInput("selectCat"),
+            options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
-            div(col_12(numericInput(inputId = ns("svm.by"),label =  labelInput("selpaso"), value = -0.05,
+            div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                     width = "100%")))
           ),
           conditionalPanel(
             "input['svm_ui_1-BoxSvm'] == 'tabSvmProbInd'",
-            options.base(), tags$hr(style = "margin-top: 0px;"),
+            options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
             div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
-            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                     width = "100%")))
           ))
       )))
@@ -97,9 +97,9 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "svm.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "svm.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateSelectizeInput(session, "select_var_svm_plot", choices = nombres)
@@ -118,10 +118,25 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       k      <- isolate(input$kernel.svm)
       nombre <- paste0("svml-",k)
       modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k)
-      pred   <- predict(modelo , test, type = 'class')
       prob   <- predict(modelo , test, type = 'prob')
-      mc     <- confusion.matrix(test, pred)
-      isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred ,prob = prob , mc = mc))
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      if(length(choices) == 2){
+        category   <- isolate(input$cat_probC)
+        corte      <- isolate(input$val_probC)
+        Score      <- prob$prediction[,category]
+        Clase      <- test[,variable]
+        results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+        mc     <- results$MC
+        pred   <- results$Prediccion
+      }else{
+        pred   <- predict(modelo , test, type = 'class') 
+        mc     <- confusion.matrix(test, pred)
+        pred   <- pred$prediction
+      }
+      
+      
+      isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
     },error = function(e){
@@ -172,12 +187,13 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
   # Genera la probabilidad de corte
   output$txtsvmprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$svm.sel
-      paso       <- input$svm.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -195,17 +211,21 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
   
   # Genera la probabilidad de corte
   output$txtsvmprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$svm[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
-      return(invisible(""))  
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$svm[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$svm[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
@@ -213,7 +233,6 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
         showNotification(paste0("ERROR: ", e), type = "error")
       }
       return(invisible(""))
-      
     })
   })
 

@@ -32,7 +32,7 @@ mod_cv_rlr_ui <- function(id){
                    ns("alpha_rlr"), labelInput("selectAlg"), multiple = T,
                    choices = list("Ridge" = 0, "Lasso" = 1)))),
                
-               fluidRow(col_6(numericInput(ns("cvrlr_step"), labelInput("probC"), value = 0.5, width = "100%")),
+               fluidRow(col_6(numericInput(ns("cvrlr_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvrlr_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrlr")), 
@@ -197,7 +197,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma), "alpha"))
+        resumen.puntos(err, labels = c(tr("errG",idioma), "alpha"), error = TRUE)
         
       }
       else

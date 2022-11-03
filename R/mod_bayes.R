@@ -19,18 +19,18 @@ mod_bayes_ui <- function(id){
             options.run(ns("runBayes")), tags$hr(style = "margin-top: 0px;")),
             conditionalPanel(
               "input['bayes_ui_1-BoxBayes'] == 'tabBayesProb'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
-              div(col_12(selectInput(inputId = ns("bayes.sel"),label = labelInput("selectCat"),
+              options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+              div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                      choices =  "", width = "100%"))),
-              div(col_12(numericInput(inputId = ns("bayes.by"),label =  labelInput("selpaso"), value = -0.05,
+              div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                       width = "100%")))
             ),
             conditionalPanel(
               "input['bayes_ui_1-BoxBayes'] == 'tabBayesProbInd'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
+              options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
               div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                      choices =  "", width = "100%"))),
-              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+              div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                       width = "100%")))))
           
         )))
@@ -81,9 +81,9 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "bayes.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "bayes.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateTabsetPanel(session, "BoxBayes",selected = "tabBayesModelo")
@@ -99,11 +99,26 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
     var    <- paste0(updateData$variable.predecir, "~.")
     nombre <- paste0("Bayes")
     modelo <- traineR::train.bayes(as.formula(var), data = train)
-    pred   <- predict(modelo , test, type = 'class')
     prob   <- predict(modelo , test, type = 'prob')
     
-    mc     <- confusion.matrix(test, pred)
-    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
+    variable   <- updateData$variable.predecir
+    choices    <- levels(test[, variable])
+    
+    if(length(choices) == 2){
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
+      Score      <- prob$prediction[,category]
+      Clase      <- test[,variable]
+      results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+      mc     <- results$MC
+      pred   <- results$Prediccion
+    }else{
+      pred   <- predict(modelo , test, type = 'class')
+      mc     <- confusion.matrix(test, pred)
+      pred   <- pred$prediction
+    }
+    
+    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo, pred = pred, prob = prob, mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)    
     },error = function(e){
@@ -154,12 +169,13 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   
   # Genera la probabilidad de corte
   output$txtbayesprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$bayes.sel
-      paso       <- input$bayes.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$bayes[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -177,16 +193,22 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   
   # Genera la probabilidad de corte
   output$txtbayesprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$bayes[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$bayes[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$bayes[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+      
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")

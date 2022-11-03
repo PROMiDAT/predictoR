@@ -26,18 +26,18 @@ mod_r_forest_ui <- function(id){
             numericInput(ns("rules.rf.n"),labelInput("ruleNumTree"),1, width = "100%", min = 1)),
           conditionalPanel(
             "input['r_forest_ui_1-BoxRf'] == 'tabRfProb'",
-            options.base(), tags$hr(style = "margin-top: 0px;"),
-            div(col_12(selectInput(inputId = ns("rf.sel"),label = labelInput("selectCat"),
+            options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+            div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
-            div(col_12(numericInput(inputId = ns("rf.by"),label =  labelInput("selpaso"), value = -0.05,
+            div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,  
                                     width = "100%")))
           ),
           conditionalPanel(
             "input['r_forest_ui_1-BoxRf'] == 'tabRfProbInd'",
-            options.base(), tags$hr(style = "margin-top: 0px;"),
+            options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
             div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                    choices =  "", width = "100%"))),
-            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+            div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                     width = "100%")))
           ))
       )))
@@ -103,9 +103,9 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
     n.mtry   <- floor(sqrt(ncol(updateData$datos.aprendizaje)))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "rf.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "rf.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateNumericInput(session, "mtry.rf", value = n.mtry)
@@ -126,9 +126,24 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
       nombre <- paste0("rfl")
       
       modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE)
-      pred   <- predict(modelo , test, type = 'class')
       prob   <- predict(modelo , test, type = 'prob')
-      mc     <- confusion.matrix(test, pred)
+      
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      if(length(choices) == 2){
+        category   <- isolate(input$cat_probC)
+        corte      <- isolate(input$val_probC)
+        Score      <- prob$prediction[,category]
+        Clase      <- test[,variable]
+        results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+        mc     <- results$MC
+        pred   <- results$Prediccion
+      }else{
+        pred   <- predict(modelo , test, type = 'class')
+        mc     <- confusion.matrix(test, pred)
+        pred   <- pred$prediction
+      }
+      
       isolate(modelos$rf[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
@@ -232,12 +247,13 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   
   # Genera la probabilidad de corte
   output$txtrfprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$rf.sel
-      paso       <- input$rf.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -255,17 +271,21 @@ mod_r_forest_server <- function(input, output, session, updateData, modelos, cod
   
   # Genera la probabilidad de corte
   output$txtrfprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$rf[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
-      return(invisible(""))  
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$rf[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$rf[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")

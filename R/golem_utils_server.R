@@ -96,7 +96,7 @@ cambiar.labels <- function() {
       'selectCapas', 'stepmax', 'nnWar', 'bigPlot', 'rl', 'rlr', 'landa', 'automatico', 'posibLanda', 'gcoeff', 'limitModel', 'aROC', 'RocNo',
       'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras',
       'resultados', 'lambda', 'limitLambda', 'superior', 'inferior', 'cargarComp', 'betas', 'cant', 'porcentaje', 'crossval', 
-      'iter', 'indicesCat', 'probC', 'selpaso', 'probCstep', "rep", "lda", "qda")
+      'iter', 'indicesCat', 'probC', 'selpaso', 'probCstep', "rep", "lda", "qda", "calibracion")
   return(x)
 }
 

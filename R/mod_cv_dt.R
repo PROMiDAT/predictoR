@@ -33,7 +33,7 @@ mod_cv_dt_ui <- function(id){
                    ns("split_dt"), labelInput("splitIndex"), multiple = T,
                    choices =  list("gini" = "gini", "Entropia" = "information")))),
                
-               fluidRow(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%")),
+               fluidRow(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvdt_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvdt")), 
@@ -197,7 +197,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("splitIndex",idioma), ":"))))
+        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("splitIndex",idioma), ":"))), error = TRUE)
         
       }
       else

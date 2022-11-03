@@ -24,18 +24,18 @@ mod_d_tree_ui <- function(id){
                                       choices =  list("gini" = "gini", "Entropia" = "information"))))),
         conditionalPanel(
           "input['d_tree_ui_1-BoxDt'] == 'tabDtProb'",
-          options.base(), tags$hr(style = "margin-top: 0px;"),
-          div(col_12(selectInput(inputId = ns("dt.sel"),label = labelInput("selectCat"),
+          options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+          div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                  choices =  "", width = "100%"))),
-          div(col_12(numericInput(inputId = ns("dt.by"),label =  labelInput("selpaso"), value = -0.05,
+          div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                   width = "100%")))
         ),
         conditionalPanel(
           "input['d_tree_ui_1-BoxDt'] == 'tabDtProbInd'",
-          options.base(), tags$hr(style = "margin-top: 0px;"),
+          options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
           div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                  choices =  "", width = "100%"))),
-          div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+          div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                   width = "100%")))
         )
         
@@ -95,9 +95,9 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "dt.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "dt.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateTabsetPanel(session, "BoxDt",selected = "tabDtModelo")
@@ -118,9 +118,24 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       nombre <- paste0("dtl-",tipo)
       modelo <- traineR::train.rpart(as.formula(var), data = train,
                                      control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo))
-      pred   <- predict(modelo , test, type = 'class')
       prob   <- predict(modelo , test, type = 'prob')
-      mc     <- confusion.matrix(test, pred)
+      
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      if(length(choices) == 2){
+        category   <- isolate(input$cat_probC)
+        corte      <- isolate(input$val_probC)
+        Score      <- prob$prediction[,category]
+        Clase      <- test[,variable]
+        results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+        mc     <- results$MC
+        pred   <- results$Prediccion
+      }else{
+        pred   <- predict(modelo , test, type = 'class') 
+        mc     <- confusion.matrix(test, pred)
+        pred   <- pred$prediction
+      }
+      
       isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
@@ -181,7 +196,7 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
       
       # Cambia el código del gráfico del árbol
       codigo <- paste0("### garbol\n", dt.plot(tipo))
-      isolate(codedioma$code <- append(codedioma$code, cod))
+      isolate(codedioma$code <- append(codedioma$code, codigo))
       
       prp(modelo, type = 2, extra = 104, nn = T, varlen = 0, faclen = 0,
           fallen.leaves = TRUE, branch.lty = 6, shadow.col = 'gray82',
@@ -209,12 +224,13 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   
   # Genera la probabilidad de corte
   output$txtdtprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$dt.sel
-      paso       <- input$dt.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -232,17 +248,22 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   
   # Genera la probabilidad de corte
   output$txtdtprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$dt[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
-      return(invisible(""))  
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$dt[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$dt[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+      
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
@@ -257,7 +278,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
   
   # Actualiza el código a la versión por defecto
   default.codigo.dt <- function() {
-    
     tipo   <- isolate(input$split.dt)
     codigo <- dt.modelo(variable.pr = updateData$variable.predecir,
                         minsplit = isolate(input$minsplit.dt),
@@ -266,12 +286,12 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     cod  <- paste0("### dtl\n",codigo)
     
     # Se genera el código de la prediccion
-    codigo <- codigo.prediccion("dt",  tipo)
+    codigo <- codigo.prediccion("dt", tipo)
     cod    <- paste0(cod,codigo)
     
     # Se genera el código de la matriz
     codigo <- codigo.MC("dt",  tipo)
-    cod    <- paste0(cod,codigo)
+    cod    <- paste0(cod, codigo)
     
     # Se genera el código de la indices
     codigo <- extract.code("indices.generales")
@@ -279,7 +299,6 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
     cod  <- paste0(cod,codigo)
     
     isolate(codedioma$code <- append(codedioma$code, cod))
-    
   }
 }
 

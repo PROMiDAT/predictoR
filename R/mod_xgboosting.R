@@ -23,18 +23,18 @@ mod_xgboosting_ui <- function(id){
                    col_6(numericInput(ns("nroundsXgb"), labelInput("selnrounds"), min = 0,step = 1, value = 50)))),
         conditionalPanel(
           "input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProb'",
-          options.base(), tags$hr(style = "margin-top: 0px;"),
-          div(col_12(selectInput(inputId = ns("xgb.sel"),label = labelInput("selectCat"),
+          options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+          div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                  choices =  "", width = "100%"))),
-          div(col_12(numericInput(inputId = ns("xgb.by"),label =  labelInput("selpaso"), value = -0.05,
+          div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                   width = "100%")))
         ),
         conditionalPanel(
           "input['xgboosting_ui_1-BoxXgb'] == 'tabXgbProbInd'",
-          options.base(), tags$hr(style = "margin-top: 0px;"),
+          options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
           div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                  choices =  "", width = "100%"))),
-          div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+          div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                   width = "100%")))
         )
       )))))
@@ -89,9 +89,9 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "xgb.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "xgb.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateTabsetPanel(session, "BoxXgb",selected = "tabXgbModelo")
@@ -112,9 +112,24 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
       nombre <- paste0("xgb-",tipo)
       modelo <- traineR::train.xgboost(as.formula(var), data = train, booster = tipo, 
                                        max_depth = max.depth, nrounds = n.rounds)
-      pred   <- predict(modelo , test, type = 'class')
       prob   <- predict(modelo , test, type = 'prob')
-      mc     <- confusion.matrix(test, pred)
+      
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      if(length(choices) == 2){
+        category   <- isolate(input$cat_probC)
+        corte      <- isolate(input$val_probC)
+        Score      <- prob$prediction[,category]
+        Clase      <- test[,variable]
+        results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+        mc     <- results$MC
+        pred   <- results$Prediccion
+      }else{
+        pred   <- predict(modelo , test, type = 'class')
+        mc     <- confusion.matrix(test, pred)
+        pred   <- pred$prediction
+      }
+      
       isolate(modelos$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
@@ -193,12 +208,13 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
   
   # Genera la probabilidad de corte
   output$txtxgbprob <- renderPrint({
+    input$runProb 
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$xgb.sel
-      paso       <- input$xgb.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$xgb[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -216,17 +232,21 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
   
   # Genera la probabilidad de corte
   output$txtxgbprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$xgb[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
-      return(invisible(""))  
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$xgb[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$xgb[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")

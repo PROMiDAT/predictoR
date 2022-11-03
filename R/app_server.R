@@ -143,9 +143,9 @@ app_server <- function( input, output, session ) {
         
       }
       if(is.null(updateData$grupos) || (is.null(updateData$numValC) && updateData$numValC <= 1)) {
-        shinyjs::disable(selector = 'a[href^="#shiny-tab-validacion"]')
+        shinyjs::disable(selector = 'a[href^="#shiny-tab-calibracion"]')
       } else {
-        shinyjs::enable(selector = 'a[href^="#shiny-tab-validacion"]')
+        shinyjs::enable(selector = 'a[href^="#shiny-tab-calibracion"]')
         shinyjs::enable(selector = 'a[data-value=poderPred]')
       }
       

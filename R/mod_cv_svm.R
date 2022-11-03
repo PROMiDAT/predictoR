@@ -32,7 +32,7 @@ mod_cv_svm_ui <- function(id){
                    ns("sel_kernel_svm"), labelInput("selkernel"), multiple = T,
                    choices = c("linear", "polynomial", "radial", "sigmoid")))),
                
-               fluidRow(col_6(numericInput(ns("cvsvm_step"), labelInput("probC"), value = 0.5, width = "100%")),
+               fluidRow(col_6(numericInput(ns("cvsvm_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvsvm_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvsvm")), 
@@ -193,7 +193,7 @@ mod_cv_svm_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma), "Kernel"))
+        resumen.puntos(err, labels = c(tr("errG",idioma), "Kernel"), error = TRUE)
         
       }
       else

@@ -27,18 +27,18 @@ mod_neural_net_ui <- function(id){
                                                                                   class = "mini-numeric-select"))))),
            conditionalPanel(
              "input['neural_net_ui_1-BoxNn'] == 'tabNnProb'",
-             options.base(), tags$hr(style = "margin-top: 0px;"),
-             div(col_12(selectInput(inputId = ns("nn.sel"),label = labelInput("selectCat"),
+             options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+             div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                     choices =  "", width = "100%"))),
-             div(col_12(numericInput(inputId = ns("nn.by"),label =  labelInput("selpaso"), value = -0.05,
+             div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = -0.0, max = 1,
                                      width = "100%")))
            ),
            conditionalPanel(
              "input['neural_net_ui_1-BoxNn'] == 'tabNnProbInd'",
-             options.base(), tags$hr(style = "margin-top: 0px;"),
+             options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
              div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                     choices =  "", width = "100%"))),
-             div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+             div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                      width = "100%"))))
            )))))
   
@@ -91,9 +91,9 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "nn.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "nn.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     updateTabsetPanel(session, "BoxNn",selected = "tabNnModelo")
@@ -140,9 +140,25 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
         stepmax   = stepmax,
         hidden    = capas)
       
-      pred   <- predict(modelo , test, type = 'class')
       prob   <- predict(modelo , test, type = 'prob')
-      mc     <- confusion.matrix(test, pred)
+      
+      variable   <- updateData$variable.predecir
+      choices    <- levels(test[, variable])
+      if(length(choices) == 2){
+        category   <- isolate(input$cat_probC)
+        corte      <- isolate(input$val_probC)
+        Score      <- prob$prediction[,category]
+        Clase      <- test[,variable]
+        results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+        mc     <- results$MC
+        pred   <- results$Prediccion
+      }else{
+        pred   <- predict(modelo , test, type = 'class')
+        mc     <- confusion.matrix(test, pred)
+        pred   <- pred$prediction
+      }
+      
+      
       isolate(modelos$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
       nombre.modelo$x <- nombre
       print(modelo)
@@ -209,12 +225,13 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
   
   # Genera la probabilidad de corte
   output$txtnnprob <- renderPrint({
+    input$runProb 
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$nn.sel
-      paso       <- input$nn.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$nn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -228,16 +245,22 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
   
   # Genera la probabilidad de corte
   output$txtnnprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$nn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$nn[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$nn[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+      
     },error = function(e){
       showNotification(paste0("ERROR: ", e), type = "error")
       return(invisible(""))

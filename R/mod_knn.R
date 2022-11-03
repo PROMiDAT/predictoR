@@ -24,18 +24,18 @@ opc_knn <- div(conditionalPanel(
                             radioSwitch(ns("switch.scale.knn"), "escal", c("si", "no"))))),
          conditionalPanel(
            "input['knn_ui_1-BoxKnn'] == 'tabKnnProb'",
-           options.base(), tags$hr(style = "margin-top: 0px;"),
-           div(col_12(selectInput(inputId = ns("knn.sel"),label = labelInput("selectCat"),
+           options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
+           div(col_12(selectInput(inputId = ns("cat.sel.prob"),label = labelInput("selectCat"),
                                   choices =  "", width = "100%"))),
-           div(col_12(numericInput(inputId = ns("knn.by"),label =  labelInput("selpaso"), value = -0.05,
+           div(col_12(numericInput(inputId = ns("by.prob"),label =  labelInput("selpaso"), value = -0.05, min = 0, max = 1, step = 0.01, 
                                    width = "100%")))
          ),
          conditionalPanel(
            "input['knn_ui_1-BoxKnn'] == 'tabKnnProbInd'",
-           options.base(), tags$hr(style = "margin-top: 0px;"),
+           options.run(ns("runProbInd")), tags$hr(style = "margin-top: 0px;"),
            div(col_12(selectInput(inputId = ns("cat_probC"),label = labelInput("selectCat"),
                                   choices =  "", width = "100%"))),
-           div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5,
+           div(col_12(numericInput(inputId = ns("val_probC"),label =  labelInput("probC"), value = 0.5, min = 0, max = 1, step = 0.1, 
                                    width = "100%"))))
          )))))
 
@@ -84,9 +84,9 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     choices  <- as.character(unique(datos[, variable]))
     if(length(choices) == 2){
       updateSelectInput(session, "cat_probC", choices = choices, selected = choices[1])
-      updateSelectInput(session, "knn.sel", choices = choices, selected = choices[1])
+      updateSelectInput(session, "cat.sel.prob", choices = choices, selected = choices[1])
     }else{
-      updateSelectInput(session, "knn.sel", choices = "")
+      updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
     if(!is.null(updateData$datos.aprendizaje)){
@@ -108,10 +108,26 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
     kernel <- isolate(input$kernel.knn)
     k.value<- isolate(input$kmax.knn)
     nombre <- paste0("knnl-",kernel)
-    modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ) 
-    pred   <- predict(modelo , test, type = 'class')
+    modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value) 
     prob   <- predict(modelo , test, type = 'prob')
-    mc     <- confusion.matrix(test, pred)
+    
+    variable   <- updateData$variable.predecir
+    choices    <- levels(test[, variable])
+    
+    if(length(choices) == 2){
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
+      Score      <- prob$prediction[,category]
+      Clase      <- test[,variable]
+      results    <- prob.values.ind(Score, Clase, choices, category, corte, print = FALSE)
+      mc     <- results$MC
+      pred   <- results$Prediccion
+    }else{
+      pred   <- predict(modelo , test, type = 'class')
+      mc     <- confusion.matrix(test, pred)
+      pred   <- pred$prediction
+    }
+    
     isolate(modelos$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
     nombre.modelo$x <- nombre
     print(modelo)
@@ -154,6 +170,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
   #Tabla de Errores por Categoría
   output$knnIndErrTable  <- shiny::renderTable({
     idioma <- codedioma$idioma
+    
     indices.knn <- indices.generales(modelos$knn[[nombre.modelo$x]]$mc)
     #Gráfico de Error y Precisión Global
     output$knnPrecGlob  <-  renderEcharts4r(e_global_gauge(round(indices.knn[[1]],2), tr("precG",idioma), "#B5E391", "#90C468"))
@@ -165,12 +182,13 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
   
   # Genera la probabilidad de corte
   output$txtknnprob <- renderPrint({
+    input$runProb
     tryCatch({
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$knn.sel
-      paso       <- input$knn.by
+      category   <- isolate(input$cat.sel.prob)
+      paso       <- isolate(input$by.prob)
       prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
@@ -184,21 +202,27 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       return(invisible(""))
       
     })
-
   })
   
   # Genera la probabilidad de corte
   output$txtknnprobInd <- renderPrint({
+    input$runProbInd
     tryCatch({
+      
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- input$cat_probC
-      corte      <- input$val_probC
+      category   <- isolate(input$cat_probC)
+      corte      <- isolate(input$val_probC)
       prediccion <- modelos$knn[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category]
       Clase      <- test[,variable]
-      prob.values.ind(Score, Clase, choices, category, corte) 
+      if(!is.null(Score) & length(choices) == 2){
+        results <- prob.values.ind(Score, Clase, choices, category, corte)
+        modelos$knn[[nombre.modelo$x]]$mc   <- results$MC
+        modelos$knn[[nombre.modelo$x]]$pred <- results$Prediccion
+      }
+
     },error = function(e){
       if(length(choices) != 2){
         showNotification(paste0("ERROR Probabilidad de Corte: ", tr("errorprobC", codedioma$idioma)), type = "error")
@@ -209,6 +233,7 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       
     })
   })
+  
   # Actualiza el código a la versión por defecto
   default.codigo.knn <- function(k.def = FALSE) {
     train  <- updateData$datos.aprendizaje

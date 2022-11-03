@@ -43,12 +43,19 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
   comp_plot
 }
 
-resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion")) {
-  
-  datos.grafico <- datos.grafico |>
-    dplyr::group_by( name, color ) |>
-    dplyr::summarise(value = mean(value), .groups = 'drop') |>
-    dplyr::arrange(desc(value))
+resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
+    
+  if(!error){  
+    datos.grafico <- datos.grafico |>
+      dplyr::group_by( name, color ) |>
+      dplyr::summarise(value = mean(value), .groups = 'drop') |>
+      dplyr::arrange(desc(value))
+  }else{
+    datos.grafico <- datos.grafico |>
+      dplyr::group_by( name, color ) |>
+      dplyr::summarise(value = mean(value), .groups = 'drop') |>
+      dplyr::arrange(value)
+  }
   
   resumen <- datos.grafico |>
     e_charts( name) |>
