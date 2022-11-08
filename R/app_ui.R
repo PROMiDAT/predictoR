@@ -99,11 +99,23 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("svml"),tabName = "cv_svm",
                                icon = icon("vector-square")),
                    menuSubItem(labelInput("dtl"),tabName = "cv_dt",
-                               icon = icon("tree")),
+                               icon = icon("tree")),                                         
+                   menuSubItem(labelInput("rfl"),tabName = "cv_rf",
+                               icon = icon("sitemap")),
                    menuSubItem(labelInput("xgb"),tabName = "cv_xgb",
                                icon = icon("project-diagram")),
+                   menuSubItem("Bayes",tabName = "cv_bayes",
+                               icon = icon("dice")),
+                   menuSubItem(labelInput("bl"),tabName = "cv_boosting",
+                               icon = icon("superscript")),
+                   menuSubItem(labelInput("rl"),tabName = "cv_rl",
+                               icon = icon("chart-line")),
                    menuSubItem(labelInput("rlr"),tabName = "cv_rlr",
                                icon = icon("wave-square")),
+                   menuSubItem(labelInput("lda"),tabName = "cv_lda",
+                               icon = icon("chart-gantt")),
+                   menuSubItem(labelInput("qda"),tabName = "cv_qda",
+                               icon = icon("square-root-variable")),
                    menuSubItem(labelInput("crossval"),tabName = "cv_cv",
                                icon = icon("gears"))),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
@@ -216,11 +228,29 @@ app_ui <- function(request) {
           tabItem(tabName = "cv_dt", 
                   mod_cv_dt_ui("cv_dt_ui_1")),
           
+          tabItem(tabName = "cv_rf", 
+                  mod_cv_rf_ui("cv_rf_ui_1")),
+          
           tabItem(tabName = "cv_xgb", 
                   mod_cv_xgb_ui("cv_xgb_ui_1")),
           
+          tabItem(tabName = "cv_boosting", 
+                  mod_cv_boost_ui("cv_boost_ui_1")),
+          
           tabItem(tabName = "cv_rlr", 
                   mod_cv_rlr_ui("cv_rlr_ui_1")),
+          
+          tabItem(tabName = "cv_bayes", 
+                  mod_cv_bayes_ui("cv_bayes_ui_1")),
+          
+          tabItem(tabName = "cv_rl", 
+                  mod_cv_rl_ui("cv_rl_ui_1")),
+          
+          tabItem(tabName = "cv_lda", 
+                  mod_cv_lda_ui("cv_lda_ui_1")),
+          
+          tabItem(tabName = "cv_qda", 
+                  mod_cv_qda_ui("cv_qda_ui_1")),
           
           tabItem(tabName = "cv_cv", 
                   mod_cross_validation_ui("cross_validation_ui_1")),

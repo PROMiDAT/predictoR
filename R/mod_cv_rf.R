@@ -1,4 +1,4 @@
-#' cv_dt UI Function
+#' cv_rf UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,116 +7,117 @@
 #' @noRd 
 #'
 #' @importFrom shiny NS tagList 
-mod_cv_dt_ui <- function(id){
+mod_cv_rf_ui <- function(id){
   ns <- NS(id)
   
   
-  title_comp <- list(conditionalPanel("input['cv_dt_ui_1-Boxdt'] == 'tabCVdtIndicesCat'",
+  title_comp <- list(conditionalPanel("input['cv_rf_ui_1-Boxrf'] == 'tabCVrfIndicesCat'",
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvdt.sel"),label = NULL,
+                                                   selectInput(inputId = ns("cvrf.sel"),label = NULL,
                                                                choices =  "", width = "100%")))))
   
   tagList(
     tabBoxPrmdt(
-      id = ns("Boxdt"), title = title_comp, 
-      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVdtModelo",
-               fluidRow(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
-                        col_6(numericInput(ns("min_split"), labelInput("minsplit"),min = 1,step = 1, value = 2))),
+      id = ns("Boxrf"), title = title_comp, 
+      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVrfModelo",
+               fluidRow(col_6(numericInput(ns("mtry"), labelInput("numVars"),1, width = "100%", min = 1)),
+                        col_6(numericInput(ns("ntree"), labelInput("numTree"), 20, width = "100%", min = 5))),
                fluidRow(col_12(
                  selectizeInput(
                    ns("sel_split"), labelInput("splitIndex"), multiple = T,
                    choices =  list("gini" = "gini", "Entropia" = "information")))),
                
-               fluidRow(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
-                        col_6(selectInput(ns("cvdt_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
+               fluidRow(col_6(numericInput(ns("cvrf_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+                        col_6(selectInput(ns("cvrf_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
-                   style = "display:block",withLoader(verbatimTextOutput(ns("txtcvdt")), 
+                   style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrf")), 
                                                       type = "html", loader = "loader4")),
                hr(style = "border-top: 2px solid #cccccc;" ),
-               actionButton(ns("btn_cv_dt"), labelInput("generar"), width  = "100%" ),br(),br()),
-      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVdtIndices",
-               div(col_6(echarts4rOutput(ns("e_dt_glob"), width = "100%", height = "70vh")),
-                   col_6(echarts4rOutput(ns("e_dt_error"), width = "100%", height = "70vh")))),
-      tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVdtIndicesCat",
-               div(col_12(echarts4rOutput(ns("e_dt_category"), width = "100%", height = "70vh"))))
+               actionButton(ns("btn_cv_rf"), labelInput("generar"), width  = "100%" ),br(),br()),
+      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVrfIndices",
+               div(col_6(echarts4rOutput(ns("e_rf_glob"), width = "100%", height = "70vh")),
+                   col_6(echarts4rOutput(ns("e_rf_error"), width = "100%", height = "70vh")))),
+      tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVrfIndicesCat",
+               div(col_12(echarts4rOutput(ns("e_rf_category"), width = "100%", height = "70vh"))))
     )
  
   )
 }
     
-#' cv_dt Server Functions
+#' cv_rf Server Functions
 #'
 #' @noRd 
-mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
+mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
     ns <- session$ns
     
     
-    M <- rv(MCs.dt = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
-    
+    M <- rv(MCs.rf = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
-      M$MCs.dt  <- NULL
+      M$MCs.rf  <- NULL
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
       M$times      <- 0
       datos        <- updateData$datos
       variable     <- updateData$variable.predecir
+      n.mtry   <- floor(sqrt(ncol(datos)))
       
       if(!is.null(datos)){
         choices      <- as.character(unique(datos[, variable]))
         updateSelectizeInput(session, "sel_split", selected = "")
-        updateSelectInput(session, "cvdt.sel", choices = choices, selected = choices[1])
-        updateSelectInput(session, "cvdt_cat", choices = choices, selected = choices[1])
+        updateNumericInput(session, "mtry", value = n.mtry)
+        updateSelectInput(session, "cvrf.sel", choices = choices, selected = choices[1])
+        updateSelectInput(session, "cvrf_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
-          shinyjs::show("cvdt_cat", anim = TRUE, animType = "fade")
-          shinyjs::show("cvdt_step", anim = TRUE, animType = "fade")
+          shinyjs::show("cvrf_cat", anim = TRUE, animType = "fade")
+          shinyjs::show("cvrf_step", anim = TRUE, animType = "fade")
         }else{
-          shinyjs::hide("cvdt_cat", anim = TRUE, animType = "fade")
-          shinyjs::hide("cvdt_step", anim = TRUE, animType = "fade")
+          shinyjs::hide("cvrf_cat", anim = TRUE, animType = "fade")
+          shinyjs::hide("cvrf_step", anim = TRUE, animType = "fade")
         }
       }
       
     })
     
-    output$txtcvdt <- renderPrint({
-      input$btn_cv_dt
-      M$MCs.dt <- NULL
+    output$txtcvrf <- renderPrint({
+      input$btn_cv_rf
+      M$MCs.rf  <- NULL
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
       tryCatch({
         splits    <- isolate(input$sel_split)
         cant.vc   <- isolate(updateData$numValC)
-        MCs.dt    <- vector(mode = "list")
+        MCs.rf    <- vector(mode = "list")
         datos     <- isolate(updateData$datos)
         numGrupos <- isolate(updateData$numGrupos)
         grupos    <- isolate(updateData$grupos)
-        max_depth <- isolate(input$max_depth)
-        min_split <- isolate(input$min_split)
+        mtry      <- isolate(input$mtry)
+        ntree     <- isolate(input$ntree)
         variable  <- updateData$variable.predecir
         var_      <- paste0(variable, "~.")
         category  <- isolate(levels(updateData$datos[,variable]))
         dim_v     <- isolate(length(category))
         nombres   <- vector(mode = "character", length = length(splits))
-        Corte     <- isolate(input$cvdt_step)
-        cat_sel   <- isolate(input$cvdt_cat)
+        Corte     <- isolate(input$cvrf_step)
+        cat_sel   <- isolate(input$cvrf_cat)
         
         if(length(splits)<1){
           if(M$times != 0)
             showNotification("Debe seleccionar al menos un kernel")
         }
         for (kernel in 1:length(splits)){
-          MCs.dt[[paste0("MCs.",splits[kernel])]] <- vector(mode = "list", length = cant.vc)
+          MCs.rf[[paste0("MCs.",splits[kernel])]] <- vector(mode = "list", length = cant.vc)
           nombres[kernel] <- paste0("MC.",splits[kernel])
         }
         
         for (i in 1:cant.vc){
-          MC.dt <- vector(mode = "list", length = length(splits))
-          names(MC.dt) <- nombres
+          MC.rf <- vector(mode = "list", length = length(splits))
+          names(MC.rf) <- nombres
           for (kernel in 1:length(splits)){
-            MC.dt[[kernel]] <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
+            MC.rf[[kernel]] <- matrix(rep(0, dim_v * dim_v), nrow = dim_v)
           }
           
           for (k in 1:numGrupos){
@@ -125,8 +126,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
             ttesting  <- datos[muestra, ]
             
             for (j in 1:length(splits)){
-              modelo      <- train.rpart(as.formula(var_), data = ttraining,
-                                         control = rpart.control(minsplit = min_split, maxdepth = max_depth),parms = list(split = splits[j]))
+              modelo      <- train.randomForest(as.formula(var_), data = ttraining, mtry = mtry, ntree = ntree, parms = list(split = splits[j]))
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -135,30 +135,30 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
                 Score       <- prediccion$prediction[,positive]
                 Prediccion  <- ifelse(Score  > Corte, positive, negative)
                 MC          <- table(Clase , Pred = factor(Prediccion, levels = category))
-                MC.dt[[j]]  <- MC.dt[[j]] + MC
+                MC.rf[[j]]  <- MC.rf[[j]] + MC
               }else{
                 prediccion  <- predict(modelo, ttesting)
                 MC          <- confusion.matrix(ttesting, prediccion)
-                MC.dt[[j]] <- MC.dt[[j]] + MC
+                MC.rf[[j]]  <- MC.rf[[j]] + MC
               }
             }
           }
           
-          for (l in 1:length(MCs.dt)){
-            MCs.dt[[l]][[i]] <- MC.dt[[l]]
+          for (l in 1:length(MCs.rf)){
+            MCs.rf[[l]][[i]] <- MC.rf[[l]]
           }
         }
         
-        M$MCs.dt  <- MCs.dt
-        resultados <- indices.cv(category, cant.vc, splits, MCs.dt)
+        M$MCs.rf  <- MCs.rf
+        resultados <<- indices.cv(category, cant.vc, splits, MCs.rf)
         M$grafico  <- resultados$grafico
         M$global   <- resultados$global
         M$categories <- resultados$categories
         M$times    <- 1
-        print(MCs.dt)
+        print(MCs.rf)
         
       },error = function(e){
-        M$MCs.dt <- NULL
+        M$MCs.rf <- NULL
         M$grafico <- NULL
         M$global  <- NULL
         M$categories <- NULL
@@ -169,8 +169,8 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     
     
     
-    output$e_dt_glob  <-  renderEcharts4r({
-      input$btn_cv_dt
+    output$e_rf_glob  <-  renderEcharts4r({
+      input$btn_cv_rf
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
@@ -181,7 +181,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
         return(NULL)
     })    
     
-    output$e_dt_error  <-  renderEcharts4r({
+    output$e_rf_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
       
       if(!is.null(M$grafico)){
@@ -195,9 +195,9 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     })
     
     
-    output$e_dt_category  <-  renderEcharts4r({
+    output$e_rf_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
-      cat    <- input$cvdt.sel
+      cat    <- input$cvrf.sel
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
@@ -211,7 +211,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
 
     
 ## To be copied in the UI
-# mod_cv_dt_ui("cv_dt_1")
+# mod_cv_rf_ui("cv_rf_1")
     
 ## To be copied in the server
-# mod_cv_dt_server("cv_dt_1")
+# mod_cv_rf_server("cv_rf_1")

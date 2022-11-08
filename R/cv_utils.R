@@ -43,7 +43,7 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
   comp_plot
 }
 
-resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
+resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
     
   if(!error){  
     datos.grafico <- datos.grafico |>
@@ -83,7 +83,7 @@ resumen.puntos <- function(datos.grafico, labels = c("Global", "iteracion"), err
   resumen
 }
 
-resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion")) {
+resumen.barras2 <- function(datos.grafico, labels = c("Global", "iteracion")) {
   
   datos.grafico <- datos.grafico |>
     dplyr::group_by( name, color ) |>

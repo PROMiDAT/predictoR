@@ -13,17 +13,12 @@ mod_lda_ui <- function(id){
   opciones <-   
     div(
       conditionalPanel(
-        "input['lda_ui_1-Boxlda'] == 'tabldaModelo' || input['lda_ui_1-Boxlda']  == 'tabldaPlot'  || input['lda_ui_1-Boxlda'] == 'tabldaProb' || input['lda_ui_1-Boxlda'] == 'tabldaProbInd'",
+        "input['lda_ui_1-Boxlda'] == 'tabldaModelo'  || input['lda_ui_1-Boxlda'] == 'tabldaProb' || input['lda_ui_1-Boxlda'] == 'tabldaProbInd'",
         tabsOptions(heights = c(70), tabs.content = list(
           list(
             conditionalPanel(
             "input['lda_ui_1-Boxlda'] == 'tabldaModelo'",
             options.run(ns("runlda")), tags$hr(style = "margin-top: 0px;")),
-            conditionalPanel(
-              "input['lda_ui_1-Boxlda']  == 'tabldaPlot'",
-              options.base(), tags$hr(style = "margin-top: 0px;"),
-              selectizeInput(ns("select_var_lda_plot"),NULL,label = "Variables Predictoras:", multiple = T, choices = c(""),
-                             options = list(maxItems = 2, placeholder = ""), width = "100%")),
             conditionalPanel(
               "input['lda_ui_1-Boxlda'] == 'tabldaProb'",
               options.run(ns("runProb")), tags$hr(style = "margin-top: 0px;"),
@@ -98,7 +93,6 @@ mod_lda_server <- function(input, output, session, updateData, modelos, codediom
       updateSelectInput(session, "cat.sel.prob", choices = "")
       updateSelectInput(session, "cat_probC", choices = "")
     }
-    updateSelectizeInput(session, "select_var_lda_plot", choices = nombres)
     updateTabsetPanel(session, "Boxlda",selected = "tabldaModelo")
   })
   

@@ -15,12 +15,7 @@ mod_cv_rlr_ui <- function(id){
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
                                                    selectInput(inputId = ns("cvrlr.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))),
-                     conditionalPanel("input['cv_rlr_ui_1-Boxrlr'] == 'tabCVrlrIndices3'",
-                                      div(id = ns("row2"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvrlr.glo"),label = NULL,
-                                                               choices = "")))))
+                                                               choices =  "", width = "100%")))))
   
   tagList(
     tabBoxPrmdt(
@@ -29,7 +24,7 @@ mod_cv_rlr_ui <- function(id){
                fluidRow(col_6(radioSwitch(ns("scale_cvrlr"), "escal", c("si", "no"))),
                col_6(
                  selectizeInput(
-                   ns("alpha_rlr"), labelInput("selectAlg"), multiple = T,
+                   ns("sel_alpha"), labelInput("selectAlg"), multiple = T,
                    choices = list("Ridge" = 0, "Lasso" = 1)))),
                
                fluidRow(col_6(numericInput(ns("cvrlr_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
@@ -57,15 +52,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
     
     
     M <- rv(MCs.rlr = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
-    
-    observeEvent(codedioma$idioma, {
-      
-      nombres <- list(0, 1)
-      names(nombres) <- tr(c("errG", "precG"),codedioma$idioma)
-      
-      updateSelectInput(session, "cvrlr.glo", choices = nombres, selected = 1)
-    })
-    
+
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
       M$MCs.rlr <- NULL
       M$grafico <- NULL
@@ -76,6 +63,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       
       if(!is.null(datos)){
         choices      <- as.character(unique(datos[, variable]))
+        updateSelectizeInput(session, "sel_alpha", selected = "")
         updateSelectInput(session, "cvrlr.sel", choices = choices, selected = choices[1])
         updateSelectInput(session, "cvrlr_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
@@ -96,7 +84,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       M$global  <- NULL
       M$categories <- NULL
       tryCatch({
-        alphas       <- isolate(input$alpha_rlr)
+        alphas       <- isolate(input$sel_alpha)
         alpha_labels <- alphas
         cant.vc   <- isolate(updateData$numValC)
         MCs.rlr   <- vector(mode = "list")
@@ -185,7 +173,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
-        resumen.puntos(grafico, labels = c(tr("precG",idioma), "alpha"))
+        resumen.barras(grafico, labels = c(tr("precG",idioma), "alpha"))
       }
       else
         return(NULL)
@@ -197,7 +185,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma), "alpha"), error = TRUE)
+        resumen.barras(err, labels = c(tr("errG",idioma), "alpha"), error = TRUE)
         
       }
       else
@@ -211,7 +199,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.puntos(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "alpha"))
+        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "alpha"))
         
       }
       else

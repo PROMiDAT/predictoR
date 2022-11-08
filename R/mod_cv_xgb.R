@@ -15,12 +15,7 @@ mod_cv_xgb_ui <- function(id){
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
                                                    selectInput(inputId = ns("cvxgb_sel"),label = NULL,
-                                                               choices =  "", width = "100%")))),
-                     conditionalPanel("input['cv_xgb_ui_1-Boxdt'] == 'tabcvxgbIndices3'",
-                                      div(id = ns("row2"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvxgb_glo"),label = NULL,
-                                                               choices = "")))))
+                                                               choices =  "", width = "100%")))))
   
   tagList(
     tabBoxPrmdt(
@@ -30,7 +25,7 @@ mod_cv_xgb_ui <- function(id){
                         col_6(numericInput(ns("n_rounds"), labelInput("selnrounds"),min = 1,step = 1, value = 50))),
                fluidRow(col_12(
                  selectizeInput(
-                   ns("booster_xgb"), labelInput("selbooster"), multiple = T,
+                   ns("sel_booster"), labelInput("selbooster"), multiple = T,
                    choices =  c("gbtree", "gblinear", "dart")))),
                
                fluidRow(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
@@ -59,13 +54,6 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
     
     M <- rv(MCs.dt = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
     
-    observeEvent(codedioma$idioma, {
-      
-      nombres <- list(0, 1)
-      names(nombres) <- tr(c("errG", "precG"),codedioma$idioma)
-      
-      updateSelectInput(session, "cvxgb_glo", choices = nombres, selected = 1)
-    })
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
       M$MCs.dt <- NULL
@@ -77,6 +65,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       
       if(!is.null(datos)){
         choices      <- as.character(unique(datos[, variable]))
+        updateSelectizeInput(session, "sel_booster", selected = "")
         updateSelectInput(session, "cvxgb_sel", choices = choices, selected = choices[1])
         updateSelectInput(session, "cvxgb_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
@@ -97,7 +86,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       M$global  <- NULL
       M$categories <- NULL
       tryCatch({
-        boosters    <- isolate(input$booster_xgb)
+        boosters    <- isolate(input$sel_booster)
         cant.vc   <- isolate(updateData$numValC)
         MCs.dt    <- vector(mode = "list")
         datos     <- isolate(updateData$datos)
@@ -185,7 +174,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
-        resumen.puntos(grafico, labels = c(tr("precG",idioma), unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
+        resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
       }
       else
         return(NULL)
@@ -197,7 +186,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma),  unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))), error = TRUE)
+        resumen.barras(err, labels = c(tr("errG",idioma),  unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))), error = TRUE)
 
       }
       else
@@ -211,7 +200,7 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.puntos(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
+        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),unlist(strsplit(strsplit(tr("selbooster",idioma), '[ ]')[[1]][3], ':'))))
         
       }
       else

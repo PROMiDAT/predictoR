@@ -193,3 +193,7 @@ e_xgb_varImp <- function(booster = "gbtree"){
   )
 }
 
+cv_knn_code <- function(){
+  
+}
+

@@ -29,11 +29,6 @@ mod_cv_knn_ui <- function(id){
                fluidRow(col_6(numericInput(ns("kmax_cvknn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
                         col_6(radioSwitch(ns("scale_cvknn"), "escal", c("si", "no")))),
                fluidRow(col_12(
-                 
-                 # selectizeInput(
-                 #   ns("sel_kernel"), labelInput("selkernel"), multiple = T,
-                 #   choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
-                 #               "triweight", "cos","inv","gaussian"))
                  selectizeInput(
                    ns("sel_kernel"), labelInput("selkernel"), multiple = T,
                    choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
@@ -79,7 +74,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       M$grafico <- NULL
       M$global  <- NULL
       M$categories <- NULL
-      M$times <- 0
+      M$times      <- 0
       datos        <- updateData$datos
       variable     <- updateData$variable.predecir
       
@@ -193,7 +188,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
-        resumen.puntos(grafico, labels = c(tr("precG",idioma), "Kernel"))
+        resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel"))
       }
       else
         return(NULL)
@@ -205,7 +200,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.puntos(err, labels = c(tr("errG",idioma), "Kernel"), error = TRUE)
+        resumen.barras(err, labels = c(tr("errG",idioma), "Kernel"), error = TRUE)
         
       }
       else
@@ -219,7 +214,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.puntos(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel"))
+        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel"))
         
       }
       else
