@@ -83,21 +83,22 @@ resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), err
   resumen
 }
 
-resumen.barras2 <- function(datos.grafico, labels = c("Global", "iteracion")) {
+resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valor Máximo", "Valor Mínimo")) {
   
-  datos.grafico <- datos.grafico |>
-    dplyr::group_by( name, color ) |>
-    dplyr::summarise(value = mean(value), .groups = 'drop') |>
-    dplyr::arrange(desc(value))
+  datos.grafico <- datos.grafico |> 
+         dplyr::group_by( name, color ) |>
+         dplyr::summarise( min = min(value), max = max(value), value = value, .groups = 'drop')
   
   resumen <- datos.grafico |>
-    e_charts( name) |>
-    e_bar(value, name = var) |> 
+    e_charts(name) |>
+    e_scatter(value, name = var, symbol_size = 10) |> 
+    e_error_bar(min, max, 
+                tooltip = list(formatter = e_JS(paste0("function(params){",
+                                                       "return('<b>", labels[3], ": </b>' + ",
+                                                       "Number.parseFloat(params.value[2]).toFixed(3) + ",
+                                                       "'<br/><b>", labels[4], ": </b>' + ",
+                                                       "Number.parseFloat(params.value[1]).toFixed(3))}"))))|>
     e_add_nested("itemStyle", color) |>
-    e_labels(show     = TRUE,
-             position = 'top' ,
-             formatter =  e_JS("function(params){
-                                           return(parseFloat(params.value[1] *100).toFixed(2) + '%' )}")) |>
     e_y_axis(formatter = e_axis_formatter("percent",
                                           digits = 0)) |>
     e_axis_labels(x = labels[2],

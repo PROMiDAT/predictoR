@@ -21,14 +21,14 @@ mod_cv_rf_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxrf"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVrfModelo",
-               fluidRow(col_6(numericInput(ns("mtry"), labelInput("numVars"),1, width = "100%", min = 1)),
+               div(col_6(numericInput(ns("mtry"), labelInput("numVars"),1, width = "100%", min = 1)),
                         col_6(numericInput(ns("ntree"), labelInput("numTree"), 20, width = "100%", min = 5))),
-               fluidRow(col_12(
+               div(col_12(
                  selectizeInput(
                    ns("sel_split"), labelInput("splitIndex"), multiple = T,
                    choices =  list("gini" = "gini", "Entropia" = "information")))),
                
-               fluidRow(col_6(numericInput(ns("cvrf_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvrf_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvrf_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrf")), 
@@ -150,7 +150,7 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         }
         
         M$MCs.rf  <- MCs.rf
-        resultados <<- indices.cv(category, cant.vc, splits, MCs.rf)
+        resultados <- indices.cv(category, cant.vc, splits, MCs.rf)
         M$grafico  <- resultados$grafico
         M$global   <- resultados$global
         M$categories <- resultados$categories

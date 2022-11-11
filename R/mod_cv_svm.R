@@ -21,13 +21,13 @@ mod_cv_svm_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxsvm"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVsvmModelo",
-               fluidRow(col_6(radioSwitch(ns("scale_cvsvm"), "escal", c("si", "no"))),
+               div(col_6(radioSwitch(ns("scale_cvsvm"), "escal", c("si", "no"))),
                col_6(
                  selectizeInput(
                    ns("sel_kernel_svm"), labelInput("selkernel"), multiple = T,
                    choices = c("linear", "polynomial", "radial", "sigmoid")))),
                
-               fluidRow(col_6(numericInput(ns("cvsvm_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvsvm_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvsvm_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvsvm")), 
@@ -150,6 +150,7 @@ mod_cv_svm_server <- function(input, output, session, updateData, codedioma){
         M$global   <- resultados$global
         M$categories <- resultados$categories
         M$times    <- 1
+        isolate(codedioma$code <- append(codedioma$code, cv_svm_code(variable, dim_v, cant.vc, numGrupos)))
         print(MCs.svm)
         
       },error = function(e){

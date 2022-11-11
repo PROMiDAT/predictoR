@@ -184,6 +184,7 @@ tablaComp;Tabla Comparativa;Comparison Table
 tasim;Valor del test;Test value
 threshold;Criterios de detención:;Detention criteria:
 tipo;Tipo;Type
+tipoGrafico;Tipo de Gráfico:; Plot Type:
 trans;Transformar;Convert
 ultimo;Ultimo;Last
 variables;Variables;Variables

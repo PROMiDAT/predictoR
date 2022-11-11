@@ -21,7 +21,7 @@ mod_cv_rl_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxrl"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVrlModelo",
-               fluidRow(col_6(numericInput(ns("cvrl_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvrl_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvrl_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrl")), 

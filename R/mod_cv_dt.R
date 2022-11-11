@@ -21,14 +21,14 @@ mod_cv_dt_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxdt"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVdtModelo",
-               fluidRow(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
+               div(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
                         col_6(numericInput(ns("min_split"), labelInput("minsplit"),min = 1,step = 1, value = 2))),
-               fluidRow(col_12(
+               div(col_12(
                  selectizeInput(
                    ns("sel_split"), labelInput("splitIndex"), multiple = T,
                    choices =  list("gini" = "gini", "Entropia" = "information")))),
                
-               fluidRow(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvdt_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvdt_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvdt")), 
@@ -155,6 +155,8 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
         M$global   <- resultados$global
         M$categories <- resultados$categories
         M$times    <- 1
+        isolate(codedioma$code <- append(codedioma$code, cv_dt_code(variable, dim_v, cant.vc, numGrupos)))
+        
         print(MCs.dt)
         
       },error = function(e){

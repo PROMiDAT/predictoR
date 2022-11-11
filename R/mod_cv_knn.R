@@ -15,27 +15,24 @@ mod_cv_knn_ui <- function(id){
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
                                                    selectInput(inputId = ns("cvknn.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))),
-                     conditionalPanel("input['cv_knn_ui_1-BoxKnn'] == 'tabCVKnnIndices3'",
-                                      div(id = ns("row2"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvknn.glo"),label = NULL,
-                                                               choices = "")))))
+                                                               choices =  "", width = "100%")))))
+  
+
   
   tagList(
     tabBoxPrmdt(
-      id = ns("BoxKnn"), title = title_comp, 
+      id = ns("BoxKnn"), 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVKnnModelo",
-               fluidRow(col_6(numericInput(ns("kmax_cvknn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
+               div(col_6(numericInput(ns("kmax_cvknn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
                         col_6(radioSwitch(ns("scale_cvknn"), "escal", c("si", "no")))),
-               fluidRow(col_12(
+               div(col_12(
                  selectizeInput(
                    ns("sel_kernel"), labelInput("selkernel"), multiple = T,
                    choices = c("optimal", "rectangular", "triangular", "epanechnikov", "biweight",
                                "triweight", "cos","inv","gaussian"))
                  )),
                
-               fluidRow(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvknn_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvknn")), 
@@ -43,9 +40,23 @@ mod_cv_knn_ui <- function(id){
                hr(style = "border-top: 2px solid #cccccc;" ),
                actionButton(ns("btn_cv_knn"), labelInput("generar"), width  = "100%" ),br(),br()),
       tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVKnnIndices",
+               div(col_8(),
+                   col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("plot_type_p"),label = NULL,
+                                                  choices =  c("barras", "lineas", "error"), width = "100%")))), hr()),
                div(col_6(echarts4rOutput(ns("e_knn_glob"), width = "100%", height = "70vh")),
                    col_6(echarts4rOutput(ns("e_knn_error"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVKnnIndicesCat",
+               div(col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("selectCat"),class = "wrapper-tag"),
+                                  tags$div(class="multiple-select-var",
+                                           selectInput(inputId = ns("cvknn.sel"),label = NULL,
+                                                       choices =  "", width = "100%")))),
+                        col_4(),
+                        col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                                  tags$div(class="multiple-select-var",
+                                           selectInput(inputId = ns("plot_type"),label = NULL,
+                                                       choices =  c("barras", "lineas", "error"), width = "100%"))))),hr(),
                div(col_12(echarts4rOutput(ns("e_knn_category"), width = "100%", height = "70vh"))))
     )
  
@@ -169,6 +180,8 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         M$global   <- resultados$global
         M$categories <- resultados$categories
         M$times    <- 1
+        isolate(codedioma$code <- append(codedioma$code, cv_knn_code(variable, dim_v, cant.vc, numGrupos)))
+        
         print(MCs.knn)
         
       },error = function(e){
@@ -185,10 +198,16 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
     
     output$e_knn_glob  <-  renderEcharts4r({
       input$btn_cv_knn
+      type    <- input$plot_type_p
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
-        resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel"))
+        
+        switch (type,
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma), "Validacion", "Valor Máximo", "Valor Mínimo")))
+        )
       }
       else
         return(NULL)
@@ -196,12 +215,16 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
     
     output$e_knn_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
+      type      <- input$plot_type_p
       
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.barras(err, labels = c(tr("errG",idioma), "Kernel"), error = TRUE)
-        
+        switch (type,
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), "Validacion", "Valor Máximo", "Valor Mínimo")))
+        )
       }
       else
         return(NULL)
@@ -211,11 +234,18 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
     output$e_knn_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
       cat    <- input$cvknn.sel
+      type   <- input$plot_type
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel"))
-        
+        res1 <<- M$grafico
+        res2 <<- M$categories[[cat]]
+        switch (type,
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "error" = return( resumen.error(graf, labels = c(tr("prec",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Validacion", "Valor Máximo", "Valor Mínimo")))
+        )
+       
       }
       else
         return(NULL)

@@ -21,15 +21,15 @@ mod_cv_boost_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxboost"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVboostModelo",
-               fluidRow(col_6(numericInput(ns("mfinal"), labelInput("numTree"), 20, width = "100%",min = 1)),
+               div(col_6(numericInput(ns("mfinal"), labelInput("numTree"), 20, width = "100%",min = 1)),
                         col_6(numericInput(ns("maxdepth"), labelInput("maxdepth"), 15, width = "100%",min = 1))),
-               fluidRow(col_6(
+               div(col_6(
                  selectizeInput(
                    ns("sel_kernel"), labelInput("selkernel"), multiple = T,
                    choices = c("Breiman", "Freund", "Zhu"))
                  ),col_6(numericInput(ns("minsplit"), labelInput("minsplit"), 20, width = "100%",min = 1))),
                
-               fluidRow(col_6(numericInput(ns("cvboost_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvboost_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvboost_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvboost")), 
@@ -127,7 +127,7 @@ mod_cv_boost_server <- function(input, output, session, updateData, codedioma){
             
             for (j in 1:length(kernels)){
               modelo      <- train.adabag(as.formula(var_), data = ttraining, coeflearn = kernels[j], mfinal = mfinal,
-                                          control = rpart.control(minsplit =minsplit, maxdepth = maxdepth))
+                                          control = rpart.control(minsplit = minsplit, maxdepth = maxdepth))
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]

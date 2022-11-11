@@ -21,14 +21,14 @@ mod_cv_xgb_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxdt"), title = title_comp, 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabcvxgbModelo",
-               fluidRow(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
+               div(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
                         col_6(numericInput(ns("n_rounds"), labelInput("selnrounds"),min = 1,step = 1, value = 50))),
-               fluidRow(col_12(
+               div(col_12(
                  selectizeInput(
                    ns("sel_booster"), labelInput("selbooster"), multiple = T,
                    choices =  c("gbtree", "gblinear", "dart")))),
                
-               fluidRow(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
                         col_6(selectInput(ns("cvxgb_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvxgb")), 

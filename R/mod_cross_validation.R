@@ -13,7 +13,12 @@ mod_cross_validation_ui <- function(id){
                                       div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
                                           tags$div(class="multiple-select-var",
                                                    selectInput(inputId = ns("cvcv_sel"),label = NULL,
-                                                               choices =  "", width = "100%")))))
+                                                               choices =  "", width = "100%")))),
+                     conditionalPanel("input['cross_validation_ui_1-BoxCV'] == 'tabcvcvIndices3'",
+                                      div(id = ns("row2"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
+                                          tags$div(class="multiple-select-var",
+                                                   selectInput(inputId = ns("cvcv_glo"),label = NULL,
+                                                               choices = "")))))
   
   opc_knn <- list(fluidRow(col_4(numericInput(ns("kmax.knn"), labelInput("kmax"), min = 1,step = 1, value = 7)),
                            col_4(selectInput(inputId = ns("kernel.knn.pred"), label = labelInput("selkernel"),selected = 1,
@@ -36,7 +41,9 @@ mod_cross_validation_ui <- function(id){
   
   opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), labelInput("numTree"), 20, width = "100%",min = 1)),
                                     col_4(numericInput(ns("maxdepth.boosting.pred"),labelInput("maxdepth"), 15, width = "100%",min = 1)),
-                                    col_4(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1))))
+                                    col_4(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1)),
+                                    col_4(selectInput(inputId = ns("coeflearn"), label = labelInput("selkernel"), selected = 1,
+                                                      choices = c("Breiman", "Freund", "Zhu")))))
   opc_rl  <- list(tags$span())
   
   opc_rlr <- list(fluidRow(col_6(selectInput(inputId = ns("alpha.rlr.pred"), label = labelInput("selectAlg"),selected = 1,
@@ -93,9 +100,11 @@ mod_cross_validation_ui <- function(id){
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txt_cv")), 
                                                       type = "html", loader = "loader4")),br(),br()),
-      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabcvcvIndices",
-               div(col_6(echarts4rOutput(ns("e_cv_glob"), width = "100%", height = "70vh")),
-                   col_6(echarts4rOutput(ns("e_cv_error"), width = "100%", height = "70vh")))),
+      # tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabcvcvIndices",
+      #          div(col_6(echarts4rOutput(ns("e_cv_glob"), width = "100%", height = "70vh")),
+      #              col_6(echarts4rOutput(ns("e_cv_error"), width = "100%", height = "70vh")))),
+      tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabcvcvIndices3",
+               div(col_12(echarts4rOutput(ns("e_cv_precision"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabcvcvIndicesCat",
                div(col_12(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh"))))
     )
@@ -115,11 +124,13 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       
       nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
       names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),codedioma$idioma)
+      precision <- list(0, 1)
+      names(precision) <- tr(c("errG", "precG"),codedioma$idioma)
       
+      updateSelectInput(session, "cvcv_glo", choices = precision, selected = 1)
       updateSelectInput(session, "sel_methods", choices = nombres, selected = input$sel_methods)
     })
-    
-    
+
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
       datos    <- updateData$datos
       variable <- updateData$variable.predecir
@@ -210,7 +221,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
               MC         <- confusion.matrix(ttesting, prediccion)
               MC.bosques <- MC.bosques + MC
               
-              modelo     <- train.gbm(var_, data = ttraining, distribution = "tdist", n.trees = 100, shrinkage = 0.1, verbose = FALSE)
+              modelo     <- train.adabag(var_, data = ttraining, coeflearn = params$coeflearn_b, mfinal = 100,
+                                         control = rpart.control(minsplit = params$minsplit_b, maxdepth = params$maxdepth_b))
               prediccion <- predict(modelo, ttesting)
               MC         <- confusion.matrix(ttesting, prediccion)
               MC.potenciacion <- MC.potenciacion + MC
@@ -268,7 +280,6 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                        "xgboosting", "bayes", "regrLog", "regrLogP")
           M$MCs.cv     <- MCs.cv
           resultados   <- indices.cv(category, cant.vc, methods, MCs.cv)
-          result       <<- resultados
           M$grafico    <- resultados$grafico
           M$global     <- resultados$global
           M$categories <- resultados$categories
@@ -334,6 +345,24 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
 
     })
     
+    output$e_cv_precision  <-  renderEcharts4r({
+      idioma <- codedioma$idioma
+      tryCatch({
+        indice  <- input$cvcv_glo
+        grafico <- M$grafico
+        error   <- indice == "0"
+        label   <- ifelse(error, tr("errG",idioma), tr("precG",idioma))
+        if(!is.null(grafico)){
+          if(error)
+            grafico$value <- 1 - M$global
+          resumen.barras(grafico, labels = c(label,  unlist(strsplit(tr("generarM",idioma), '[ ]')[[1]][2])), error = error)
+        }
+        else
+          return(NULL)
+      },error = function(e){
+        return(NULL)
+      })
+    })
     
     output$e_cv_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
@@ -350,8 +379,6 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       },error = function(e){
         return(NULL)
       })
-      
-
     })
     #Actualiza la cantidad de capas ocultas (neuralnet)
     observeEvent(input$cant.capas.nn.pred, {
@@ -395,6 +422,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         iter         <-  input$iter.boosting.pred 
         maxdepth_b   <-  input$maxdepth.boosting.pred 
         minsplit_b   <-  input$minsplit.boosting.pred
+        coeflearn_b  <- input$coeflearn
       })
       return(list(k_kn       = k_kn,       scal_kn     = scal_kn,     kernel_kn    = kernel_kn, 
                   tipo_dt    = tipo_dt,    minsplit_dt = minsplit_dt, maxdepth_dt  = maxdepth_dt, 
@@ -402,7 +430,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                   kernel_svm = kernel_svm, tipo_xgb    = tipo_xgb,    maxdepth_xgb = maxdepth_xgb,  
                   n.rounds   = n.rounds,   threshold   = threshold,   stepmax      = stepmax, 
                   capas.np   = capas.np,   scal_rlr    = scal_rlr,    alpha        = alpha, 
-                  iter       = iter,       maxdepth_b  = maxdepth_b,  minsplit_b   = minsplit_b))
+                  iter       = iter,       maxdepth_b  = maxdepth_b,  minsplit_b   = minsplit_b, coeflearn_b = coeflearn_b))
     }
     
     defaul_param_values <- function(){
