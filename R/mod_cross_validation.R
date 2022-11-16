@@ -39,10 +39,10 @@ mod_cross_validation_ui <- function(id){
                                              choices =  list("gini" = "gini", "Entropia" = "information")))))
   opc_bayes <- list(tags$span())
   
-  opc_potenciacion <- list(fluidRow(col_4(numericInput(ns("iter.boosting.pred"), labelInput("numTree"), 20, width = "100%",min = 1)),
-                                    col_4(numericInput(ns("maxdepth.boosting.pred"),labelInput("maxdepth"), 15, width = "100%",min = 1)),
-                                    col_4(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1)),
-                                    col_4(selectInput(inputId = ns("coeflearn"), label = labelInput("selkernel"), selected = 1,
+  opc_potenciacion <- list(fluidRow(col_6(numericInput(ns("iter.boosting.pred"), labelInput("numTree"), 20, width = "100%",min = 1)),
+                                    col_6(numericInput(ns("maxdepth.boosting.pred"),labelInput("maxdepth"), 15, width = "100%",min = 1)),
+                                    col_6(numericInput(ns("minsplit.boosting.pred"),labelInput("minsplit"), 20, width = "100%",min = 1)),
+                                    col_6(selectInput(inputId = ns("coeflearn"), label = labelInput("selkernel"), selected = 1,
                                                       choices = c("Breiman", "Freund", "Zhu")))))
   opc_rl  <- list(tags$span())
   
@@ -73,21 +73,21 @@ mod_cross_validation_ui <- function(id){
                fluidRow(
                  col_6(selectInput(inputId = ns("predic_var"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
                  col_6(selectInput(inputId = ns("sel_methods"), label = labelInput("selectMod"),
-                                   choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%"))
+                                   choices =  list("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "rl", "rlr"), width = "100%"))
                ), hr(style = "border-top: 2px solid #cccccc;" ),
-               conditionalPanel(condition =  "input.sel_methods == 'knn'",
+               conditionalPanel(condition =  "input.sel_methods == 'knnl'",
                                 opc_knn, ns = ns),
-               conditionalPanel(condition =  "input.sel_methods == 'svm'",
+               conditionalPanel(condition =  "input.sel_methods == 'svml'",
                                 opc_svm, ns = ns),
-               conditionalPanel(condition =  "input.sel_methods == 'dt'",
+               conditionalPanel(condition =  "input.sel_methods == 'dtl'",
                                 opc_dt, ns = ns),
-               conditionalPanel(condition =  "input.sel_methods == 'rf'",
+               conditionalPanel(condition =  "input.sel_methods == 'rfl'",
                                 opc_rf, ns = ns),
                conditionalPanel(condition =  "input.sel_methods == 'xgb'",
                                 opc_xgb, ns = ns),
-               conditionalPanel(condition =  "input.sel_methods == 'ada'",
+               conditionalPanel(condition =  "input.sel_methods == 'bl'",
                                 opc_potenciacion, ns = ns),
-               conditionalPanel(condition =  "input.sel_methods == 'bayes'",
+               conditionalPanel(condition =  "input.sel_methods == 'Bayes'",
                                 opc_bayes, ns = ns),
                conditionalPanel(condition =  "input.sel_methods == 'nn'",
                                 opc_nn, ns = ns),
@@ -122,8 +122,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
     
     observeEvent(codedioma$idioma, {
       
-      nombres <- list( "knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr")
-      names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "nn", "rl", "rlr"),codedioma$idioma)
+      nombres <- list("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr")
+      names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr"),codedioma$idioma)
       precision <- list(0, 1)
       names(precision) <- tr(c("errG", "precG"),codedioma$idioma)
       
@@ -276,13 +276,16 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                          MCs.bayes        = MCs.bayes,        MCs.regrLog    = MCs.regrLog,
                          MCs.regrLogP     = MCs.regrLogP)
           
-          methods <- c("svm", "knn", "arboles", "bosques", "potenciacion", 
-                       "xgboosting", "bayes", "regrLog", "regrLogP")
+          methods <- c("knn", "arboles", "potenciacion",  "bosques", "svm", 
+                       "bayes", "xgboosting", "regrLog", "regrLogP")
           M$MCs.cv     <- MCs.cv
           resultados   <- indices.cv(category, cant.vc, methods, MCs.cv)
+          resultados$grafico$name <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr"),codedioma$idioma)
           M$grafico    <- resultados$grafico
           M$global     <- resultados$global
           M$categories <- resultados$categories
+          isolate(codedioma$code <- append(codedioma$code, cv_cv_code(variable, dim_v, cant.vc, numGrupos)))
+          res <<- resultados
           print("SVM")
           print(MCs.svm)
           print("KNN")
@@ -309,41 +312,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         
       })
     })
-
     
-    
-    output$e_cv_glob  <-  renderEcharts4r({
-      input$btn_cv
-      tryCatch({
-        grafico <- M$grafico
-        if(!is.null(grafico)){
-          idioma    <- codedioma$idioma
-          resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("generarM",idioma), '[ ]')[[1]][2])))
-        }
-        else
-          return(NULL)
-      },error = function(e){
-        return(NULL)
-      })
-
-    })    
-    
-    output$e_cv_error  <-  renderEcharts4r({
-      idioma    <- codedioma$idioma
-      tryCatch({
-        if(!is.null(M$grafico)){
-          err  <- M$grafico
-          err$value <- 1 - M$global
-          resumen.barras(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("generarM",idioma), '[ ]')[[1]][2])))
-          
-        }
-        else
-          return(NULL)
-      },error = function(e){
-        return(NULL)
-      })
-
-    })
     
     output$e_cv_precision  <-  renderEcharts4r({
       idioma <- codedioma$idioma
@@ -355,7 +324,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         if(!is.null(grafico)){
           if(error)
             grafico$value <- 1 - M$global
-          resumen.barras(grafico, labels = c(label,  unlist(strsplit(tr("generarM",idioma), '[ ]')[[1]][2])), error = error)
+          resumen.barras.h(grafico, labels = c(label,  unlist(strsplit(tr("generarM",idioma), '[ ]')[[1]][2])), error = error)
         }
         else
           return(NULL)

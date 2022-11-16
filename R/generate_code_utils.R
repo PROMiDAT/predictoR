@@ -417,7 +417,7 @@ for(i in 1:cantidad.validacion.cruzada){
     MC <- confusion.matrix(ttesting, prediccion)
     MC.gini <- MC.gini + MC
     
-    modelo <- train.randomForest(",var_pred," ~ ., data = taprendizaje, , parms = list(split = 'information'), mtry =floor(sqrt(ncol(datos))), ntree = 100)
+    modelo <- train.randomForest(",var_pred," ~ ., data = taprendizaje, parms = list(split = 'information'), mtry =floor(sqrt(ncol(datos))), ntree = 100)
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     MC.information <- MC.information + MC
@@ -513,6 +513,199 @@ for(i in 1:cantidad.validacion.cruzada){
 }"
   )
 }
+
+# BOOST ---------------------------------------------------------------------------------------------------
+
+cv_boost_code <- function(var_pred, dim_v, validaciones, grupo){
+  paste0(
+    "numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <- ",validaciones,"
+cantidad.grupos <- ",grupo,"
+
+MCs.breiman <- list()
+MCs.freund <- list()
+MCs.zhu <- list()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos)  # Crea los 10 grupos
+  MC.breiman <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  MC.freund <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  MC.zhu <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  
+  # Este ciclo es el que hace 'cross-validation' (validación cruzada) con 10
+  # grupos (Folds)
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  # Por ser una lista requiere de doble paréntesis
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Freiman', mfinal = 100,
+                                          control = rpart.control(maxdepth = 30)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.breiman <- MC.breiman + MC
+    
+    modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Freund', mfinal = 100,
+                                          control = rpart.control(maxdepth = 30)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.freund <- MC.freund + MC
+    
+    modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Zhu', mfinal = 100,
+                                          control = rpart.control(maxdepth = 30)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.zhu <- MC.zhu + MC
+    
+  }
+  MCs.breiman[[i]] <- MC.breiman
+  MCs.freund[[i]] <- MC.freund
+  MCs.zhu[[i]] <- MC.zhu
+}"
+  )
+}
+
+
+# RL ---------------------------------------------------------------------------------------------------
+
+cv_rl_code <- function(var_pred, dim_v, validaciones, grupo){
+  paste0(
+    "numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <- ",validaciones,"
+cantidad.grupos <- ",grupo,"
+
+MCs.rl <- list()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos)  # Crea los 10 grupos
+  MC.rl <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  # Este ciclo es el que hace 'cross-validation' (validación cruzada) con 10
+  # grupos (Folds)
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  # Por ser una lista requiere de doble paréntesis
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.glm(",var_pred," ~ ., data = taprendizaje)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.rl <- MC.rl + MC
+    
+    
+  }
+  MCs.rl[[i]] <- MC.rl
+}"
+  )
+}
+
+
+# RLR ---------------------------------------------------------------------------------------------------
+
+
+cv_rlr_code <- function(var_pred, dim_v, validaciones, grupo){
+  paste0(
+    "numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <- ",validaciones,"
+cantidad.grupos <- ",grupo,"
+
+MCs.ridge <- list()
+MCs.lasso <- list()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos)  # Crea los 10 grupos
+  MC.ridge <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  MC.lasso <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  
+  # Este ciclo es el que hace 'cross-validation' (validación cruzada) con 10
+  # grupos (Folds)
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  # Por ser una lista requiere de doble paréntesis
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.glmnet(",var_pred," ~ ., data = taprendizaje, standardize = TRUE, alpha = 0, family = 'multinomial' )
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.ridge <- MC.ridge + MC
+    
+    modelo <- train.glmnet(",var_pred," ~ ., data = taprendizaje, standardize = TRUE, alpha = 1, family = 'multinomial' )
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.lasso <- MC.lasso + MC
+    
+  }
+
+  MCs.ridge[[i]] <- MC.ridge
+  MCs.lasso[[i]] <- MC.lasso
+}"
+  )
+}
+
+
+# LDA ---------------------------------------------------------------------------------------------------
+
+cv_lda_code <- function(var_pred, dim_v, validaciones, grupo){
+  paste0(
+    "numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <- ",validaciones,"
+cantidad.grupos <- ",grupo,"
+
+MCs.lda <- list()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos)  # Crea los 10 grupos
+  MC.lda <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  # Este ciclo es el que hace 'cross-validation' (validación cruzada) con 10
+  # grupos (Folds)
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  # Por ser una lista requiere de doble paréntesis
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.lda(",var_pred," ~ ., data = taprendizaje)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.lda <- MC.lda + MC
+    
+    
+  }
+  MCs.lda[[i]] <- MC.lda
+}"
+  )
+}
+
+# LDA ---------------------------------------------------------------------------------------------------
+
+cv_qda_code <- function(var_pred, dim_v, validaciones, grupo){
+  paste0(
+    "numero.filas <- nrow(datos)
+cantidad.validacion.cruzada <- ",validaciones,"
+cantidad.grupos <- ",grupo,"
+
+MCs.qda <- list()
+
+for(i in 1:cantidad.validacion.cruzada){
+  grupos  <- createFolds(1:numero.filas, cantidad.grupos)  # Crea los 10 grupos
+  MC.qda <- matrix(rep(0, ",dim_v," * ",dim_v,"), nrow = ",dim_v,")
+  # Este ciclo es el que hace 'cross-validation' (validación cruzada) con 10
+  # grupos (Folds)
+  for(k in 1:cantidad.grupos) {
+    muestra <- grupos[[k]]  # Por ser una lista requiere de doble paréntesis
+    ttesting <- datos[muestra, ]
+    taprendizaje <- datos[-muestra, ]
+    
+    modelo <- train.qda(",var_pred," ~ ., data = taprendizaje)
+    prediccion <- predict(modelo, ttesting)
+    MC <- confusion.matrix(ttesting, prediccion)
+    MC.qda <- MC.qda + MC
+    
+    
+  }
+  MCs.qda[[i]] <- MC.qda
+}"
+  )
+}
+
 
 
 # Todos ---------------------------------------------------------------------------------------------------

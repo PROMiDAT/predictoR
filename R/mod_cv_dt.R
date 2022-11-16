@@ -9,17 +9,11 @@
 #' @importFrom shiny NS tagList 
 mod_cv_dt_ui <- function(id){
   ns <- NS(id)
-  
-  
-  title_comp <- list(conditionalPanel("input['cv_dt_ui_1-Boxdt'] == 'tabCVdtIndicesCat'",
-                                      div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvdt.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))))
+
   
   tagList(
     tabBoxPrmdt(
-      id = ns("Boxdt"), title = title_comp, 
+      id = ns("Boxdt"),
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVdtModelo",
                div(col_6(numericInput(ns("max_depth"), labelInput("maxdepth"), 15, width = "100%",min = 0, max = 30, step = 1)),
                         col_6(numericInput(ns("min_split"), labelInput("minsplit"),min = 1,step = 1, value = 2))),
@@ -36,9 +30,23 @@ mod_cv_dt_ui <- function(id){
                hr(style = "border-top: 2px solid #cccccc;" ),
                actionButton(ns("btn_cv_dt"), labelInput("generar"), width  = "100%" ),br(),br()),
       tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVdtIndices",
+               div(col_8(),
+                   col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("plot_type_p"),label = NULL,
+                                                  choices =  c("barras", "lineas", "error"), width = "100%")))), hr()),
                div(col_6(echarts4rOutput(ns("e_dt_glob"), width = "100%", height = "70vh")),
                    col_6(echarts4rOutput(ns("e_dt_error"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVdtIndicesCat",
+               div(col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("selectCat"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("cv.cat.sel"),label = NULL,
+                                                  choices =  "", width = "100%")))),
+                   col_4(),
+                   col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("plot_type"),label = NULL,
+                                                  choices =  "", width = "100%"))))),hr(),
                div(col_12(echarts4rOutput(ns("e_dt_category"), width = "100%", height = "70vh"))))
     )
  
@@ -55,6 +63,15 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     M <- rv(MCs.dt = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
     
     
+    observeEvent(codedioma$idioma, {
+      
+      nombres <- list("barras", "lineas", "error")
+      names(nombres) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
+      
+      updateSelectInput(session, "plot_type", choices = nombres, selected = "barras")
+      updateSelectInput(session, "plot_type_p", choices = nombres, selected = "barras")
+    })
+    
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
       M$MCs.dt  <- NULL
       M$grafico <- NULL
@@ -67,7 +84,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(datos)){
         choices      <- as.character(unique(datos[, variable]))
         updateSelectizeInput(session, "sel_split", selected = "")
-        updateSelectInput(session, "cvdt.sel", choices = choices, selected = choices[1])
+        updateSelectInput(session, "cv.cat.sel", choices = choices, selected = choices[1])
         updateSelectInput(session, "cvdt_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
           shinyjs::show("cvdt_cat", anim = TRUE, animType = "fade")
@@ -169,15 +186,18 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       })
     })
     
-    
-    
     output$e_dt_glob  <-  renderEcharts4r({
       input$btn_cv_dt
+      type    <- input$plot_type_p
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
         
-        resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":"))))
+        switch (type,
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)
@@ -185,12 +205,16 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     
     output$e_dt_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
+      type      <- input$plot_type_p
       
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.barras(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("splitIndex",idioma), ":"))), error = TRUE)
-        
+        switch (type,
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)
@@ -199,12 +223,16 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
     
     output$e_dt_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
-      cat    <- input$cvdt.sel
+      cat    <- input$cv.cat.sel
+      type   <- input$plot_type
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  unlist(strsplit(tr("splitIndex",idioma), ":"))))
-        
+        switch (type,
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)

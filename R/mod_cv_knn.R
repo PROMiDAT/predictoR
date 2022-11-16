@@ -56,7 +56,7 @@ mod_cv_knn_ui <- function(id){
                         col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
                                   tags$div(class="multiple-select-var",
                                            selectInput(inputId = ns("plot_type"),label = NULL,
-                                                       choices =  c("barras", "lineas", "error"), width = "100%"))))),hr(),
+                                                       choices =  "", width = "100%"))))),hr(),
                div(col_12(echarts4rOutput(ns("e_knn_category"), width = "100%", height = "70vh"))))
     )
  
@@ -74,10 +74,11 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
     
     observeEvent(codedioma$idioma, {
       
-      nombres <- list(0, 1)
-      names(nombres) <- tr(c("errG", "precG"),codedioma$idioma)
+      nombres <- list("barras", "lineas", "error")
+      names(nombres) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
       
-      updateSelectInput(session, "cvknn.glo", choices = nombres, selected = 1)
+      updateSelectInput(session, "plot_type", choices = nombres, selected = "barras")
+      updateSelectInput(session, "plot_type_p", choices = nombres, selected = "barras")
     })
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
@@ -204,9 +205,9 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         idioma    <- codedioma$idioma
         
         switch (type,
-                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma), "Validacion", "Valor Máximo", "Valor Mínimo")))
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel" ))), 
+                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
         )
       }
       else
@@ -221,9 +222,9 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         err  <- M$grafico
         err$value <- 1 - M$global
         switch (type,
-                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), "Validacion", "Valor Máximo", "Valor Mínimo")))
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Kernel" ))), 
+                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
       else
@@ -238,14 +239,13 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        res1 <<- M$grafico
-        res2 <<- M$categories[[cat]]
+        # res1 <<- M$grafico
+        # res2 <<- M$categories[[cat]]
         switch (type,
-                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "error" = return( resumen.error(graf, labels = c(tr("prec",idioma), "Kernel", "Valor Máximo", "Valor Mínimo"))), 
-                "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Validacion", "Valor Máximo", "Valor Mínimo")))
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel" ))), 
+                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
-       
       }
       else
         return(NULL)

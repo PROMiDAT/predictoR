@@ -10,16 +10,9 @@
 mod_cv_rf_ui <- function(id){
   ns <- NS(id)
   
-  
-  title_comp <- list(conditionalPanel("input['cv_rf_ui_1-Boxrf'] == 'tabCVrfIndicesCat'",
-                                      div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvrf.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))))
-  
   tagList(
     tabBoxPrmdt(
-      id = ns("Boxrf"), title = title_comp, 
+      id = ns("Boxrf"),
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVrfModelo",
                div(col_6(numericInput(ns("mtry"), labelInput("numVars"),1, width = "100%", min = 1)),
                         col_6(numericInput(ns("ntree"), labelInput("numTree"), 20, width = "100%", min = 5))),
@@ -36,9 +29,23 @@ mod_cv_rf_ui <- function(id){
                hr(style = "border-top: 2px solid #cccccc;" ),
                actionButton(ns("btn_cv_rf"), labelInput("generar"), width  = "100%" ),br(),br()),
       tabPanel(title = p(labelInput("indices"),class = "wrapper-tag"), value = "tabCVrfIndices",
+               div(col_8(),
+                   col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("plot_type_p"),label = NULL,
+                                                  choices =  c("barras", "lineas", "error"), width = "100%")))), hr()),
                div(col_6(echarts4rOutput(ns("e_rf_glob"), width = "100%", height = "70vh")),
                    col_6(echarts4rOutput(ns("e_rf_error"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabCVrfIndicesCat",
+               div(col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("selectCat"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("cv.cat.sel"),label = NULL,
+                                                  choices =  "", width = "100%")))),
+                   col_4(),
+                   col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("tipoGrafico"),class = "wrapper-tag"),
+                             tags$div(class="multiple-select-var",
+                                      selectInput(inputId = ns("plot_type"),label = NULL,
+                                                  choices =  "", width = "100%"))))),hr(),
                div(col_12(echarts4rOutput(ns("e_rf_category"), width = "100%", height = "70vh"))))
     )
  
@@ -54,6 +61,15 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
     
     M <- rv(MCs.rf = NULL, grafico = NULL, global = NULL, categories = NULL, times = 0)
     
+    observeEvent(codedioma$idioma, {
+      
+      nombres <- list("barras", "lineas", "error")
+      names(nombres) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
+      
+      updateSelectInput(session, "plot_type", choices = nombres, selected = "barras")
+      updateSelectInput(session, "plot_type_p", choices = nombres, selected = "barras")
+    })
+    
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
       M$MCs.rf  <- NULL
       M$grafico <- NULL
@@ -68,7 +84,7 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         choices      <- as.character(unique(datos[, variable]))
         updateSelectizeInput(session, "sel_split", selected = "")
         updateNumericInput(session, "mtry", value = n.mtry)
-        updateSelectInput(session, "cvrf.sel", choices = choices, selected = choices[1])
+        updateSelectInput(session, "cv.cat.sel", choices = choices, selected = choices[1])
         updateSelectInput(session, "cvrf_cat", choices = choices, selected = choices[1])
         if(length(choices) == 2){
           shinyjs::show("cvrf_cat", anim = TRUE, animType = "fade")
@@ -155,6 +171,8 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         M$global   <- resultados$global
         M$categories <- resultados$categories
         M$times    <- 1
+        isolate(codedioma$code <- append(codedioma$code, cv_rf_code(variable, dim_v, cant.vc, numGrupos)))
+        
         print(MCs.rf)
         
       },error = function(e){
@@ -171,11 +189,16 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
     
     output$e_rf_glob  <-  renderEcharts4r({
       input$btn_cv_rf
+      type    <- input$plot_type_p
       grafico <- M$grafico
       if(!is.null(grafico)){
         idioma    <- codedioma$idioma
         
-        resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":"))))
+        switch (type,
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)
@@ -183,12 +206,16 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
     
     output$e_rf_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
+      type      <- input$plot_type_p
       
       if(!is.null(M$grafico)){
         err  <- M$grafico
         err$value <- 1 - M$global
-        resumen.barras(err, labels = c(tr("errG",idioma),  unlist(strsplit(tr("splitIndex",idioma), ":"))), error = TRUE)
-        
+        switch (type,
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)
@@ -197,12 +224,16 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
     
     output$e_rf_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
-      cat    <- input$cvrf.sel
+      cat    <- input$cv.cat.sel
+      type   <- input$plot_type
       if(!is.null(M$grafico)){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
-        resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  unlist(strsplit(tr("splitIndex",idioma), ":"))))
-        
+        switch (type,
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
+        )
       }
       else
         return(NULL)

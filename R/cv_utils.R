@@ -16,7 +16,14 @@ cv.values <- function(datos){
   }
   return(puntos)
 }
-
+validar.tamanno <- function(text){
+  if(nchar(text)>25){
+    aux <- unlist(strsplit(text, " "))
+    aux <- paste0(substr(aux[1], 1, 1), ". ", aux[2]," ", aux[3])
+    return(aux)
+  }
+  return(text)  
+}
 resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
   puntos <- cv.values(datos.grafico)
   opts <- list(
@@ -36,7 +43,7 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
             textStyle = list(fontSize = 20)) |>
     e_tooltip(formatter = e_JS("function(params){
                                            return('<strong>' + params.value[0] + ' </strong>' +",
-                               " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
+                               " parseFloat(params.value[1] * 100).toFixed(2) + '%' )}")) |>
     e_datazoom(show = F,startValue=1) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
@@ -44,7 +51,7 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
 }
 
 resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
-    
+  
   if(!error){  
     datos.grafico <- datos.grafico |>
       dplyr::group_by( name, color ) |>
@@ -75,10 +82,51 @@ resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), err
             textStyle = list(fontSize = 20)) |>
     e_tooltip(formatter = e_JS("function(params){
                                            return('<strong>' + params.value[0] + ' </strong>' +",
-                               " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
+                               " parseFloat(params.value[1] * 100).toFixed(2) + '%' )}")) |>
     e_datazoom(show = F) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  resumen$x$opts$legend$data <- datos.grafico$name
+  resumen
+}
+
+resumen.barras.h <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
+  
+  if(!error){  
+    datos.grafico <- datos.grafico |>
+      dplyr::group_by( name, color ) |>
+      dplyr::summarise(value = mean(value), .groups = 'drop') |>
+      dplyr::arrange(desc(value))
+  }else{
+    datos.grafico <- datos.grafico |>
+      dplyr::group_by( name, color ) |>
+      dplyr::summarise(value = mean(value), .groups = 'drop') |>
+      dplyr::arrange(value)
+  }
+  datos.grafico$name <- unlist(lapply(datos.grafico$name, validar.tamanno))
+  resumen <- datos.grafico |>
+    e_charts( name) |>
+    e_bar(value, name = var) |> 
+    e_add_nested("itemStyle", color) |>
+    e_labels(show     = TRUE,
+             position = 'top' ,
+             formatter =  e_JS("function(params){
+                                           return(parseFloat(params.value[0] *100).toFixed(2) + '%' )}")) |>
+    e_y_axis(formatter = e_axis_formatter("percent",
+                                          digits = 0)) |>
+    e_axis_labels(x = "",
+                  y = paste('%', labels[1])) |>
+    e_title(labels[1],
+            left  = "center",
+            top   = 5,
+            textStyle = list(fontSize = 20)) |>
+    e_tooltip(formatter = e_JS("function(params){
+                                           return('<strong>' + params.name + ' </strong>' +",
+                               " parseFloat(params.value[0] * 100).toFixed(2) + '%' )}")) |>
+    e_datazoom(show = F) |>
+    e_legend(show = T, type = "scroll", bottom = 1) |>
+    e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)|>  
+    e_flip_coords()
   resumen$x$opts$legend$data <- datos.grafico$name
   resumen
 }
@@ -87,7 +135,9 @@ resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valo
   
   datos.grafico <- datos.grafico |> 
          dplyr::group_by( name, color ) |>
-         dplyr::summarise( min = min(value), max = max(value), value = value, .groups = 'drop')
+         dplyr::summarise( min = min(value), 
+                           max = max(value), 
+                           value = mean(value), .groups = 'drop')
   
   resumen <- datos.grafico |>
     e_charts(name) |>
@@ -95,9 +145,9 @@ resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valo
     e_error_bar(min, max, 
                 tooltip = list(formatter = e_JS(paste0("function(params){",
                                                        "return('<b>", labels[3], ": </b>' + ",
-                                                       "Number.parseFloat(params.value[2]).toFixed(3) + ",
+                                                       "Number.parseFloat(params.value[2]).toFixed(2) + ",
                                                        "'<br/><b>", labels[4], ": </b>' + ",
-                                                       "Number.parseFloat(params.value[1]).toFixed(3))}"))))|>
+                                                       "Number.parseFloat(params.value[1]).toFixed(2))}"))))|>
     e_add_nested("itemStyle", color) |>
     e_y_axis(formatter = e_axis_formatter("percent",
                                           digits = 0)) |>
@@ -109,7 +159,7 @@ resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valo
             textStyle = list(fontSize = 20)) |>
     e_tooltip(formatter = e_JS("function(params){
                                            return('<strong>' + params.value[0] + ' </strong>' +",
-                               " parseFloat(params.value[1] * 100).toFixed(1) + '%' )}")) |>
+                               " parseFloat(params.value[1] * 100).toFixed(2) + '%' )}")) |>
     e_datazoom(show = F) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)

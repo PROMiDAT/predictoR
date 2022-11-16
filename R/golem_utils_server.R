@@ -96,7 +96,8 @@ cambiar.labels <- function() {
       'selectCapas', 'stepmax', 'nnWar', 'bigPlot', 'rl', 'rlr', 'landa', 'automatico', 'posibLanda', 'gcoeff', 'limitModel', 'aROC', 'RocNo',
       'predicnuevos', 'seleParModel', 'generarM', 'cargarNuev', 'NoTamColum', "eliminana", 'ErrorModelo', 'ErrorDatosPN', 'manual', 'home', 'atras',
       'resultados', 'lambda', 'limitLambda', 'superior', 'inferior', 'cargarComp', 'betas', 'cant', 'porcentaje', 'crossval', 
-      'iter', 'indicesCat', 'probC', 'selpaso', 'probCstep', "rep", "lda", "qda", "calibracion", "tipoGrafico")
+      'iter', 'indicesCat', 'probC', 'selpaso', 'probCstep', "rep", "lda", "qda", "calibracion", "tipoGrafico", "grafLineas", "grafBarras", 
+      "grafError", "booster", "modelo")
   return(x)
 }
 
@@ -107,7 +108,7 @@ colnames.empty <- function(res) {
     return("")
   return(res)
 }
-# 
+
 # Función para generar diccionario.
 # crear.traslation <- function() {
 #    library(plyr)
