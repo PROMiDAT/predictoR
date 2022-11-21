@@ -142,7 +142,11 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
             ttesting  <- datos[muestra, ]
             
             for (j in 1:length(alphas)){
-              modelo <- traineR::train.glmnet(as.formula(var_), data = ttraining, standardize = as.logical(scales), alpha = alphas[j], family = 'multinomial' )
+              modelo <- traineR::train.glmnet(as.formula(var_), 
+                                              data        = ttraining, 
+                                              standardize = as.logical(scales), 
+                                              alpha       = alphas[j], 
+                                              family      = 'multinomial' )
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -196,7 +200,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
         
         switch (type,
                 "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Alpha" ))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
         )
       }
@@ -213,7 +217,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
         err$value <- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Alpha" ))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
@@ -231,7 +235,7 @@ mod_cv_rlr_server <- function(input, output, session, updateData, codedioma){
         graf$value <- M$categories[[cat]]
         switch (type,
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Alpha" ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), "Alpha", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

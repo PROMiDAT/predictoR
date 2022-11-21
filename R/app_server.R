@@ -72,7 +72,7 @@ app_server <- function( input, output, session ) {
   #' Update on Language
   observeEvent(input$idioma, {
     codedioma$idioma = input$idioma
-    etiquetas <- c(readeR::labels_readeR(), cambiar.labels())
+    etiquetas <- names(translation)
     updateLabelInput(session, etiquetas, tr(etiquetas, input$idioma))
   })
   
@@ -81,16 +81,10 @@ app_server <- function( input, output, session ) {
     codigo <- codedioma$code
     lg <- input$idioma
     
-    keys <- c(
-      'doccarga', 'doctt', 'doccv', 'docresumen', 'dochist', 'docqq', 
-      'docnormal', 'docdisp', 'docdistnum', 'docdistcat', 'doccor',
-      'docrename', 'doctrans', 'doceliminar', 'distpred', 'pares', 'denspred',
-      'docpredcat', 'knnl', 'svml', 'gclasificacion', 'dtl', 'reglas', 'garbol', 
-      'xgb', 'docImpV', 'rfl', 'docpot', 'evolerror', 'Bayes', 'redPlot', 'nN', 'rl', 'plr',
-      'posibLanda', 'gcoeff', 'betas', 'adc', 'adl')
-    
+    keys <- names(translation)
+
     for (k in keys) {
-      codigo <- gsub(k, tr(k, idioma = lg), codigo, fixed = T)
+      codigo <- gsub(paste0(" ", k, "\n"), paste0(" ", tr(k, idioma = lg), "\n"), codigo, fixed = T)
     }
     
     codigo.completo <- paste0(
@@ -196,7 +190,7 @@ app_server <- function( input, output, session ) {
   callModule(mod_cv_lda_server,          "cv_lda_ui_1",           updateData, codedioma)
   callModule(mod_cv_qda_server,          "cv_qda_ui_1",           updateData, codedioma)
   callModule(mod_cross_validation_server,"cross_validation_ui_1", updateData, codedioma)
-  
+
   #Predicción de Individuos Nuevos
   callModule(mod_ind_nuevos_server,     "ind_nuevos_ui_1",  newCases, updateData2, codedioma)
   

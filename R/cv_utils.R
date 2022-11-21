@@ -16,14 +16,21 @@ cv.values <- function(datos){
   }
   return(puntos)
 }
+
 validar.tamanno <- function(text){
-  if(nchar(text)>25){
+  if(nchar(text) > 15){
     aux <- unlist(strsplit(text, " "))
-    aux <- paste0(substr(aux[1], 1, 1), ". ", aux[2]," ", aux[3])
+    if(length(aux) == 2)
+      aux <- paste0(substr(aux[1], 1, 1), ". ", aux[2])
+    if(length(aux) == 3)
+      aux <- paste0(substr(aux[1], 1, 1), ". ", aux[2]," ", aux[3])
+    if(length(aux) == 4)
+      aux <- paste0(substr(aux[1], 1, 1), ". ",substr(aux[2], 1, 1), ". ", aux[3]," ", aux[4])
     return(aux)
   }
   return(text)  
 }
+
 resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
   puntos <- cv.values(datos.grafico)
   opts <- list(
@@ -50,20 +57,13 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
   comp_plot
 }
 
-resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
-  
-  if(!error){  
+resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), rotacion = FALSE) {
+
     datos.grafico <- datos.grafico |>
       dplyr::group_by( name, color ) |>
-      dplyr::summarise(value = mean(value), .groups = 'drop') |>
-      dplyr::arrange(desc(value))
-  }else{
-    datos.grafico <- datos.grafico |>
-      dplyr::group_by( name, color ) |>
-      dplyr::summarise(value = mean(value), .groups = 'drop') |>
-      dplyr::arrange(value)
-  }
-  
+      dplyr::summarise(value = mean(value), .groups = 'drop')
+    datos.grafico$name <- unlist(lapply(datos.grafico$name, validar.tamanno))
+    
   resumen <- datos.grafico |>
     e_charts( name) |>
     e_bar(value, name = var) |> 
@@ -86,52 +86,14 @@ resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), err
     e_datazoom(show = F) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
-  resumen$x$opts$legend$data <- datos.grafico$name
-  resumen
-}
-
-resumen.barras.h <- function(datos.grafico, labels = c("Global", "iteracion"), error = FALSE) {
   
-  if(!error){  
-    datos.grafico <- datos.grafico |>
-      dplyr::group_by( name, color ) |>
-      dplyr::summarise(value = mean(value), .groups = 'drop') |>
-      dplyr::arrange(desc(value))
-  }else{
-    datos.grafico <- datos.grafico |>
-      dplyr::group_by( name, color ) |>
-      dplyr::summarise(value = mean(value), .groups = 'drop') |>
-      dplyr::arrange(value)
-  }
-  datos.grafico$name <- unlist(lapply(datos.grafico$name, validar.tamanno))
-  resumen <- datos.grafico |>
-    e_charts( name) |>
-    e_bar(value, name = var) |> 
-    e_add_nested("itemStyle", color) |>
-    e_labels(show     = TRUE,
-             position = 'top' ,
-             formatter =  e_JS("function(params){
-                                           return(parseFloat(params.value[0] *100).toFixed(2) + '%' )}")) |>
-    e_y_axis(formatter = e_axis_formatter("percent",
-                                          digits = 0)) |>
-    e_axis_labels(x = "",
-                  y = paste('%', labels[1])) |>
-    e_title(labels[1],
-            left  = "center",
-            top   = 5,
-            textStyle = list(fontSize = 20)) |>
-    e_tooltip(formatter = e_JS("function(params){
-                                           return('<strong>' + params.name + ' </strong>' +",
-                               " parseFloat(params.value[0] * 100).toFixed(2) + '%' )}")) |>
-    e_datazoom(show = F) |>
-    e_legend(show = T, type = "scroll", bottom = 1) |>
-    e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)|>  
-    e_flip_coords()
+  if(rotacion)
+    resumen <- resumen |> e_x_axis(axisLabel = list(interval= 0, rotate= 30))
   resumen$x$opts$legend$data <- datos.grafico$name
   resumen
 }
 
-resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valor Máximo", "Valor Mínimo")) {
+resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valor Maximo", "Valor Minimo")) {
   
   datos.grafico <- datos.grafico |> 
          dplyr::group_by( name, color ) |>

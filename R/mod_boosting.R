@@ -22,7 +22,7 @@ mod_boosting_ui <- function(id){
               fluidRow(col_6(numericInput(ns("iter.boosting"), labelInput("numTree"), 20, width = "100%",min = 1)),
                        col_6(numericInput(ns("maxdepth.boosting"), labelInput("maxdepth"), 15, width = "100%",min = 1))),
               
-              fluidRow(col_6(numericInput(ns("minsplit.boosting"), labelInput("minsplit"), 20, width = "100%",min = 1)))           ),
+              fluidRow(col_6(numericInput(ns("minsplit.boosting"), labelInput("minsplit"), 20, width = "100%",min = 1)))),
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBRules'",
               options.base(), tags$hr(style = "margin-top: 0px;"),

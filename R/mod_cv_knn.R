@@ -32,7 +32,7 @@ mod_cv_knn_ui <- function(id){
                                "triweight", "cos","inv","gaussian"))
                  )),
                
-               div(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvknn_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvknn")), 
@@ -152,7 +152,11 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
             ttesting  <- datos[muestra, ]
             
             for (j in 1:length(kernels)){
-              modelo      <- train.knn(as.formula(var_), data = ttraining, kernel = kernels[j], kmax = kmax, scale = as.logical(scales))
+              modelo      <- train.knn(as.formula(var_), 
+                                       data   = ttraining, 
+                                       kernel = kernels[j], 
+                                       kmax   = kmax, 
+                                       scale  = as.logical(scales))
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -206,7 +210,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         
         switch (type,
                 "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel" ))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
         )
       }
@@ -223,7 +227,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         err$value <- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Kernel" ))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
@@ -243,7 +247,7 @@ mod_cv_knn_server <- function(input, output, session, updateData, codedioma){
         # res2 <<- M$categories[[cat]]
         switch (type,
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel" ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

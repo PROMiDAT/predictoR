@@ -142,7 +142,10 @@ mod_cv_boost_server <- function(input, output, session, updateData, codedioma){
             ttesting  <- datos[muestra, ]
             
             for (j in 1:length(kernels)){
-              modelo      <- train.adabag(as.formula(var_), data = ttraining, coeflearn = kernels[j], mfinal = mfinal,
+              modelo      <- train.adabag(as.formula(var_), 
+                                          data      = ttraining, 
+                                          coeflearn = kernels[j], 
+                                          mfinal    = mfinal,
                                           control = rpart.control(maxdepth = maxdepth))
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
@@ -197,7 +200,7 @@ mod_cv_boost_server <- function(input, output, session, updateData, codedioma){
         
         switch (type,
                 "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "Kernel" ))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
         )
       }
@@ -214,7 +217,7 @@ mod_cv_boost_server <- function(input, output, session, updateData, codedioma){
         err$value <- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "Kernel" ))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
@@ -232,7 +235,7 @@ mod_cv_boost_server <- function(input, output, session, updateData, codedioma){
         graf$value <- M$categories[[cat]]
         switch (type,
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel" ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), "Kernel", tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

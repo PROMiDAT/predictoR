@@ -102,11 +102,11 @@ mod_cv_rl_server <- function(input, output, session, updateData, codedioma){
       M$categories <- NULL
       tryCatch({
         
-        cant.vc   <- isolate(updateData$numValC)
+        cant.vc   <- updateData$numValC
         MCs.rl    <- vector(mode = "list")
         datos     <- isolate(updateData$datos)
-        numGrupos <- isolate(updateData$numGrupos)
-        grupos    <- isolate(updateData$grupos)
+        numGrupos <- updateData$numGrupos
+        grupos    <- updateData$grupos
         variable  <- isolate(updateData$variable.predecir)
         var_      <- paste0(variable, "~.")
         category  <- isolate(levels(updateData$datos[,variable]))
@@ -127,7 +127,8 @@ mod_cv_rl_server <- function(input, output, session, updateData, codedioma){
             ttraining <- datos[-muestra, ]
             ttesting  <- datos[muestra, ]
             j <- 1
-              modelo      <- train.glm(as.formula(var_), data = ttraining)
+              modelo      <- train.glm(as.formula(var_), 
+                                       data = ttraining)
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -181,8 +182,8 @@ mod_cv_rl_server <- function(input, output, session, updateData, codedioma){
         
         switch (type,
                 "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma),  tr("modelo",idioma) ))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma),  tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
-                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma),  tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),  tr("crossval",idioma) )))
         )
       }
       else
@@ -197,8 +198,8 @@ mod_cv_rl_server <- function(input, output, session, updateData, codedioma){
         err  <- M$grafico
         err$value <- 1 - M$global
         switch (type,
-                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma),  tr("modelo",idioma) ))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma),  tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), tr("modelo",idioma) ))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
@@ -215,8 +216,8 @@ mod_cv_rl_server <- function(input, output, session, updateData, codedioma){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
         switch (type,
-                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  tr("modelo",idioma) ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma),  tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo",idioma) ))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

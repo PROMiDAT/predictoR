@@ -230,7 +230,7 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
         graf$value <- M$categories[[cat]]
         switch (type,
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error" = return( resumen.error(graf,   labels = c(paste0(tr("prec",idioma), " ",cat ), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

@@ -142,7 +142,11 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
             ttesting  <- datos[muestra, ]
             
             for (j in 1:length(splits)){
-              modelo      <- train.randomForest(as.formula(var_), data = ttraining, mtry = mtry, ntree = ntree, parms = list(split = splits[j]))
+              modelo      <- train.randomForest(as.formula(var_), 
+                                                data  = ttraining, 
+                                                mtry  = mtry, 
+                                                ntree = ntree, 
+                                                parms = list(split = splits[j]))
               if(length(category) == 2){
                 positive    <- category[which(category == cat_sel)]
                 negative    <- category[which(category != cat_sel)]
@@ -196,8 +200,8 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         
         switch (type,
                 "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
-                "error" = return( resumen.error(grafico, labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
-                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma), tr("crossval",idioma) )))
         )
       }
       else
@@ -213,7 +217,7 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         err$value <- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
-                "error" = return( resumen.error(err, labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
       }
@@ -230,8 +234,8 @@ mod_cv_rf_server <- function(input, output, session, updateData, codedioma){
         graf  <- M$grafico
         graf$value <- M$categories[[cat]]
         switch (type,
-                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),  unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
-                "error" = return( resumen.error(graf,   labels = c(tr("prec",idioma), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), unlist(strsplit(tr("splitIndex",idioma), ":")) ))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), unlist(strsplit(tr("splitIndex",idioma), ":")), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
         )
       }

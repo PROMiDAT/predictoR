@@ -148,7 +148,8 @@ selectCapas;Cantidad de capas ocultas:;Number of hidden layers:
 seleccionarPredecir;Seleccionar la variable a predecir:;Select the variable to be predicted:
 selectCat;Seleccionar Categoría:;Select Category:
 selectMod;Seleccionar Modelo:;Select Model:
-seleParModel;Selección y Parametrización del Modelo;Selection and Parameterization of the Model
+seleParModel;Parametrización de Modelos;Parameterization of the Models
+seleModel;Selección de Modelos;Selection of Models
 selidioma;Seleccionar Idioma:;Select Language
 selkernel;Seleccionar un Kernel:;Select kernel:
 selnrounds;Número Máximo de Iteraciones:;Maximum Number of Iterations:

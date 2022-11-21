@@ -254,6 +254,7 @@ app_ui <- function(request) {
           
           tabItem(tabName = "cv_cv", 
                   mod_cross_validation_ui("cross_validation_ui_1")),
+          
           # Predicción Individuos Nuevos
           tabItem(tabName = "predNuevos", 
                   mod_ind_nuevos_ui("ind_nuevos_ui_1")), 
