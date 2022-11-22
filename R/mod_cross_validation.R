@@ -94,7 +94,7 @@ mod_cross_validation_ui <- function(id){
                div(
                  col_12(selectInput(inputId = ns("predic_var"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%"))               ),
                div(
-                 col_12(checkboxGroupInput(inputId = ns("sel_models"), label = labelInput("selectMod"), choices =    c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "rl", "rlr", "lda", "qda"), width = "100%"))
+                 col_12(checkboxGroupInput(inputId = ns("sel_models"), label = labelInput("seleModel"), choices =    c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb", "rl", "rlr", "lda", "qda"), width = "100%"))
                ),br(),br()),
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVsvmModelo",
                div(
@@ -313,7 +313,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                 )
                 if(length(category) == 2){
 
-                  Corte     <<- switch(models[j],
+                  Corte     <- switch(models[j],
                                       "knnl"  = cortes$cvknnl_step, 
                                       "svml"  = cortes$cvsvml_step, 
                                       "dtl"   = cortes$cvdtl_step, 
@@ -325,7 +325,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                                       "rlr"   = cortes$cvrlr_step, 
                                       "lda"   = cortes$cvlda_step, 
                                       "qda"   = cortes$cvqda_step)
-                  cat_sel   <<- switch(models[j],
+                  cat_sel   <- switch(models[j],
                                       "knnl"  = cortes$cvknnl_cat, 
                                       "svml"  = cortes$cvsvml_cat, 
                                       "dtl"   = cortes$cvdtl_cat, 
@@ -339,22 +339,22 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                                       "qda"   = cortes$cvqda_cat)
                   
                   
-                  positive    <<- category[which(category == cat_sel)]
-                  negative    <<- category[which(category != cat_sel)]
-                  prediccion  <<- predict(modelo, ttesting, type = "prob")
-                  Clase       <<- ttesting[,variable]
+                  positive    <- category[which(category == cat_sel)]
+                  negative    <- category[which(category != cat_sel)]
+                  prediccion  <- predict(modelo, ttesting, type = "prob")
+                  Clase       <- ttesting[,variable]
                   if(models[j] == "rlr")
-                    Score       <<- prediccion$prediction[,positive,]
+                    Score       <- prediccion$prediction[,positive,]
                   else
-                    Score       <<- prediccion$prediction[,positive]
+                    Score       <- prediccion$prediction[,positive]
                   
-                  Prediccion  <<- ifelse(Score  > Corte, positive, negative)
-                  MC          <<- table(Clase , Pred = factor(Prediccion, levels = category))
-                  MC.cv[[j]] <- MC.cv[[j]] + MC
+                  Prediccion  <- ifelse(Score  > Corte, positive, negative)
+                  MC          <- table(Clase , Pred = factor(Prediccion, levels = category))
+                  MC.cv[[j]]  <- MC.cv[[j]] + MC
                 }else{
                   prediccion  <- predict(modelo, ttesting)
                   MC          <- confusion.matrix(ttesting, prediccion)
-                  MC.cv[[j]] <- MC.cv[[j]] + MC
+                  MC.cv[[j]]  <- MC.cv[[j]] + MC
                 }
                 
               }

@@ -19,10 +19,13 @@ mod_boosting_ui <- function(id){
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBModelo'",
               options.run(ns("runBoosting")), tags$hr(style = "margin-top: 0px;"),
-              fluidRow(col_6(numericInput(ns("iter.boosting"), labelInput("numTree"), 20, width = "100%",min = 1)),
+              div(col_6(numericInput(ns("iter.boosting"), labelInput("numTree"), 20, width = "100%",min = 1)),
                        col_6(numericInput(ns("maxdepth.boosting"), labelInput("maxdepth"), 15, width = "100%",min = 1))),
               
-              fluidRow(col_6(numericInput(ns("minsplit.boosting"), labelInput("minsplit"), 20, width = "100%",min = 1)))),
+              div(col_6(numericInput(ns("minsplit.boosting"), labelInput("minsplit"), 20, width = "100%",min = 1)),
+                  col_6(
+                    selectInput(inputId = ns("coeff.boosting"), label = labelInput("selkernel"),selected = 1,
+                                choices = c("Breiman", "Freund", "Zhu"))))),
             conditionalPanel(
               "input['boosting_ui_1-BoxB'] == 'tabBRules'",
               options.base(), tags$hr(style = "margin-top: 0px;"),
@@ -71,10 +74,10 @@ mod_boosting_ui <- function(id){
                verbatimTextOutput(ns("txtBoostingMC"))),
       
       tabPanel(title = labelInput("indices"),value = "tabBIndex",
-               fluidRow(col_6(echarts4rOutput(ns("boostingPrecGlob"), width = "100%")),
+               div(col_6(echarts4rOutput(ns("boostingPrecGlob"), width = "100%")),
                         col_6(echarts4rOutput(ns("boostingErrorGlob"), width = "100%"))),
-               fluidRow(col_12(shiny::tableOutput(ns("boostingIndPrecTable")))),
-               fluidRow(col_12(shiny::tableOutput(ns("boostingIndErrTable"))))),
+               div(col_12(shiny::tableOutput(ns("boostingIndPrecTable")))),
+               div(col_12(shiny::tableOutput(ns("boostingIndErrTable"))))),
       
       tabPanel(title = labelInput("reglas"), value = "tabBRules",
                verbatimTextOutput(ns("rulesB"))),
@@ -122,9 +125,10 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     var     <- paste0(updateData$variable.predecir, "~.")
     iter    <- isolate(input$iter.boosting)
     maxdepth<-isolate(input$maxdepth.boosting)
-    minsplit<-isolate(input$minsplit.boosting)
+    minsplit<-isolate(input$minsplit.boosting) 
+    coeff   <-isolate(input$coeff.boosting)
     nombre  <- paste0("bl")
-    modelo  <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
+    modelo  <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,coeflearn = coeff,
                                     control = rpart.control(minsplit =minsplit, maxdepth = maxdepth))
     prob   <- predict(modelo , test, type = 'prob')
     

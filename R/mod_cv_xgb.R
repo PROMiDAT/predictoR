@@ -21,7 +21,7 @@ mod_cv_xgb_ui <- function(id){
                    ns("sel_booster"), labelInput("selbooster"), multiple = T,
                    choices =  c("gbtree", "gblinear", "dart")))),
                
-               div(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvxgb_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvxgb_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvxgb")), 

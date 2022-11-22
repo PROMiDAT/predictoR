@@ -14,7 +14,7 @@ mod_cv_qda_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxqda"),
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVqdaModelo",
-               div(col_6(numericInput(ns("cvqda_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvqda_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvqda_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvqda")), 

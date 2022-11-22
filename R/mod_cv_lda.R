@@ -14,7 +14,7 @@ mod_cv_lda_ui <- function(id){
     tabBoxPrmdt(
       id = ns("Boxlda"),
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVldaModelo",
-               div(col_6(numericInput(ns("cvlda_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1)),
+               div(col_6(numericInput(ns("cvlda_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvlda_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvlda")), 
