@@ -152,7 +152,10 @@ mod_cross_validation_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_12(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh"))))
+               div(col_12(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh")))),
+      tabPanel(title = p(labelInput("tablaComp"),class = "wrapper-tag"),
+               withLoader(DT::dataTableOutput(ns("TablaComp"), height="70vh"), 
+                          type = "html", loader = "loader4"))
     )
  
   )
@@ -177,7 +180,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       
       nombres <- list("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr", "lda", "qda")
       names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr", "lda", "qda"),codedioma$idioma)
-      
+      modelos <-ifelse(!is.null(isolate(input$sel_models)), isolate(input$sel_models), "") 
       precision <- list(0, 1)
       names(precision) <- tr(c("errG", "precG"),codedioma$idioma)
       nombres_p <- list("barras", "lineas", "error")
@@ -186,7 +189,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       updateSelectInput(session, "plot_type", choices = nombres_p, selected = "barras")
       updateSelectInput(session, "plot_type_p", choices = nombres_p, selected = "barras")
       updateSelectInput(session, "cvcv_glo", choices = precision, selected = 1)
-      updateCheckboxGroupInput(session, "sel_models", choices = nombres)
+      updateCheckboxGroupInput(session, "sel_models", choices = nombres, selected = modelos)
     })
 
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
@@ -367,7 +370,6 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
           
           M$MCs.cv   <- MCs.cv
           resultados <- indices.cv(category, cant.vc, models, MCs.cv)
-          resultados$grafico$name <-  tr(resultados$grafico$name,codedioma$idioma)
           M$grafico  <- resultados$grafico
           M$global   <- resultados$global
           M$categories <- resultados$categories
@@ -393,6 +395,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         indice  <- input$cvcv_glo
         type    <- input$plot_type_p
         grafico <- M$grafico
+        grafico$name <-  tr(grafico$name,codedioma$idioma)
+        
         error   <- indice == "0"
         label   <- ifelse(error, tr("errG",idioma), tr("precG",idioma))
         if(!is.null(grafico)){
@@ -418,6 +422,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         type   <- input$plot_type
         if(!is.null(M$grafico)){
           graf  <- M$grafico
+          graf$name <-  tr(graf$name,codedioma$idioma)
           graf$value <- M$categories[[cat]]
           switch (type,
                   "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo", idioma)))), 
@@ -431,6 +436,45 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         return(NULL)
       })
     })
+    
+    # Update Comparison Table
+    output$TablaComp <- DT::renderDataTable({
+      res      <- data.frame()
+      idioma   <- codedioma$idioma
+      global   <- M$grafico
+      categorias <- M$categories
+      tryCatch({
+        global$name <-  tr(global$name,codedioma$idioma)
+        for (i in 1:nrow(global)) {
+          new <- data.frame(
+            OAccuracy = global[i,"value"],
+            EAccuracy = 1- global[i,"value"]
+          )
+          for (cat in names(categorias)) {
+            new[[paste0(tr("prec",idioma), " ",cat)]] <- categorias[[cat]][i]
+          }
+          
+          row.names(new) <- global[i,"name"]
+          res            <- rbind(res, new)
+          
+        }
+        
+        colnames(res)[1]           <- tr('precG', idioma)
+        colnames(res)[2]           <- tr('errG', idioma)
+        
+        
+        res[]                      <- lapply(res, as.numeric)
+        res                        <- round(res, 5)*100
+        DT::datatable(res, selection = "none", editable = FALSE,
+                      options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+      }, error = function(e) {
+        showNotification(e, duration = 10)
+        DT::datatable(data.frame(), selection = "none", editable = FALSE,
+                      options = list(dom = "frtip", pageLength = 10, buttons = NULL))
+      })
+    },server = FALSE)
+    
+    
     #Actualiza la cantidad de capas ocultas (neuralnet)
     observeEvent(input$cant.capas.nn.pred, {
       if(!is.null(input$cant.capas.nn.pred)){

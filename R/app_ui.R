@@ -60,7 +60,7 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("distribucion"), "distribucion",
                                icon = icon("chart-area")),
                    menuSubItem(labelInput("correlacion"), "correlacion",
-                               icon = icon("table"))                   ,
+                               icon = icon("table")),
                    menuSubItem(labelInput("poderpred"), "poderPred",
                                icon = icon("rocket"))
           ),
@@ -115,9 +115,13 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("lda"),tabName = "cv_lda",
                                icon = icon("chart-gantt")),
                    menuSubItem(labelInput("qda"),tabName = "cv_qda",
-                               icon = icon("square-root-variable")),
-                   menuSubItem(labelInput("crossval"),tabName = "cv_cv",
-                               icon = icon("gears"))),
+                               icon = icon("square-root-variable"))
+                   # ,
+                   # menuSubItem(labelInput("crossval"),tabName = "cv_cv",
+                   #             icon = icon("gears"))
+                   ),
+          menuItem(labelInput("crossval"), tabName = "cv_cv", 
+                   icon = icon("laptop-code")),
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",

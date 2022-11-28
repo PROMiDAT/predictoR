@@ -22,8 +22,8 @@ mod_cv_boost_ui <- function(id){
                    ns("sel_kernel"), labelInput("selkernel"), multiple = T,
                    choices = c("Breiman", "Freund", "Zhu"))
                  )),
-               div(col_6(numericInput(ns("cvboost_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
-                   col_6(selectInput(ns("cvboost_cat"), choices = "",label =  labelInput("selectCat"), width = "80%"))), 
+               fluidRow(col_6(numericInput(ns("cvboost_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
+                   col_6(selectInput(ns("cvboost_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvboost")), 
                                                       type = "html", loader = "loader4")),

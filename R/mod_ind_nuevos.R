@@ -186,7 +186,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     if(!is.null(variable)){
       tryCatch({
         codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-        codigo <- paste0(codigo, "datos.prueba.completos <<- datos\n")
+        codigo <- paste0(codigo, "datos.prueba.completos <- datos\n")
         
         isolate(codedioma$code <- append(codedioma$code, codigo))
         
@@ -207,7 +207,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
         newCases$datos.prueba[,variable] <- NA
         
         validar()
-        # unificar.factores()
+        unificar.factores()
         # 
         if(ncol(test) <= 1) {
           showNotification(
@@ -251,7 +251,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     if(!is.null(variable)){
       tryCatch({
         #codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
-        #codigo <- paste0(codigo, "datos.prueba.completos <<- datos\n")
+        #codigo <- paste0(codigo, "datos.prueba.completos <- datos\n")
         
         #isolate(codedioma$code <- append(codedioma$code, codigo))
         
@@ -269,7 +269,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
         newCases$datos.prueba[,variable] <- NA
         
         validar()
-        # unificar.factores()
+        unificar.factores()
         # 
         if(ncol(test) <= 1) {
           showNotification(
@@ -440,7 +440,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                                           isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
                                           isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10))
                           cant.capas <- isolate(input$cant.capas.nn.pred)
-                          capas.np   <<- as.vector(as.numeric(capas.np[1:cant.capas]))
+                          capas.np   <- as.vector(as.numeric(capas.np[1:cant.capas]))
                           
                           isolate(modelo     <- traineR::train.neuralnet(
                             formula   = as.formula(var),
@@ -532,7 +532,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
         datos[,vari]        <- pred$prediction
         newCases$prediccion <- pred
         nombre.columnas <- c("ID", colnames(datos))
-        isolate(codedioma$code <- append(codedioma$code, "predic.nuevos <<- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
+        isolate(codedioma$code <- append(codedioma$code, "predic.nuevos <- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
         tipo.columnas <- sapply(colnames(datos), function(i)
           ifelse(class(datos[,i]) %in% c("numeric", "integer"),
                  paste0("<span data-id='numerico'><i class='fa fa-sort-numeric-up wrapper-tag'></i><br>", tipos[1], "</span>"),
@@ -610,7 +610,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
       }
       shinyjs::runjs('get_inputs()')
       shinyjs::runjs('get_inputs_xlsx()')
-      cod <-  "datos.aprendizaje.completos <<- datos\n"
+      cod <-  "datos.aprendizaje.completos <- datos\n"
       isolate(codedioma$code <- append(codedioma$code, cod))
 
       newCases$originales <- updateData2$originales

@@ -11,17 +11,11 @@ mod_cv_rl_ui <- function(id){
   ns <- NS(id)
   
   
-  title_comp <- list(conditionalPanel("input['cv_rl_ui_1-Boxrl'] == 'tabCVrlIndicesCat'",
-                                      div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvrl.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))))
-  
   tagList(
     tabBoxPrmdt(
-      id = ns("Boxrl"), title = title_comp, 
+      id = ns("Boxrl"), 
       tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag"), value = "tabCVrlModelo",
-               div(col_6(numericInput(ns("cvrl_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
+               fluidRow(col_6(numericInput(ns("cvrl_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvrl_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrl")), 

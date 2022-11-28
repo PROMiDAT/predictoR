@@ -21,7 +21,7 @@ mod_cv_rlr_ui <- function(id){
                    ns("sel_alpha"), labelInput("selectAlg"), multiple = T,
                    choices = list("Ridge" = 0, "Lasso" = 1)))),
                
-               div(col_6(numericInput(ns("cvrlr_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
+               fluidRow(col_6(numericInput(ns("cvrlr_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvrlr_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvrlr")), 

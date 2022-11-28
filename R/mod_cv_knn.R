@@ -11,14 +11,6 @@ mod_cv_knn_ui <- function(id){
   ns <- NS(id)
   
   
-  title_comp <- list(conditionalPanel("input['cv_knn_ui_1-BoxKnn'] == 'tabCVKnnIndicesCat'",
-                                      div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;margin-right: 10px;", labelInput("selectCat"),class = "wrapper-tag"),
-                                          tags$div(class="multiple-select-var",
-                                                   selectInput(inputId = ns("cvknn.sel"),label = NULL,
-                                                               choices =  "", width = "100%")))))
-  
-
-  
   tagList(
     tabBoxPrmdt(
       id = ns("BoxKnn"), 
@@ -32,7 +24,7 @@ mod_cv_knn_ui <- function(id){
                                "triweight", "cos","inv","gaussian"))
                  )),
                
-               div(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
+               fluidRow(col_6(numericInput(ns("cvknn_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                         col_6(selectInput(ns("cvknn_cat"), choices = "",label =  labelInput("selectCat"), width = "100%"))), 
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txtcvknn")), 
