@@ -360,7 +360,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
         stop(tr("limitModel", codedioma$idioma), call. = FALSE)
     
     tryCatch({
-      
+      dat.a  <- "datos.aprendizaje.completos"
       var    <- paste0(variable, "~.")
       codigo <- switch (m.seleccionado ,
                         knn   = {
@@ -368,10 +368,11 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                           scales <- isolate(input$switch.scale.knn.pred)
                           kernel <- isolate(input$kernel.knn.pred)
                           isolate(modelo <- traineR::train.knn(as.formula(var), data = train, scale = as.logical(scales), kernel = kernel, kmax = k.value ))
-                          cod <- kkn.modelo.np(variable.pr = variable,
+                          cod <- code.kkn.modelo(variable.pr = variable,
                                                scale = scales,
                                                kmax = k.value,
-                                               kernel = kernel)
+                                               kernel = kernel,
+                                               datos = dat.a)
                           isolate(codedioma$code <- append(codedioma$code, cod))
                           isolate(modelo)
                         },
@@ -382,10 +383,11 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                           isolate(modelo  <- traineR::train.rpart(as.formula(var), data = train,
                                                          control = rpart.control(minsplit = minsplit, maxdepth = maxdepth),parms = list(split = tipo)))
                           
-                          isolate(codedioma$code <- append(codedioma$code, dt.modelo.np(variable.pr = variable,
+                          isolate(codedioma$code <- append(codedioma$code, dt.modelo (variable.pr = variable,
                                                                                         minsplit = minsplit,
                                                                                         maxdepth = maxdepth,
-                                                                                        split = tipo)))
+                                                                                        split = tipo,
+                                                                                        datos = dat.a)))
                           isolate(modelo)
                         },
                         rf    = {
@@ -393,23 +395,26 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                           ntree  <- isolate(input$ntree.rf.pred)
                           isolate(modelo <- traineR::train.randomForest(as.formula(var), data = train, mtry = mtry, ntree = ntree, importance = TRUE))
                           
-                          isolate(codedioma$code <- append(codedioma$code, rf.modelo.np(variable.pr = variable,
+                          isolate(codedioma$code <- append(codedioma$code, rf.modelo (variable.pr = variable,
                                                                                         ntree = ntree,
-                                                                                        mtry  = mtry)))
+                                                                                        mtry  = mtry,
+                                                                                        datos = dat.a)))
                           isolate(modelo)
                         },
                         svm   = {
                           scales <- isolate(input$switch.scale.svm.pred)
                           k      <- isolate(input$kernel.svm.pred)
                           isolate(modelo <- traineR::train.svm(as.formula(var), data = train, scale = as.logical(scales), kernel = k))
-                          isolate(codedioma$code <- append(codedioma$code, svm.modelo.np(variable.pr =variable,
+                          isolate(codedioma$code <- append(codedioma$code, svm.modelo (variable.pr =variable,
                                                                                          scale  = scales,
-                                                                                         kernel = k)))
+                                                                                         kernel = k,
+                                                                                         datos = dat.a)))
                           isolate(modelo)
                         },
                         bayes = {
                           isolate(modelo <- traineR::train.bayes(as.formula(var), data = train))
-                          isolate(codedioma$code <- append(codedioma$code, bayes.modelo.np(variable.pr=variable)))
+                          isolate(codedioma$code <- append(codedioma$code, codigo.modelo (variable.pr=variable, model.name = "bayes",
+                                                                                          datos = dat.a )))
                           isolate(modelo)
                           
                         },
@@ -419,15 +424,17 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                           n.rounds <- isolate(input$nroundsXgb.pred)
                           isolate(modelo   <- traineR::train.xgboost(as.formula(var), data = train, booster = tipo, 
                                                            max_depth = max.depth, nrounds = n.rounds))
-                          isolate(codedioma$code <- append(codedioma$code, xgb.modelo.np(variable.pr=variable,
+                          isolate(codedioma$code <- append(codedioma$code, xgb.modelo (variable.pr=variable,
                                                                                          booster   = tipo,
                                                                                          max.depth = max.depth,
-                                                                                         n.rounds  = n.rounds)))
+                                                                                         n.rounds  = n.rounds,
+                                                                                         datos = dat.a)))
                           isolate(modelo)
                         },
                         rl    = {
                           isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
-                          isolate(codedioma$code <- append(codedioma$code, rl.modelo.np(variable.pr=variable)))
+                          isolate(codedioma$code <- append(codedioma$code, codigo.modelo (variable.pr=variable, model.name = "glm",
+                                                                                          datos = dat.a )))
                           isolate(modelo)
                           
                           },
@@ -448,7 +455,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                             threshold = threshold,
                             stepmax   = stepmax,
                             hidden    = capas.np))
-                          isolate(codedioma$code <- append(codedioma$code, nn.modelo.np(variable.pr=variable,
+                          isolate(codedioma$code <- append(codedioma$code, nn.modelo (variable.pr=variable,
                                                                                         threshold,
                                                                                         stepmax,
                                                                                         cant.capas,
@@ -456,16 +463,18 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                                                                                         isolate(input$nn.cap.pred.3),isolate(input$nn.cap.pred.4),
                                                                                         isolate(input$nn.cap.pred.5),isolate(input$nn.cap.pred.6),
                                                                                         isolate(input$nn.cap.pred.7),isolate(input$nn.cap.pred.8),
-                                                                                        isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10))))
+                                                                                        isolate(input$nn.cap.pred.9),isolate(input$nn.cap.pred.10),
+                                                                                        datos = dat.a)))
                           isolate(modelo)
                         },
                         rlr    = {
                           scales <- isolate(input$switch.scale.rlr.pred)
                           alpha  <- isolate(input$alpha.rlr.pred)
                           isolate(modelo <- traineR::train.glmnet(as.formula(var), data = train, standardize = as.logical(scales), alpha = alpha, family = 'multinomial' ))
-                          isolate(codedioma$code <- append(codedioma$code, rlr.modelo.np(variable.pr = variable,
+                          isolate(codedioma$code <- append(codedioma$code, rlr.modelo (variable.pr = variable,
                                                                                          alpha,
-                                                                                         scales)))
+                                                                                         scales,
+                                                                                         datos = dat.a)))
                           isolate(modelo)
                         },
                         ada    = {
@@ -474,10 +483,11 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
                           minsplit<-isolate(input$minsplit.boosting.pred)
                           isolate(modelo <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,
                                                           control = rpart.control(minsplit =minsplit, maxdepth = maxdepth)))
-                          isolate(codedioma$code <- append(codedioma$code, boosting.modelo.np(variable.pr = variable,
+                          isolate(codedioma$code <- append(codedioma$code, boosting.modelo (variable.pr = variable,
                                                                                               iter        = iter,
                                                                                               maxdepth    = maxdepth,
-                                                                                              minsplit    = minsplit)))
+                                                                                              minsplit    = minsplit,
+                                                                                              datos = dat.a)))
                           isolate(modelo)
                         }
       )
@@ -500,7 +510,8 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
       }        
       if(m.seleccionado == "rl"){
         isolate(modelo <- traineR::train.glm(as.formula(var), data = train))
-        isolate(codedioma$code <- append(codedioma$code, rl.modelo.np(variable.pr=variable)))
+        isolate(codedioma$code <- append(codedioma$code, codigo.modelo (variable.pr=variable, model.name = "glm",
+                                                                        datos = dat.a )))
         newCases$modelo      <- modelo
         print(modelo)
       }

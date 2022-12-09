@@ -1,12 +1,12 @@
-codigo.modelo <- function(model.name = "knn", variable.pr = NULL){
-  return(paste0("modelo.",model.name," <<- train.",model.name,"(",variable.pr,"~., data = datos.aprendizaje)\n"))
+codigo.modelo <- function(model.name = "knn", variable.pr = NULL, datos = "datos.aprendizaje"){
+  return(paste0("modelo.",model.name," <<- train.",model.name,"(",variable.pr,"~., data = ",datos,")\n"))
 }
 
-codigo.prediccion <- function(model.name = "knn", alg = NULL){
+codigo.prediccion <- function(model.name = "knn", alg = NULL, datos = "datos.prueba"){
   if (is.null(alg)) {
-    return(paste0("prediccion.",model.name," <<- predict(modelo.",model.name,", datos.prueba, type = 'class')\n"))
+    return(paste0("prediccion.",model.name," <<- predict(modelo.",model.name,", ",datos,", type = 'class')\n"))
   }else{
-    return(paste0("prediccion.",model.name,".",alg," <<- predict(modelo.",model.name,".",alg,", datos.prueba, type='class')\n"))
+    return(paste0("prediccion.",model.name,".",alg," <<- predict(modelo.",model.name,".",alg,", ",datos,", type='class')\n"))
   }
 }
 
@@ -22,11 +22,11 @@ codigo.MC <- function(model.name = "knn", alg = NULL){
 # Códigos de BOOSTING --------------------------------------------------------------------------------------------------------
 
 #Crea el modelo BOOSTING
-boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minsplit = 1){
+boosting.modelo <- function(variable.pr = NULL, iter = 50, maxdepth = 1, minsplit = 1, datos = "datos.aprendizaje"){
   iter     <- ifelse(!is.numeric(iter), 50, iter)
   maxdepth <- ifelse(!is.numeric(maxdepth) && maxdepth > 30, 15, maxdepth)
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit)
-  codigo   <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = datos.aprendizaje, mfinal = ",iter,",
+  codigo   <- paste0("modelo.boosting <<- train.adabag(",variable.pr,"~., data = ",datos,", mfinal = ",iter,",
                    control = rpart.control(minsplit = ",minsplit,", maxdepth = ",maxdepth,"))\n")
   return(codigo)
 }
@@ -60,10 +60,10 @@ boosting.plot.import <- function() {
 # Códigos de DT --------------------------------------------------------------------------------------------------------
 
 #Crea el modelo DT
-dt.modelo  <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini"){
+dt.modelo  <- function(variable.pr = NULL, minsplit =  20, maxdepth = 15, split = "gini", datos = "datos.aprendizaje"){
   minsplit <- ifelse(!is.numeric(minsplit), 1, minsplit )
   maxdepth <- ifelse(!is.numeric(maxdepth) || maxdepth > 30, 15, maxdepth)
-  codigo   <- paste0("modelo.dt.",split," <<- train.rpart(",variable.pr,"~., data = datos.aprendizaje,
+  codigo   <- paste0("modelo.dt.",split," <<- train.rpart(",variable.pr,"~., data = ",datos,",
                    control = rpart.control(minsplit = ",minsplit,", maxdepth = ", maxdepth,"),parms = list(split = '",split,"'))\n")
   return(codigo)
 }
@@ -80,26 +80,26 @@ dt.plot <- function(tipo, num = 1){
 #' @import traineR 
 
 #Crea el modelo KNN
-code.kkn.modelo <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal"){
-  return(paste0("modelo.knn.",kernel," <<- traineR::train.knn(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')\n"))
+code.kkn.modelo <- function(variable.pr = NULL, scale = TRUE,kmax = 7, kernel = "optimal", datos = "datos.aprendizaje"){
+  return(paste0("modelo.knn.",kernel," <<- traineR::train.knn(",variable.pr,"~., data = ",datos,", scale =",scale,", kmax=",kmax,", kernel = '",kernel,"')\n"))
 }
 
 # Códigos de  RL --------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo RL
-rl.modelo <- function(variable.predecir = NULL){
-  return(paste0("modelo.glm <<- train.glm(",variable.predecir,"~., data = datos.aprendizaje, family = binomial)\n"))
+rl.modelo <- function(variable.predecir = NULL, datos = "datos.aprendizaje"){
+  return(paste0("modelo.glm <<- train.glm(",variable.predecir,"~., data = ",datos,", family = binomial)\n"))
 }
 
 # Códigos de NN ---------------------------------------------------------------------------------------------------------
 
 #Crea el modelo NN
-nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, cant.cap = 2, ...){
+nn.modelo   <- function(variable.pr = NULL, threshold = 0.01, stepmax = 1000, cant.cap = 2, datos = "datos.aprendizaje", ...){
   threshold <- ifelse(threshold == 0, 0.01, threshold)
   stepmax   <- ifelse(stepmax < 100, 100, stepmax)
   capas     <- as.string.c(as.numeric(list(...)[1:cant.cap]), .numeric = TRUE)
   
-  return(paste0("modelo.neuralnet <<- train.neuralnet(",variable.pr,"~., data = datos.aprendizaje, hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
+  return(paste0("modelo.neuralnet <<- train.neuralnet(",variable.pr,"~., data = ",datos,", hidden = ",capas,",\n\t\t\tlinear.output = FALSE,",
                 "threshold = ",threshold,", stepmax = ",stepmax,")\n"))
 }
 
@@ -113,16 +113,16 @@ nn.plot <- function(){
 # Códigos de RLR -------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo RLR
-rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE){
-  return(paste0("modelo.glmnet.",type,"<<- train.glmnet(",variable.pr,"~., data = datos.aprendizaje, standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')\n"))
+rlr.modelo <- function(variable.pr = NULL, type = "ridge", alpha = 0, escalar = TRUE, datos = "datos.aprendizaje"){
+  return(paste0("modelo.glmnet.",type,"<<- train.glmnet(",variable.pr,"~., data = ",datos,", standardize = ",escalar,", alpha = ",alpha,", family = 'multinomial')\n"))
 }
 
 # Códigos de RF--------------------------------------------------------------------------------------------------
 
 #Crea el modelo RF
-rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1){
+rf.modelo <- function(variable.pr = NULL, ntree = 500, mtry = 1, datos = "datos.aprendizaje"){
   ntree   <- ifelse(!is.numeric(ntree), 500, ntree)
-  Codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = datos.aprendizaje,importance = TRUE,",
+  Codigo  <- paste0("modelo.rf <<- train.randomForest(",variable.pr,"~., data = ",datos,",importance = TRUE,",
                     " ntree =",ntree,",mtry =",mtry,")\n")
   return(Codigo)
 }
@@ -149,8 +149,8 @@ plot.rf.error <- function(){
 # Códigos de SVM -------------------------------------------------------------------------------------------------------------
 
 #Crea el modelo SVM
-svm.modelo <- function(variable.pr = NULL, scale = TRUE, kernel = "linear"){
-  return(paste0("modelo.svm.",kernel," <- traineR::train.svm(",variable.pr,"~., data = datos.aprendizaje, scale =",scale,", kernel = '",kernel,"')\n"))
+svm.modelo <- function(variable.pr = NULL, scale = TRUE, kernel = "linear", datos = "datos.aprendizaje"){
+  return(paste0("modelo.svm.",kernel," <- traineR::train.svm(",variable.pr,"~., data = ",datos,", scale =",scale,", kernel = '",kernel,"')\n"))
 }
 
 #Código del gráfico de svm
@@ -172,8 +172,8 @@ svm.plot <- function(var.pred,train,  variables, resto, kernel = "linear"){
 # Códigos de XGBOOSTING ---------------------------------------------------------------------------------------------------
 
 #Crea el modelo
-xgb.modelo <- function(variable.pr = NULL, booster = "gbtree",max.depth = 6, n.rounds = 60){
-  return(paste0("modelo.xgb.",booster," <<- traineR::train.xgboost(",variable.pr,"~., data = datos.aprendizaje, booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")\n"))
+xgb.modelo <- function(variable.pr = NULL, booster = "gbtree",max.depth = 6, n.rounds = 60, datos = "datos.aprendizaje"){
+  return(paste0("modelo.xgb.",booster," <<- traineR::train.xgboost(",variable.pr,"~., data = ",datos,", booster ='",booster,"', max_depth=",max.depth,", nrounds = ",n.rounds,")\n"))
 }
 
 
