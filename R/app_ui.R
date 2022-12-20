@@ -5,7 +5,7 @@
 #' @import shiny
 #' @import rlang
 #' @import traineR 
-#' @import readeR 
+#' @import loadeR 
 #' @import shinyAce
 #' @import echarts4r
 #' @import htmltools
@@ -125,7 +125,7 @@ app_ui <- function(request) {
           menuItem(labelInput("predicnuevos"), tabName = "predNuevos", 
                    icon = icon("table")),
           menuItem(labelInput("acercade"), tabName = "acercaDe",
-                   icon = icon("info")),
+                   icon = icon("circle-info")),
           hr(),
           menu.idioma(),
           tags$div(style = "display:none;",
@@ -144,26 +144,26 @@ app_ui <- function(request) {
           
           # Carga de Datos
           tabItem(tabName = "cargar",  
-                  readeR::mod_carga_datos_ui("carga_datos_ui_1", labelInput("data"))),
+                  loadeR::mod_carga_datos_ui("carga_datos_ui_1", labelInput("data"))),
           # Resumen Numérico
           tabItem(tabName = "resumen", 
-                  readeR::mod_r_numerico_ui("r_numerico_ui_1")),
+                  loadeR::mod_r_numerico_ui("r_numerico_ui_1")),
           
           # Test de Normalidad
           tabItem(tabName = "normalidad", 
-                  readeR::mod_normal_ui("normal_ui_1")),
+                  loadeR::mod_normal_ui("normal_ui_1")),
           
           # Dispersión
           tabItem(tabName = "dispersion",
-                  readeR::mod_dispersion_ui("dispersion_ui_1")),
+                  loadeR::mod_dispersion_ui("dispersion_ui_1")),
           
           # Distribuciones
           tabItem(tabName = "distribucion", 
-                  readeR::mod_distribuciones_ui("distribuciones_ui_1")),
+                  loadeR::mod_distribuciones_ui("distribuciones_ui_1")),
           
           # Correlaciones
           tabItem(tabName = "correlacion", 
-                  readeR::mod_correlacion_ui("correlacion_ui_1")),
+                  loadeR::mod_correlacion_ui("correlacion_ui_1")),
           
           # Poder Predictivo
           tabItem(tabName = "poderPred", 

@@ -92,7 +92,7 @@ app_server <- function( input, output, session ) {
       "library(traineR)\n", "library(xgboost)\n",
       "library(rpart)\n", "library(rpart.plot)\n",
       "library(glmnet)\n", "library(predictoR)\n",
-      "library(echarts4r)\n", "library(readeR)\n\n"
+      "library(echarts4r)\n", "library(loadeR)\n\n"
     )
     for (cod in codigo) {
       codigo.completo <- paste0(codigo.completo, "\n", cod)
@@ -151,14 +151,14 @@ app_server <- function( input, output, session ) {
   
   ###################################  Modules  ###############################
   #Carga de Datos
-  readeR::mod_carga_datos_server("carga_datos_ui_1", updateData, modelos, codedioma, "predictoR")
-  readeR::mod_carga_datos_server("carga_datos_ui_2", updateData2, NULL, codedioma, "discoveR")
+  loadeR::mod_carga_datos_server("carga_datos_ui_1", updateData, modelos, codedioma, "predictoR")
+  loadeR::mod_carga_datos_server("carga_datos_ui_2", updateData2, NULL, codedioma, "discoveR")
   #Estadísticas Básicas
-  readeR::mod_r_numerico_server("r_numerico_ui_1",         updateData, codedioma)
-  readeR::mod_normal_server("normal_ui_1",                 updateData, codedioma)
-  readeR::mod_dispersion_server("dispersion_ui_1",         updateData, codedioma)
-  readeR::mod_distribuciones_server("distribuciones_ui_1", updateData, codedioma)
-  readeR::mod_correlacion_server("correlacion_ui_1",       updateData, codedioma)
+  loadeR::mod_r_numerico_server("r_numerico_ui_1",         updateData, codedioma)
+  loadeR::mod_normal_server("normal_ui_1",                 updateData, codedioma)
+  loadeR::mod_dispersion_server("dispersion_ui_1",         updateData, codedioma)
+  loadeR::mod_distribuciones_server("distribuciones_ui_1", updateData, codedioma)
+  loadeR::mod_correlacion_server("correlacion_ui_1",       updateData, codedioma)
   mod_poder_pred_server("poder_pred_ui_1",                 updateData, codedioma)
   
   #Aprendizaje Supervisado

@@ -11,7 +11,7 @@ Imports:
     DT (>= 0.20),
     dplyr,
     golem (>= 0.3.1),
-    readeR (>= 1.0.1),
+    loadeR (>= 1.0.1),
     shiny  (>= 1.7.1),
     rlang  (>= 1.0.1),
     config (>= 0.3.1),

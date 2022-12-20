@@ -28,7 +28,7 @@ mod_ind_nuevos_ui <- function(id){
     div(id = ns("primera"),
         div(
           col_11(
-            readeR::mod_carga_datos_ui("carga_datos_ui_2", p(labelInput("cargarComp"),class = "wrapper-tag"), "discoveR")
+            loadeR::mod_carga_datos_ui("carga_datos_ui_2", p(labelInput("cargarComp"),class = "wrapper-tag"), "discoveR")
           ),
           col_1(
             actionButton(ns("cargarnext"), label = NULL, width = "100%",
@@ -156,7 +156,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
         }
         else{
           if(paste0(var, ".", unique(originales[, var])[1]) %in% colnames(datos.aprendizaje)){
-            datos.prueba <- readeR::datos.disyuntivos(datos.prueba, var)
+            datos.prueba <- loadeR::datos.disyuntivos(datos.prueba, var)
             datos.prueba[, var]       <- NULL
           }else{
             datos.prueba[, var]       <- NULL
@@ -185,7 +185,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     
     if(!is.null(variable)){
       tryCatch({
-        codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        codigo <- loadeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
         codigo <- paste0(codigo, "datos.prueba.completos <- datos\n")
         
         isolate(codedioma$code <- append(codedioma$code, codigo))
@@ -250,7 +250,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     
     if(!is.null(variable)){
       tryCatch({
-        #codigo <- readeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
+        #codigo <- loadeR:::code.carga(rowname, ruta$name, sep, dec, encabezado, deleteNA)
         #codigo <- paste0(codigo, "datos.prueba.completos <- datos\n")
         
         #isolate(codedioma$code <- append(codedioma$code, codigo))
