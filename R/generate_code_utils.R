@@ -540,19 +540,19 @@ for(i in 1:cantidad.validacion.cruzada){
     taprendizaje <- datos[-muestra, ]
     
     modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Freiman', mfinal = 100,
-                                          control = rpart.control(maxdepth = 30)
+                                          control = rpart.control(maxdepth = 30))
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     MC.breiman <- MC.breiman + MC
     
     modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Freund', mfinal = 100,
-                                          control = rpart.control(maxdepth = 30)
+                                          control = rpart.control(maxdepth = 30))
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     MC.freund <- MC.freund + MC
     
     modelo <- train.adabag(",var_pred," ~ ., data = taprendizaje, coeflearn = 'Zhu', mfinal = 100,
-                                          control = rpart.control(maxdepth = 30)
+                                          control = rpart.control(maxdepth = 30))
     prediccion <- predict(modelo, ttesting)
     MC <- confusion.matrix(ttesting, prediccion)
     MC.zhu <- MC.zhu + MC

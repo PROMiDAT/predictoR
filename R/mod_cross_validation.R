@@ -181,7 +181,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       
       nombres <- list("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr", "lda", "qda")
       names(nombres) <- tr(c("knnl", "dtl", "rfl", "bl", "svml", "Bayes", "xgb" , "rl", "rlr", "lda", "qda"),codedioma$idioma)
-      modelos <-ifelse(!is.null(isolate(input$sel_models)), isolate(input$sel_models), "") 
+      modelos   <- input$sel_models
       precision <- list(0, 1)
       names(precision) <- tr(c("errG", "precG"),codedioma$idioma)
       nombres_p <- list("barras", "lineas", "error")
