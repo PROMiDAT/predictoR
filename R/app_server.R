@@ -67,6 +67,17 @@ app_server <- function( input, output, session ) {
                     rf       = NULL,
                     nn       = NULL,
                     dt       = NULL)
+  
+  modelos2    <-  rv(svm     = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    knn      = list(n = 0, mcs = list()),
+                    bayes    = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    rl       = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    rlr      = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    xgb      = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    boosting = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    rf       = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    nn       = list(n = 1, mcs = vector(mode = "list", length = 10)),
+                    dt       = list(n = 1, mcs = vector(mode = "list", length = 10)))
   ###################################  Update  ################################
 
   #' Update on Language
@@ -162,7 +173,7 @@ app_server <- function( input, output, session ) {
   mod_poder_pred_server("poder_pred_ui_1",                 updateData, codedioma)
   
   #Aprendizaje Supervisado
-  callModule(mod_knn_server,            "knn_ui_1",            updateData, modelos, codedioma)
+  callModule(mod_knn_server,            "knn_ui_1",            updateData, modelos, codedioma, modelos2)
   callModule(mod_svm_server,            "svm_ui_1",            updateData, modelos, codedioma)
   callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData, modelos, codedioma)
   callModule(mod_r_forest_server,       "r_forest_ui_1",       updateData, modelos, codedioma)

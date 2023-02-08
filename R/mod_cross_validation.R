@@ -127,7 +127,7 @@ mod_cross_validation_ui <- function(id){
                conditionalPanel(condition =  "input.sel_methods == 'qda'",
                                 opc_qda, ns = ns),
                hr(style = "border-top: 2px solid #cccccc;" ),
-               actionButton(ns("btn_cv"), labelInput("generar"), width  = "100%" ),br(),br(),
+               actionButton(ns("btn_cv"), labelInput("generarT"), width  = "100%" ),br(),br(),
                div(id = ns("texto"),
                    style = "display:block",withLoader(verbatimTextOutput(ns("txt_cv")), 
                                                       type = "html", loader = "loader4")),br(),br()),
@@ -141,7 +141,8 @@ mod_cross_validation_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type_p"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_12(echarts4rOutput(ns("e_cv_precision"), width = "100%", height = "70vh")))),
+               div(col_6(echarts4rOutput(ns("e_cv_glob"), width = "100%", height = "70vh")),
+                   col_6(echarts4rOutput(ns("e_cv_error"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabcvcvIndicesCat",
                div(col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("selectCat"),class = "wrapper-tag"),
                              tags$div(class="multiple-select-var",
@@ -152,7 +153,8 @@ mod_cross_validation_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_12(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh")))),
+               div(col_6(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh")),
+                   col_6(echarts4rOutput(ns("e_cv_category_err"), width = "100%", height = "70vh")))),
       tabPanel(title = p(labelInput("tablaComp"),class = "wrapper-tag"),
                withLoader(DT::dataTableOutput(ns("TablaComp"), height="70vh"), 
                           type = "html", loader = "loader4"))
@@ -390,31 +392,41 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
     })
     
     
-    output$e_cv_precision  <-  renderEcharts4r({
-      idioma <- codedioma$idioma
-      tryCatch({
-        indice  <- input$cvcv_glo
-        type    <- input$plot_type_p
-        grafico <- M$grafico
-        grafico$name <-  tr(grafico$name,codedioma$idioma)
+    output$e_cv_glob  <-  renderEcharts4r({
+      type    <- input$plot_type_p
+      grafico <- M$grafico
+      if(!is.null(grafico)){
+        idioma    <- codedioma$idioma
+        grafico$name <-  tr(grafico$name,idioma)
         
-        error   <- indice == "0"
-        label   <- ifelse(error, tr("errG",idioma), tr("precG",idioma))
-        if(!is.null(grafico)){
-          if(error)
-            grafico$value <- 1 - M$global
-          switch (type,
-                  "barras" = return( resumen.barras(grafico, labels = c(label, tr("modelo", idioma) ))), 
-                  "error" = return( resumen.error(grafico, labels = c(label, tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
-                  "lineas" = return( resumen.lineas(grafico, labels = c(label, tr("crossval",idioma) )))
-          )
-        }
-        else
-          return(NULL)
-      },error = function(e){
+        switch (type,
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), tr("modelo", idioma) ))), 
+                "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
+        )
+      }
+      else
         return(NULL)
-      })
+    })    
+    
+    output$e_cv_error  <-  renderEcharts4r({
+      idioma    <- codedioma$idioma
+      type      <- input$plot_type_p
+      
+      if(!is.null(M$grafico)){
+        err  <- M$grafico
+        err$value <- 1 - M$global
+        err$name <-  tr(err$name,idioma)
+        switch (type,
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), tr("modelo", idioma) ))), 
+                "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
+        )
+      }
+      else
+        return(NULL)
     })
+    
     
     output$e_cv_category  <-  renderEcharts4r({
       idioma <- codedioma$idioma
@@ -438,14 +450,41 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       })
     })
     
+    output$e_cv_category_err  <-  renderEcharts4r({
+      idioma <- codedioma$idioma
+      tryCatch({
+        cat    <- input$cv.cat.sel
+        type   <- input$plot_type
+        if(!is.null(M$grafico)){
+          graf  <- M$grafico
+          graf$name <-  tr(graf$name,codedioma$idioma)
+          graf$value <- 1 - M$categories[[cat]]
+          switch (type,
+                  "barras" = return( resumen.barras(graf, labels = c(paste0("Error ",cat ), tr("modelo", idioma)))), 
+                  "error" = return( resumen.error(graf,   labels = c(paste0("Error ",cat ), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                  "lineas" = return( resumen.lineas(graf, labels = c(paste0("Error ",cat ), tr("crossval",idioma) )))
+          )
+        }
+        else
+          return(NULL)
+      },error = function(e){
+        return(NULL)
+      })
+    })
+    
     # Update Comparison Table
     output$TablaComp <- DT::renderDataTable({
       res      <- data.frame()
       idioma   <- codedioma$idioma
-      global   <- M$grafico
-      categorias <- M$categories
+      global   <<- M$grafico
+      categorias <<- M$categories
       tryCatch({
-        global$name <-  tr(global$name,codedioma$idioma)
+        global$name <<-  tr(global$name,codedioma$idioma)
+        
+        global <- global |> 
+                    dplyr::group_by(name) |> 
+                      dplyr::summarise(value = mean(value))
+        
         for (i in 1:nrow(global)) {
           new <- data.frame(
             OAccuracy = global[i,"value"],

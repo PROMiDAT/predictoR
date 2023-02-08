@@ -72,6 +72,7 @@ gclasificacion;Diagrama de Voronoi;Voronoi Diagram
 gcoeff;Coeficientes y lambda;Coefficients and lambda
 generar;Generar;Generate
 generarM;Generar Modelo;Generate Model
+generarT;Generar todos los Modelos;Generate All Models
 generatem;Generación del Modelo;Generation of the Model
 habilitada;Habilitada;Enabled
 header;Nombre de Variables;Variables names 

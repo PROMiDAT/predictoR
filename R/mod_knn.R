@@ -73,7 +73,7 @@ opc_knn <- div(conditionalPanel(
 #' knn Server Function
 #'
 #' @noRd 
-mod_knn_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_knn_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
 
@@ -128,7 +128,15 @@ mod_knn_server <- function(input, output, session, updateData, modelos, codediom
       pred   <- pred$prediction
     }
     
-    isolate(modelos$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate({
+      modelos$knn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc)
+      modelos2$knn$n <- modelos2$knn$n + 1
+      modelos2$knn$mcs[modelos2$knn$n] <- general.indexes(mc=mc)
+      if(modelos2$knn$n > 9)
+        modelos2$knn$n <- 0
+      
+      })
+    res <<- modelos2$knn
     nombre.modelo$x <- nombre
     print(modelo)
     },error = function(e){

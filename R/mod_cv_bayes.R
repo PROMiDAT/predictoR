@@ -46,7 +46,8 @@ mod_cv_bayes_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_12(echarts4rOutput(ns("e_bayes_category"), width = "100%", height = "70vh"))))
+               div(col_6(echarts4rOutput(ns("e_bayes_category"), width = "100%", height = "70vh")),
+                   col_6(echarts4rOutput(ns("e_bayes_category_err"), width = "100%", height = "70vh"))))
     )
  
   )
@@ -190,11 +191,11 @@ mod_cv_bayes_server <- function(input, output, session, updateData, codedioma){
     
     output$e_bayes_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
-      type      <- input$plot_type_p
+      type      <<- input$plot_type_p
       
       if(!is.null(M$grafico)){
-        err  <- M$grafico
-        err$value <- 1 - M$global
+        err  <<- M$grafico
+        err$value <<- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), tr("modelo",idioma) ))), 
                 "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
@@ -217,6 +218,22 @@ mod_cv_bayes_server <- function(input, output, session, updateData, codedioma){
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo",idioma)))), 
                 "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
+        )
+      }
+      else
+        return(NULL)
+    })
+    output$e_bayes_category_err  <-  renderEcharts4r({
+      idioma <- codedioma$idioma
+      cat    <- input$cv.cat.sel
+      type   <- input$plot_type
+      if(!is.null(M$grafico)){
+        graf  <- M$grafico
+        graf$value <- 1- M$categories[[cat]]
+        switch (type,
+                "barras" = return( resumen.barras(graf, labels = c(paste0("Error ",cat ), tr("modelo",idioma)))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0("Error ",cat ), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0("Error ",cat ), tr("crossval",idioma) )))
         )
       }
       else

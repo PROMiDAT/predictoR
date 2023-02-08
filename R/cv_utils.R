@@ -54,6 +54,7 @@ resumen.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
     e_datazoom(show = F,startValue=1) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  comp_plot$x$opts$yAxis$max <- 1
   comp_plot
 }
 
@@ -89,6 +90,7 @@ resumen.barras <- function(datos.grafico, labels = c("Global", "iteracion"), rot
   
   if(rotacion)
     resumen <- resumen |> e_x_axis(axisLabel = list(interval= 0, rotate= 30))
+  resumen$x$opts$yAxis[[1]]$max <- 1
   resumen$x$opts$legend$data <- datos.grafico$name
   resumen
 }
@@ -126,6 +128,7 @@ resumen.error <- function(datos.grafico, labels = c("Global", "iteracion", "Valo
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
   resumen$x$opts$legend$data <- datos.grafico$name
+  resumen$x$opts$yAxis[[1]]$max <- 1
   resumen
 }
 

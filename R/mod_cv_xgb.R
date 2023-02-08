@@ -46,7 +46,8 @@ mod_cv_xgb_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_12(echarts4rOutput(ns("e_xgb_category"), width = "100%", height = "70vh"))))
+               div(col_6(echarts4rOutput(ns("e_xgb_category"), width = "100%", height = "70vh")), 
+                   col_6(echarts4rOutput(ns("e_xgb_category_err"), width = "100%", height = "70vh"))))
     )
  
   )
@@ -235,6 +236,24 @@ mod_cv_xgb_server <- function(input, output, session, updateData, codedioma){
                 "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ),tr("booster",idioma) ))), 
                 "error"  = return( resumen.error(graf,  labels = c(paste0(tr("prec",idioma), " ",cat ), tr("booster",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
+        )
+      }
+      else
+        return(NULL)
+    })
+    
+    
+    output$e_xgb_category_err  <-  renderEcharts4r({
+      idioma <- codedioma$idioma
+      cat    <- input$cv.cat.sel
+      type   <- input$plot_type
+      if(!is.null(M$grafico)){
+        graf  <- M$grafico
+        graf$value <- 1 - M$categories[[cat]]
+        switch (type,
+                "barras" = return( resumen.barras(graf, labels = c(paste0("Error ",cat ), tr("booster",idioma) ))), 
+                "error"  = return( resumen.error(graf,  labels = c(paste0("Error ",cat ), tr("booster",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
+                "lineas" = return( resumen.lineas(graf, labels = c(paste0("Error ",cat ), tr("crossval",idioma) )))
         )
       }
       else
