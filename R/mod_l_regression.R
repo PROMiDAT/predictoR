@@ -69,10 +69,13 @@ mod_l_regression_ui <- function(id){
 #' l_regression Server Function
 #'
 #' @noRd 
-mod_l_regression_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_l_regression_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
-
+  
+  observeEvent(updateData$datos, {
+    modelos2$rl = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable <- updateData$variable.predecir
@@ -128,7 +131,13 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
     }
     
     
-    isolate(modelos$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob, mc = mc))
+    isolate({
+      modelos$rl[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob, mc = mc)
+      modelos2$rl$n <- modelos2$rl$n + 1
+      modelos2$rl$mcs[modelos2$rl$n] <- general.indexes(mc = mc)
+      if(modelos2$rl$n > 9)
+        modelos2$rl$n <- 0
+      })
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {

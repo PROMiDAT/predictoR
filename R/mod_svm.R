@@ -84,10 +84,15 @@ mod_svm_ui <- function(id){
 #' svm Server Function
 #'
 #' @noRd 
-mod_svm_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_svm_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   
   nombre.modelo <- rv(x = NULL)
+  
+  
+  observeEvent(updateData$datos, {
+    modelos2$svm = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
@@ -136,7 +141,12 @@ mod_svm_server <- function(input, output, session, updateData, modelos, codediom
       }
       
       
-      isolate(modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+      isolate({modelos$svm[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc)
+      modelos2$svm$n <- modelos2$svm$n + 1
+      modelos2$svm$mcs[modelos2$svm$n] <- general.indexes(mc = mc)
+      if(modelos2$svm$n > 9)
+        modelos2$svm$n <- 0
+      })
       nombre.modelo$x <- nombre
       print(modelo)
     },error = function(e){

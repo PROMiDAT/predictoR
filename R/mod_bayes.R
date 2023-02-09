@@ -70,10 +70,13 @@ mod_bayes_ui <- function(id){
 #' bayes Server Function
 #'
 #' @noRd 
-mod_bayes_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_bayes_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
+  observeEvent(updateData$datos, {
+    modelos2$bayes = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable <- updateData$variable.predecir
@@ -118,7 +121,13 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
       pred   <- pred$prediction
     }
     
-    isolate(modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo, pred = pred, prob = prob, mc = mc))
+    isolate({
+      modelos$bayes[[nombre]] <- list(nombre = nombre, modelo = modelo, pred = pred, prob = prob, mc = mc)
+      modelos2$bayes$n <- modelos2$bayes$n + 1
+      modelos2$bayes$mcs[modelos2$bayes$n] <- general.indexes(mc = mc)
+      if(modelos2$bayes$n > 9)
+        modelos2$bayes$n <- 0
+      })
     nombre.modelo$x <- nombre
     print(modelo)    
     },error = function(e){

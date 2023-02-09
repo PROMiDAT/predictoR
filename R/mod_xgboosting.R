@@ -77,10 +77,13 @@ mod_xgboosting_ui <- function(id){
 #' xgboosting Server Function
 #'
 #' @noRd 
-mod_xgboosting_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_xgboosting_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
+  observeEvent(updateData$datos, {
+    modelos2$xgb = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   # When load training-testing
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     
@@ -130,7 +133,13 @@ mod_xgboosting_server <- function(input, output, session, updateData, modelos, c
         pred   <- pred$prediction
       }
       
-      isolate(modelos$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+      isolate({
+        modelos$xgb[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc)
+        modelos2$xgb$n <- modelos2$xgb$n + 1
+        modelos2$xgb$mcs[modelos2$xgb$n] <- general.indexes(mc = mc)
+        if(modelos2$xgb$n > 9)
+          modelos2$xgb$n <- 0
+        })
       nombre.modelo$x <- nombre
       print(modelo)
     },error = function(e){

@@ -76,10 +76,13 @@ mod_lda_ui <- function(id){
 #' lda Server Function
 #'
 #' @noRd 
-mod_lda_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_lda_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
+  observeEvent(updateData$datos, {
+    modelos2$lda = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     nombres <- colnames.empty(var.numericas(updateData$datos))
@@ -125,7 +128,13 @@ mod_lda_server <- function(input, output, session, updateData, modelos, codediom
       pred   <- pred$prediction
     }
     
-    isolate(modelos$lda[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
+    isolate({
+      modelos$lda[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc)
+      modelos2$lda$n <- modelos2$lda$n + 1
+      modelos2$lda$mcs[modelos2$lda$n] <- general.indexes(mc = mc)
+      if(modelos2$lda$n > 9)
+        modelos2$lda$n <- 0
+      })
     nombre.modelo$x <- nombre
     print(modelo)    
     },error = function(e){

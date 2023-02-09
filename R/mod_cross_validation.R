@@ -476,10 +476,10 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
     output$TablaComp <- DT::renderDataTable({
       res      <- data.frame()
       idioma   <- codedioma$idioma
-      global   <<- M$grafico
-      categorias <<- M$categories
+      global   <- M$grafico
+      categorias <- M$categories
       tryCatch({
-        global$name <<-  tr(global$name,codedioma$idioma)
+        global$name <-  tr(global$name,codedioma$idioma)
         
         global <- global |> 
                     dplyr::group_by(name) |> 

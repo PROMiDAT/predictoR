@@ -100,7 +100,7 @@ prob.values.ind <- function(Score, Class, levels, category, Corte = 0.5, print =
 
 # Gráfico comparativo
 
-comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
+comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion"), error = FALSE) {
   
   comp_plot <- datos.grafico |>
     e_charts(rep) |>
@@ -119,7 +119,6 @@ comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion")) {
     e_datazoom(show = F,startValue=1) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
-  comp_plot$x$opts$yAxis$max <- 1
   comp_plot
 }
 

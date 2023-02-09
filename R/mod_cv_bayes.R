@@ -191,11 +191,11 @@ mod_cv_bayes_server <- function(input, output, session, updateData, codedioma){
     
     output$e_bayes_error  <-  renderEcharts4r({
       idioma    <- codedioma$idioma
-      type      <<- input$plot_type_p
+      type      <- input$plot_type_p
       
       if(!is.null(M$grafico)){
-        err  <<- M$grafico
-        err$value <<- 1 - M$global
+        err  <- M$grafico
+        err$value <- 1 - M$global
         switch (type,
                 "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), tr("modelo",idioma) ))), 
                 "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), tr("modelo",idioma), tr("maximo", idioma),tr("minimo", idioma)))), 

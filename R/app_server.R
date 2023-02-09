@@ -68,16 +68,18 @@ app_server <- function( input, output, session ) {
                     nn       = NULL,
                     dt       = NULL)
   
-  modelos2    <-  rv(svm     = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    knn      = list(n = 0, mcs = list()),
-                    bayes    = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    rl       = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    rlr      = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    xgb      = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    boosting = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    rf       = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    nn       = list(n = 1, mcs = vector(mode = "list", length = 10)),
-                    dt       = list(n = 1, mcs = vector(mode = "list", length = 10)))
+  modelos2    <-  rv(svm      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     knn      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     bayes    = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     rl       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     rlr      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     xgb      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     boosting = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     rf       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     nn       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     dt       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     lda      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                     qda      = list(n = 0, mcs = vector(mode = "list", length = 10)))
   ###################################  Update  ################################
 
   #' Update on Language
@@ -85,6 +87,21 @@ app_server <- function( input, output, session ) {
     codedioma$idioma = input$idioma
     etiquetas <- names(translation)
     updateLabelInput(session, etiquetas, tr(etiquetas, input$idioma))
+  })
+  
+  observeEvent(updateData$datos, {
+    modelos2    <-  rv(svm      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       knn      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       bayes    = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       rl       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       rlr      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       xgb      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       boosting = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       rf       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       nn       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       dt       = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       lda      = list(n = 0, mcs = vector(mode = "list", length = 10)),
+                       qda      = list(n = 0, mcs = vector(mode = "list", length = 10)))
   })
   
   # Update Code
@@ -174,20 +191,20 @@ app_server <- function( input, output, session ) {
   
   #Aprendizaje Supervisado
   callModule(mod_knn_server,            "knn_ui_1",            updateData, modelos, codedioma, modelos2)
-  callModule(mod_svm_server,            "svm_ui_1",            updateData, modelos, codedioma)
-  callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData, modelos, codedioma)
-  callModule(mod_r_forest_server,       "r_forest_ui_1",       updateData, modelos, codedioma)
-  callModule(mod_xgboosting_server,     "xgboosting_ui_1",     updateData, modelos, codedioma)
-  callModule(mod_boosting_server,       "boosting_ui_1",       updateData, modelos, codedioma)
-  callModule(mod_bayes_server,          "bayes_ui_1",          updateData, modelos, codedioma)
-  callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData, modelos, codedioma)
-  callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData, modelos, codedioma)
-  callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData, modelos, codedioma)
-  callModule(mod_lda_server,            "lda_ui_1",            updateData, modelos, codedioma)
-  callModule(mod_qda_server,            "qda_ui_1",            updateData, modelos, codedioma)
+  callModule(mod_svm_server,            "svm_ui_1",            updateData, modelos, codedioma, modelos2)
+  callModule(mod_d_tree_server,         "d_tree_ui_1",         updateData, modelos, codedioma, modelos2)
+  callModule(mod_r_forest_server,       "r_forest_ui_1",       updateData, modelos, codedioma, modelos2)
+  callModule(mod_xgboosting_server,     "xgboosting_ui_1",     updateData, modelos, codedioma, modelos2)
+  callModule(mod_boosting_server,       "boosting_ui_1",       updateData, modelos, codedioma, modelos2)
+  callModule(mod_bayes_server,          "bayes_ui_1",          updateData, modelos, codedioma, modelos2)
+  callModule(mod_neural_net_server,     "neural_net_ui_1",     updateData, modelos, codedioma, modelos2)
+  callModule(mod_l_regression_server,   "l_regression_ui_1",   updateData, modelos, codedioma, modelos2)
+  callModule(mod_penalized_l_r_server,  "penalized_l_r_ui_1",  updateData, modelos, codedioma, modelos2)
+  callModule(mod_lda_server,            "lda_ui_1",            updateData, modelos, codedioma, modelos2)
+  callModule(mod_qda_server,            "qda_ui_1",            updateData, modelos, codedioma, modelos2)
   
   #Comparación de Modelos
-  callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos, codedioma)
+  callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos, codedioma, modelos2)
   
   
   #Validación Cruzada

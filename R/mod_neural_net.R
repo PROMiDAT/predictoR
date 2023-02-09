@@ -80,7 +80,7 @@ mod_neural_net_ui <- function(id){
 #' neural_net Server Function
 #'
 #' @noRd 
-mod_neural_net_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_neural_net_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
@@ -159,7 +159,9 @@ mod_neural_net_server <- function(input, output, session, updateData, modelos, c
       }
       
       
-      isolate(modelos$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+      isolate({
+        modelos$nn[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc)
+        })
       nombre.modelo$x <- nombre
       print(modelo)
       

@@ -94,10 +94,13 @@ mod_boosting_ui <- function(id){
 #' boosting Server Function
 #'
 #' @noRd 
-mod_boosting_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_boosting_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   
+  observeEvent(updateData$datos, {
+    modelos2$boosting = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable <- updateData$variable.predecir
@@ -148,7 +151,14 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
       pred   <- pred$prediction
     }
 
-    isolate(modelos$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo, pred = pred, prob = prob , mc = mc))
+    isolate({
+      modelos$boosting[[nombre]] <- list(nombre = nombre, modelo = modelo, pred = pred, prob = prob , mc = mc)
+      modelos2$boosting$n <- modelos2$boosting$n + 1
+      modelos2$boosting$mcs[modelos2$boosting$n] <- general.indexes(mc = mc)
+      if(modelos2$boosting$n > 9)
+        modelos2$boosting$n <- 0
+    
+      })
     nombre.modelo$x <- nombre
     print(modelo)
     }, error = function(e) {

@@ -97,11 +97,13 @@ mod_penalized_l_r_ui <- function(id){
 #' penalized_l_r Server Function
 #'
 #' @noRd 
-mod_penalized_l_r_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_penalized_l_r_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
   cv            <- rv(cv.glm = NULL)
-  
+  observeEvent(updateData$datos, {
+    modelos2$rlr = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable     <- updateData$variable.predecir
@@ -148,16 +150,22 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       mc     <- results$MC
       pred   <- results$Prediccion
     }else{
-      pred   <<- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
+      pred   <- predict(modelo , test, type = 'class', s = mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se)))
       mc     <- confusion.matrix(test, pred)
-      pred   <<- pred$prediction
+      pred   <- pred$prediction
     }
     updateNumericInput(session, 
                        "landa", 
                        max   =  round(max(log(modelo$lambda)), 5), 
                        min   =  round(min(log(modelo$lambda)), 5),
                        value =  round(log(mean(c(cv$cv.glm$lambda.min, cv$cv.glm$lambda.1se))),5))
-    isolate(modelos$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc))
+    isolate({
+      modelos$rlr[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred, prob = prob , mc = mc)
+      modelos2$rlr$n <- modelos2$rlr$n + 1
+      modelos2$rlr$mcs[modelos2$rlr$n] <- general.indexes(mc = mc)
+      if(modelos2$rlr$n > 9)
+        modelos2$rlr$n <- 0
+      })
     print(modelo)
   },error = function(e){
     return(invisible(""))

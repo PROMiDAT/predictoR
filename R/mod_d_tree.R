@@ -83,9 +83,14 @@ mod_d_tree_ui <- function(id){
 #' d_tree Server Function
 #'
 #' @noRd 
-mod_d_tree_server <- function(input, output, session, updateData, modelos, codedioma){
+mod_d_tree_server <- function(input, output, session, updateData, modelos, codedioma, modelos2){
   ns <- session$ns
   nombre.modelo <- rv(x = NULL)
+  
+  
+  observeEvent(updateData$datos, {
+    modelos2$dt = list(n = 0, mcs = vector(mode = "list", length = 10))
+  })
   
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
@@ -136,7 +141,14 @@ mod_d_tree_server <- function(input, output, session, updateData, modelos, coded
         pred   <- pred$prediction
       }
       
-      isolate(modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc))
+      isolate({
+        modelos$dt[[nombre]] <- list(nombre = nombre, modelo = modelo ,pred = pred , prob = prob, mc = mc)
+        modelos2$dt$n <- modelos2$dt$n + 1
+        modelos2$dt$mcs[modelos2$dt$n] <- general.indexes(mc = mc)
+        if(modelos2$dt$n > 9)
+          modelos2$dt$n <- 0
+      
+        })
       nombre.modelo$x <- nombre
       print(modelo)
     },error = function(e){
