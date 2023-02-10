@@ -91,7 +91,9 @@ app_ui <- function(request) {
                    menuSubItem(labelInput("qda"),tabName = "qda",
                                icon = icon("superscript")),
                    menuSubItem(labelInput("comparacion"), tabName = "comparar", 
-                               icon = icon("balance-scale"))),
+                               icon = icon("balance-scale")),
+                   menuSubItem(labelInput("varError"), tabName = "varerr", 
+                               icon = icon("triangle-exclamation"))),
           menuItem(labelInput("calibracion"), tabName = "calibracion",#server, award battle-net brain bug buffer check-circle chart-line chart-bar
                    icon = icon("gears"),
                    menuSubItem(labelInput("knnl"),tabName = "cv_knn",
@@ -218,7 +220,11 @@ app_ui <- function(request) {
           
           # Comparación de Modelos
           tabItem(tabName = "comparar", 
-                  mod_comparacion_ui("comparacion_ui_1")),   
+                  mod_comparacion_ui("comparacion_ui_1")),  
+          
+          # Comparación de Modelos
+          tabItem(tabName = "varerr", 
+                  mod_varerr_ui("varerr_ui_1")),   
           
           
           ############### Validación Cruzada ############### 

@@ -76,6 +76,7 @@ mod_l_regression_server <- function(input, output, session, updateData, modelos,
   observeEvent(updateData$datos, {
     modelos2$rl = list(n = 0, mcs = vector(mode = "list", length = 10))
   })
+  
   #Cuando se generan los datos de prueba y aprendizaje
   observeEvent(c(updateData$datos.aprendizaje,updateData$datos.prueba), {
     variable <- updateData$variable.predecir

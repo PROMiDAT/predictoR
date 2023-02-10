@@ -68,6 +68,7 @@ garbol;Gráfico Árbol;Tree Plot
 grafLineas;Gráfico de Líneas;Line Plot
 grafBarras;Gráfico de Barras;Bar Plot
 grafError;Gráfico de Variación del Error;Error Variation Plot
+varError;Variación del Error;Error Variation 
 gclasificacion;Diagrama de Voronoi;Voronoi Diagram
 gcoeff;Coeficientes y lambda;Coefficients and lambda
 generar;Generar;Generate

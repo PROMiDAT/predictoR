@@ -84,8 +84,8 @@ colnames.empty <- function(res) {
     return("")
   return(res)
 }
-
-# Función para generar diccionario.
+# 
+# # Función para generar diccionario.
 # crear.traslation <- function() {
 #    library(plyr)
 #    archivo <- read.table("diccionario.csv", header = TRUE, sep = ";", as.is = TRUE)

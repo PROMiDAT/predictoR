@@ -205,6 +205,7 @@ app_server <- function( input, output, session ) {
   
   #Comparación de Modelos
   callModule(mod_comparacion_server,    "comparacion_ui_1",    updateData, modelos, codedioma, modelos2)
+  callModule(mod_varerr_server,         "varerr_ui_1",         updateData, modelos, codedioma, modelos2)
   
   
   #Validación Cruzada
