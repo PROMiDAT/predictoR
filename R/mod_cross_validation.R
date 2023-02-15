@@ -189,8 +189,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       nombres_p <- list("barras", "lineas", "error")
       names(nombres_p) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
       
-      updateSelectInput(session, "plot_type", choices = nombres_p, selected = "barras")
-      updateSelectInput(session, "plot_type_p", choices = nombres_p, selected = "barras")
+      updateSelectInput(session, "plot_type", choices = nombres_p, selected = "lineas")
+      updateSelectInput(session, "plot_type_p", choices = nombres_p, selected = "lineas")
       updateSelectInput(session, "cvcv_glo", choices = precision, selected = 1)
       updateCheckboxGroupInput(session, "sel_models", choices = nombres, selected = modelos)
     })

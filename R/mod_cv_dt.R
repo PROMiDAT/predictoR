@@ -69,8 +69,8 @@ mod_cv_dt_server <- function(input, output, session, updateData, codedioma){
       nombres <- list("barras", "lineas", "error")
       names(nombres) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
       
-      updateSelectInput(session, "plot_type", choices = nombres, selected = "barras")
-      updateSelectInput(session, "plot_type_p", choices = nombres, selected = "barras")
+      updateSelectInput(session, "plot_type", choices = nombres, selected = "lineas")
+      updateSelectInput(session, "plot_type_p", choices = nombres, selected = "lineas")
     })
     
     observeEvent(c(updateData$datos, updateData$variable.predecir), {
