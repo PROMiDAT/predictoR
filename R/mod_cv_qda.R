@@ -57,8 +57,8 @@ mod_cv_qda_server <- function(input, output, session, updateData, codedioma){
     
     observeEvent(codedioma$idioma, {
       
-      nombres <- list("barras", "lineas", "error")
-      names(nombres) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
+      nombres <- list( "lineas", "barras","error")
+      names(nombres) <- tr(c("grafLineas", "grafBarras",  "grafError"),codedioma$idioma)
       
       updateSelectInput(session, "plot_type", choices = nombres, selected = "lineas")
       updateSelectInput(session, "plot_type_p", choices = nombres, selected = "lineas")

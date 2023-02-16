@@ -186,8 +186,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
       modelos   <- input$sel_models
       precision <- list(0, 1)
       names(precision) <- tr(c("errG", "precG"),codedioma$idioma)
-      nombres_p <- list("barras", "lineas", "error")
-      names(nombres_p) <- tr(c("grafBarras", "grafLineas", "grafError"),codedioma$idioma)
+      nombres_p <- list( "lineas", "barras","error")
+      names(nombres_p) <- tr(c("grafLineas", "grafBarras",  "grafError"),codedioma$idioma)
       
       updateSelectInput(session, "plot_type", choices = nombres_p, selected = "lineas")
       updateSelectInput(session, "plot_type_p", choices = nombres_p, selected = "lineas")

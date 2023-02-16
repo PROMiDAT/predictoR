@@ -34,15 +34,14 @@ dist_cat_predecir <- function(data, variable, variable.pr){
 }
 
 #Gráfica el pairs
-pairs.poder  <- function(datos,variable.predecir){
+pairs.poder  <- function(datos,variable.predecir, col){
   vars.p <- datos[,variable.predecir]
   tam    <- length(unique(vars.p))
-  col    <- gg_color_hue(tam)
   if(tam == 2){
     col <- base::rev(col)
   }
   r      <- pairs.panels(var.numericas(datos),bg = col,
-                         pch = 22, main = '', hist.col = gg_color_hue(1), ellipses = FALSE, oma=c(3,3,3,15))
+                         pch = 22, main = '', hist.col = col[1], ellipses = FALSE, oma=c(3,3,3,15))
   legend('topright', 
          fill   = unique(col[datos[,variable.predecir]]), 
          legend = c(levels(datos[,variable.predecir])))
@@ -50,7 +49,8 @@ pairs.poder  <- function(datos,variable.predecir){
 }
 
 #Gráfica la densidad de las variables númericas
-e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${X} ${Y}"){
+e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${X} ${Y}", colores =c("#F8766D", "#00BFC4", "#00BA38", "#C77CFF", "#00B0F6",
+                                                                                                            "#EEEE00", "#CD661D", "#006400","#EE82EE", "#000080")){
   label = str_interp(label,list(X = variable,Y = variable.predecir))
   datos.plot <- data.frame(
     "variable" = datos.dens[, variable],
@@ -58,7 +58,6 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
   )
   
   categorias <- levels(datos.plot[,"variable.predecir"])
-  colores    <- gg_color_hue(length(categorias))
   dens       <- tapply(datos.plot[,"variable"],
                        datos.plot[,"variable.predecir"], 
                        function(x) {density(x, n = 20)})
@@ -93,10 +92,10 @@ e_numerico_dens <- function(datos.dens, variable, variable.predecir, label = "${
 }
 
 #Hace la gráfica de distribuciones según la variable predictiva
-e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}", labels = c("Porcentaje", "Cantidad")){
+e_categorico_dist <- function(datos, variable, var.predecir, label = "${X} ${Y}", labels = c("Porcentaje", "Cantidad"), color =c("#F8766D", "#00BFC4", "#00BA38", "#C77CFF", "#00B0F6",
+                                                                                                                                          "#EEEE00", "#CD661D", "#006400","#EE82EE", "#000080") ){
   label = str_interp(label,list(X = variable,
                                 Y = var.predecir))
-  color    <- gg_color_hue(length(levels(datos[,var.predecir])))
   dataplot <- dist_cat_predecir(datos, variable, var.predecir)
   
   dataplot |> 
