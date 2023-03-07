@@ -14,7 +14,7 @@
 #' Package: \tab predictoR\cr
 #' Type: \tab Package\cr
 #' Version: \tab 3.0.0\cr
-#' Date: \tab 2022-02-09\cr
+#' Date: \tab 2023-02-15\cr
 #' License: \tab GPL (>=2)\cr
 #' }
 #' @keywords package
