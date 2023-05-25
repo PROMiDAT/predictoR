@@ -250,8 +250,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       pred   <- predict(modelo , updateData$datos.prueba, type = 'class', s = exp(landa) )
       mc     <- confusion.matrix(updateData$datos.prueba, pred)
       
-      isolate(modelos$rlr[[nombre.modelo$x]]$pred <- pred)
-      isolate(modelos$rlr[[nombre.modelo$x]]$mc   <- mc)
+      modelos$rlr[[nombre.modelo$x]]$pred <- pred
+      modelos$rlr[[nombre.modelo$x]]$mc   <- mc
     }
     return(landa)
   }
@@ -279,8 +279,8 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
       test       <- updateData$datos.prueba
       variable   <- updateData$variable.predecir
       choices    <- levels(test[, variable])
-      category   <- isolate(input$cat.sel.prob)
-      paso       <- isolate(input$by.prob)
+      category   <- isolate(input$rlr.sel)
+      paso       <- isolate(input$rlr.by)
       prediccion <- modelos$rlr[[nombre.modelo$x]]$prob 
       Score      <- prediccion$prediction[,category,]
       Clase      <- test[,variable]
