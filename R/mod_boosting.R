@@ -130,7 +130,7 @@ mod_boosting_server <- function(input, output, session, updateData, modelos, cod
     maxdepth<-isolate(input$maxdepth.boosting)
     minsplit<-isolate(input$minsplit.boosting) 
     coeff   <-isolate(input$coeff.boosting)
-    nombre  <- paste0("bl")
+    nombre  <- paste0("bl-", coeff)
     modelo  <- traineR::train.adabag(as.formula(var), data = train, mfinal = iter,coeflearn = coeff,
                                     control = rpart.control(minsplit =minsplit, maxdepth = maxdepth))
     prob   <- predict(modelo , test, type = 'prob')

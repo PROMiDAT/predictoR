@@ -204,7 +204,7 @@ indices.cv <- function(category, cant.vc, kernels, MCs.cv){
 
 
 # Gráfico comparativo de variación del error
-comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion"), error = FALSE) {
+comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion") ) {
   
   comp_plot <- datos.grafico |>
     e_charts(rep) |>
@@ -223,6 +223,7 @@ comp.lineas <- function(datos.grafico, labels = c("Global", "repeticion"), error
     e_datazoom(show = F,startValue=1) |>
     e_legend(show = T, type = "scroll", bottom = 1) |>
     e_show_loading()|> e_x_axis(nameLocation = 'middle', nameGap = 35)
+  comp_plot$x$opts$yAxis[[1]]$max <- 1
   comp_plot
 }
 
