@@ -29,8 +29,10 @@ mod_cross_validation_ui <- function(id){
                   div(col_6(numericInput(ns("cvsvml_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                       col_6(selectInput(ns("cvsvml_cat"),   choices = "", label =  labelInput("selectCat"), width = "100%"))))
   
-  opc_rf  <- list(div(col_6(numericInput(ns("ntree.rf.pred"), labelInput("numTree"), 20, width = "100%", min = 0)),
-                      col_6(numericInput(ns("mtry.rf.pred"),  labelInput("numVars"),1, width = "100%", min = 1))),
+  opc_rf  <- list(div(col_4(numericInput(ns("ntree.rf.pred"), labelInput("numTree"), 20, width = "100%", min = 0)),
+                      col_4(numericInput(ns("mtry.rf.pred"),  labelInput("numVars"),1, width = "100%", min = 1)),
+                      col_4(selectInput(inputId = ns("split.rf.pred"), label = labelInput("splitIndex"),selected = 1,
+                                        choices =  list("gini" = "gini", "Entropia" = "information")))),
                   div(col_6(numericInput(ns("cvrfl_step"), labelInput("probC"), value = 0.5, width = "100%", min = 0, max = 1, step = 0.1)),
                       col_6(selectInput(ns("cvrfl_cat"),   choices = "", label =  labelInput("selectCat"), width = "100%"))))
   
@@ -132,8 +134,8 @@ mod_cross_validation_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type_p"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_6(echarts4rOutput(ns("e_cv_glob"), width = "100%", height = "70vh")),
-                   col_6(echarts4rOutput(ns("e_cv_error"), width = "100%", height = "70vh")))),
+               div(col_6(echarts4rOutput(ns("e_cv_glob"), width = "100%", height = "80vh")),
+                   col_6(echarts4rOutput(ns("e_cv_error"), width = "100%", height = "80vh")))),
       tabPanel(title = p(labelInput("indicesCat"),class = "wrapper-tag"), value = "tabcvcvIndicesCat",
                div(col_4(div(id = ns("row"), shiny::h5(style = "float:left;margin-top: 15px;", labelInput("selectCat"),class = "wrapper-tag"),
                              tags$div(class="multiple-select-var",
@@ -144,10 +146,10 @@ mod_cross_validation_ui <- function(id){
                              tags$div(class="multiple-select-var",
                                       selectInput(inputId = ns("plot_type"),label = NULL,
                                                   choices =  "", width = "100%"))))),hr(),
-               div(col_6(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "70vh")),
-                   col_6(echarts4rOutput(ns("e_cv_category_err"), width = "100%", height = "70vh")))),
+               div(col_6(echarts4rOutput(ns("e_cv_category"), width = "100%", height = "80vh")),
+                   col_6(echarts4rOutput(ns("e_cv_category_err"), width = "100%", height = "80vh")))),
       tabPanel(title = p(labelInput("tablaComp"),class = "wrapper-tag"),
-               withLoader(DT::dataTableOutput(ns("TablaComp"), height="70vh"), 
+               withLoader(DT::dataTableOutput(ns("TablaComp"), height="80vh"), 
                           type = "html", loader = "loader4"))
     )
  
@@ -294,7 +296,8 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
                                                                     data  = ttraining, 
                                                                     mtry  = params$mtry, 
                                                                     ntree = params$ntree, 
-                                                                    importance = TRUE)},
+                                                                    importance = TRUE,
+                                                                    parms   = list(split = params$tipo_rf))},
                                        "bl"    = {
                                                  train.adabag(var_, 
                                                               data      = ttraining, 
@@ -419,7 +422,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         grafico$name <-  tr(grafico$name,idioma)
         
         switch (type,
-                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), tr("modelo", idioma) ))), 
+                "barras" = return( resumen.barras(grafico, labels = c(tr("precG",idioma), "" ), rotacion = TRUE)), 
                 "error"  = return( resumen.error(grafico,  labels = c(tr("precG",idioma), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(grafico, labels = c(tr("precG",idioma),tr("crossval",idioma) )))
         )
@@ -438,7 +441,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         err$value <- 1 - M$global
         err$name <-  tr(err$name,idioma)
         switch (type,
-                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), tr("modelo", idioma) ))), 
+                "barras" = return( resumen.barras(err, labels = c(tr("errG",idioma), "" ), rotacion = TRUE)), 
                 "error"  = return( resumen.error(err,  labels = c(tr("errG",idioma), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                 "lineas" = return( resumen.lineas(err, labels = c(tr("errG",idioma), tr("crossval",idioma) )))
         )
@@ -459,7 +462,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
           graf$name <-  tr(graf$name,codedioma$idioma)
           graf$value <- M$categories[[cat]]
           switch (type,
-                  "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo", idioma)))), 
+                  "barras" = return( resumen.barras(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), ""), rotacion = TRUE)), 
                   "error" = return( resumen.error(graf,   labels = c(paste0(tr("prec",idioma), " ",cat ), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                   "lineas" = return( resumen.lineas(graf, labels = c(paste0(tr("prec",idioma), " ",cat ), tr("crossval",idioma) )))
           )
@@ -482,7 +485,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
           graf$name <-  tr(graf$name,codedioma$idioma)
           graf$value <- 1 - M$categories[[cat]]
           switch (type,
-                  "barras" = return( resumen.barras(graf, labels = c(paste0("Error ",cat ), tr("modelo", idioma)))), 
+                  "barras" = return( resumen.barras(graf, labels = c(paste0("Error ",cat )), rotacion = TRUE)), 
                   "error" = return( resumen.error(graf,   labels = c(paste0("Error ",cat ), tr("modelo", idioma), tr("maximo", idioma),tr("minimo", idioma)))), 
                   "lineas" = return( resumen.lineas(graf, labels = c(paste0("Error ",cat ), tr("crossval",idioma) )))
           )
@@ -560,6 +563,7 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         minsplit_dt  <-  input$minsplit.dt.pred 
         maxdepth_dt  <-  input$maxdepth.dt.pred 
         mtry         <-  input$mtry.rf.pred 
+        tipo_rf      <-  input$split.rf.pred 
         ntree        <-  input$ntree.rf.pred 
         scal_svm     <-  input$switch.scale.svm.pred 
         kernel_svm   <-  input$kernel.svm.pred 
@@ -582,14 +586,14 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
         minsplit_b   <-  input$minsplit.boosting.pred
         coeflearn_b  <- input$coeflearn
       })
-      return(list(k_kn        = k_kn,       scal_kn     = scal_kn,     kernel_kn    = kernel_kn, 
-                  tipo_dt     = tipo_dt,    minsplit_dt = minsplit_dt, maxdepth_dt  = maxdepth_dt, 
-                  mtry        = mtry,       ntree       = ntree,       scal_svm     = scal_svm, 
-                  kernel_svm  = kernel_svm, tipo_xgb    = tipo_xgb,    maxdepth_xgb = maxdepth_xgb,  
-                  n.rounds    = n.rounds,   threshold   = threshold,   stepmax      = stepmax, 
-                  capas.np    = capas.np,   scal_rlr    = scal_rlr,    alpha        = alpha, 
-                  iter        = iter,       maxdepth_b  = maxdepth_b,  minsplit_b   = minsplit_b, 
-                  coeflearn_b = coeflearn_b))
+      return(list(k_kn        = k_kn,        scal_kn     = scal_kn,     kernel_kn    = kernel_kn, 
+                  tipo_dt     = tipo_dt,     minsplit_dt = minsplit_dt, maxdepth_dt  = maxdepth_dt, 
+                  mtry        = mtry,        ntree       = ntree,       scal_svm     = scal_svm, 
+                  kernel_svm  = kernel_svm,  tipo_xgb    = tipo_xgb,    maxdepth_xgb = maxdepth_xgb,  
+                  n.rounds    = n.rounds,    threshold   = threshold,   stepmax      = stepmax, 
+                  capas.np    = capas.np,    scal_rlr    = scal_rlr,    alpha        = alpha, 
+                  iter        = iter,        maxdepth_b  = maxdepth_b,  minsplit_b   = minsplit_b, 
+                  coeflearn_b = coeflearn_b, tipo_rf = tipo_rf))
     }
     
     # Obtiene las probabilidades de corte y categoría seleccionada para cada modelo
