@@ -187,7 +187,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
   #Gráfico de la Matríz de Confusión
   output$plot_rlr_mc <- renderPlot({
     idioma <- codedioma$idioma
-    exe(plot.MC.code(idioma = idioma))
+    exe(plot_MC_code(idioma = idioma))
     plot.MC(modelos$rlr[[nombre.modelo$x]]$mc)
   })
   
@@ -265,7 +265,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     lambda   <- input$landa
     cv.glm   <- cv$cv.glm
     lambda   <- ifelse(is.null(lambda), round(log(mean(c(cv.glm$lambda.min, cv.glm$lambda.1se))),5), lambda)
-    pos      <- select.beta(modelo, lambda)
+    pos      <- select_beta(modelo, lambda)
     isolate(codedioma$code <- append(codedioma$code, paste0("### betas\n","modelo.glmnet.",tipo,"$beta[['",category,"']][,",pos,"]")))
     print(modelo$beta[[category]][,pos])
   })
@@ -389,7 +389,7 @@ mod_penalized_l_r_server <- function(input, output, session, updateData, modelos
     cod  <- paste0(cod,codigo)
     
     # Se genera el código del posible lambda
-    codigo <- select.landa(updateData$variable.predecir,
+    codigo <- select_landa(updateData$variable.predecir,
                            isolate(input$alpha.rlr),
                            isolate(input$switch.scale.rlr),
                            tipo)

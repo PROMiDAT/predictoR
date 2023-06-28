@@ -155,7 +155,7 @@ mod_bayes_server <- function(input, output, session, updateData, modelos, codedi
   #Gráfico de la Matríz de Confusión
   output$plot_bayes_mc <- renderPlot({
     idioma <- codedioma$idioma
-    exe(plot.MC.code(idioma = idioma))
+    exe(plot_MC_code(idioma = idioma))
     plot.MC(modelos$bayes[[nombre.modelo$x]]$mc)
   })
   
