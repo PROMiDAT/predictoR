@@ -66,10 +66,12 @@ mod_ind_nuevos_ui <- function(id){
                    tabBoxPrmdt(
                      id = "BoxModeloa",
                      tabPanel(title = p(labelInput("seleParModel"),class = "wrapper-tag") ,solidHeader = FALSE, collapsible = FALSE, collapsed = FALSE, value = "crearModelo",
-                                div(
-                                  col_6(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
-                                  col_6(selectInput(inputId = ns("selectModelsPred"), label = labelInput("selectMod"),
-                                                    choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%"))
+                                fluidRow(
+                                  col_4(selectInput(inputId = ns("sel.predic.var.nuevos"), label = labelInput("seleccionarPredecir"), choices =  "", width = "100%")),
+                                  col_4(selectInput(inputId = ns("selectModelsPred"), label = labelInput("selectMod"),
+                                                    choices =  list("knn", "dt", "rf", "ada", "svm","bayes", "xgb", "nn", "rl", "rlr"), width = "100%")),
+                                  col_2(numericInput(ns("sel.model.corte"), label = labelInput("probC"), 0.5, 0, 1, 0.1, width = "100%")),
+                                  col_2(selectInput(ns("sel.corte.cat"), choices = "", label = labelInput("selectCat"), width = "100%"))
                                 ), hr(style = "border-top: 2px solid #cccccc;" ),
                               uiOutput(ns('opcModelsPredN')),
 
@@ -529,18 +531,37 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
     sel  <- newCases$m.seleccionado
     vari <- newCases$variable.predecir
     newCases$prediccion        <- NULL
+    choices <- as.character(unique(train[, vari]))
+    cat_sel <- input$sel.corte.cat
+    Corte <- input$sel.model.corte
     tipos  <- c(
         tr("numerico",   isolate(codedioma$idioma)),
         tr("categorico", isolate(codedioma$idioma))
     )
       tryCatch({
-        if(sel == "svm")
-        pred                <- predict(model, test[,-which(colnames(test) == vari)], type = 'class')       
-        else
-        pred                <- predict(model, test, type = 'class')
+        if(length(choices) == 2) {
+          if(sel == "svm") {
+            pred <- predict(model, test[,-which(colnames(test) == vari)], type = 'prob')    
+          } else {
+            pred <- predict(model, test, type = 'prob')
+          }
+          positive <- cat_sel
+          negative <- choices[choices != cat_sel][1]
+          Score <- pred$prediction[, positive]
+          pred  <- ifelse(Score > Corte, positive, negative)
+          
+        } else{
+          if(sel == "svm") {
+            pred <- predict(model, test[,-which(colnames(test) == vari)], type = 'class')
+            pred <- pred$prediction
+          } else {
+            pred <- predict(model, test, type = 'class')
+            pred <- pred$prediction
+          }
+        }
         
         datos               <- test
-        datos[,vari]        <- pred$prediction
+        datos[,vari]        <- pred
         newCases$prediccion <- pred
         nombre.columnas <- c("ID", colnames(datos))
         isolate(codedioma$code <- append(codedioma$code, "predic.nuevos <- predict(modelo.nuevos, datos.prueba.completos, type = 'class')"))
@@ -580,7 +601,7 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
   #Agrega la predicción a los datos
   crear.datos.np <- function(){
     datos.aux.prueba <- newCases$datos.prueba
-    datos.aux.prueba[,newCases$variable.predecir]   <- newCases$prediccion$prediction
+    datos.aux.prueba[,newCases$variable.predecir]   <- newCases$prediccion
     
     return(datos.aux.prueba)
   }
@@ -763,12 +784,26 @@ mod_ind_nuevos_server <- function(input, output, session, newCases, updateData2,
       updateSelectInput(session, "sel.predic.var.nuevos", choices = rev(colnames.empty(var.categoricas(newCases$datos.aprendizaje))))
       updateNumericInput(session, "kmax.knn.pred", value = round(sqrt(nrow(newCases$datos.aprendizaje))))
       updateNumericInput(session, "mtry.rf.pred",  value = round(sqrt(ncol(newCases$datos.aprendizaje) -1)))
-      
     }
   
     res <-  do.call(tagList, res)
 
     return(res)
+  })
+  
+  observeEvent(input$sel.predic.var.nuevos, {
+    datos <- newCases$datos.aprendizaje
+    n <- levels(datos[[input$sel.predic.var.nuevos]])
+    
+    if(length(n) == 2) {
+      shinyjs::show("sel.model.corte", anim = TRUE, animType = "fade")
+      shinyjs::show("sel.corte.cat", anim = TRUE, animType = "fade")
+      updateSelectInput(session, "sel.corte.cat", choices = n)
+    }else{
+      shinyjs::hide("sel.model.corte", anim = TRUE, animType = "fade")
+      shinyjs::hide("sel.corte.cat", anim = TRUE, animType = "fade")
+      updateSelectInput(session, "sel.corte.cat", choices = "")
+    }
   })
 }
     
