@@ -396,7 +396,6 @@ mod_cross_validation_server <- function(input, output, session, updateData, code
           M$MCs.cv   <- MCs.cv
           # Se calculan los indices para realizar los gráficos
           resultados <- indices.cv(category, cant.vc, models, MCs.cv)
-          auxDiego <<- resultados
           M$grafico  <- resultados$grafico
           M$global   <- resultados$global
           M$categories <- resultados$categories
